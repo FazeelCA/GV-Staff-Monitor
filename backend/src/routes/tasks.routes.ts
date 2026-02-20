@@ -7,10 +7,14 @@ const router = Router();
 
 router.use(authenticateToken);
 
-// GET /api/tasks - Get all tasks (global)
-router.get("/", async (_req: Request, res: Response) => {
+// GET /api/tasks - Get all tasks (global) or specific to the user based on role
+router.get("/", async (req: Request, res: Response) => {
     try {
+        const user = (req as any).user;
+        const where = user?.role === "ADMIN" ? {} : { userId: user?.userId };
+
         const tasks = await prisma.task.findMany({
+            where,
             include: {
                 user: {
                     select: { name: true, email: true }
