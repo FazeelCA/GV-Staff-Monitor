@@ -1,0 +1,2778 @@
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+Error: Cannot find module 'pg'
+Require stack:
+- /root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js
+- /root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js
+- /root/GV-Staff-Monitor/backend/dist/src/index.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js:5:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/GV-Staff-Monitor/backend/dist/src/lib/prisma.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/routes/time.routes.js',
+    '/root/GV-Staff-Monitor/backend/dist/src/index.js'
+  ]
+}
+auth/login error: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at /root/GV-Staff-Monitor/backend/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async PrismaPgAdapter.performIO (/root/GV-Staff-Monitor/backend/node_modules/@prisma/adapter-pg/dist/index.js:652:22)
+    at async PrismaPgAdapter.queryRaw (/root/GV-Staff-Monitor/backend/node_modules/@prisma/adapter-pg/dist/index.js:602:30)
+    at async e.interpretNode (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:11:43522)
+    at async e.interpretNode (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:11:43962)
+    at async e.interpretNode (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:11:45151)
+    at async e.run (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:11:42242)
+    at async e.execute (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:57:815)
+    at async qt.request (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:58:2327) {
+  clientVersion: '7.4.0'
+}
+auth/login error: Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at /root/GV-Staff-Monitor/backend/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async PrismaPgAdapter.performIO (/root/GV-Staff-Monitor/backend/node_modules/@prisma/adapter-pg/dist/index.js:652:22)
+    at async PrismaPgAdapter.queryRaw (/root/GV-Staff-Monitor/backend/node_modules/@prisma/adapter-pg/dist/index.js:602:30)
+    at async e.interpretNode (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:11:43522)
+    at async e.interpretNode (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:11:43962)
+    at async e.interpretNode (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:11:45151)
+    at async e.run (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:11:42242)
+    at async e.execute (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:57:815)
+    at async qt.request (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:58:2327) {
+  clientVersion: '7.4.0'
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:70:960)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/tasks/autoDelete.js:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/GV-Staff-Monitor/backend/dist/src/index.js:18:22) {
+  clientVersion: '7.4.0',
+  errorCode: undefined,
+  retryable: undefined
+}
