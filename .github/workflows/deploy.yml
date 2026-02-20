@@ -34,8 +34,9 @@ jobs:
             cd backend
             npm install
             
-            echo "Generating Prisma client..."
+            echo "Generating Prisma client and pushing schema..."
             npx prisma generate
+            npx prisma db push --accept-data-loss
             
             echo "Building backend..."
             npm run build

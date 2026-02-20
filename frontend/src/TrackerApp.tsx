@@ -64,7 +64,16 @@ async function apiFetch(path: string, token: string, opts: RequestInit = {}) {
             ...(opts.headers ?? {}),
         },
     });
-    if (!res.ok) throw new Error((await res.json()).error ?? res.statusText);
+    if (!res.ok) {
+        let errMessage = res.statusText;
+        try {
+            const data = await res.json();
+            errMessage = data.error ?? errMessage;
+        } catch {
+            // Not JSON
+        }
+        throw new Error(errMessage);
+    }
     return res.json();
 }
 
