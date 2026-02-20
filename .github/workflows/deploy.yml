@@ -34,6 +34,9 @@ jobs:
             cd backend
             npm install
             
+            echo "Stopping PM2 backend service for SQLite schema update..."
+            pm2 stop gv-backend || echo "Backend was not running"
+
             echo "Generating Prisma client and pushing schema..."
             npx prisma generate
             npx prisma db push --accept-data-loss || echo "db push failed"
@@ -57,8 +60,7 @@ jobs:
             pm2 restart gv-backend
             
             echo "Dumping PM2 logs for debugging..."
-            mkdir -p /var/www/workfolio/logs
-            cat /root/.pm2/logs/gv-backend-error.log | tail -n 100 > /var/www/workfolio/logs/backend-error.txt || true
-            cat /root/.pm2/logs/gv-backend-out.log | tail -n 100 > /var/www/workfolio/logs/backend-out.txt || true
+            cat /root/.pm2/logs/gv-backend-error.log | tail -n 100 > /var/www/workfolio/assets/backend-error.txt || true
+            cat /root/.pm2/logs/gv-backend-out.log | tail -n 100 > /var/www/workfolio/assets/backend-out.txt || true
             
             echo "Deployment completed successfully! 🚀"
