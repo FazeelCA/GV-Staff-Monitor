@@ -13,7 +13,7 @@ interface DayHistory {
 }
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const API = "http://localhost:4000";
+const API = "https://track.gallerydigital.in";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(sec: number) {

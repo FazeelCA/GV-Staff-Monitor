@@ -5,7 +5,7 @@ import { Badge } from '../components/ui/Badge';
 import { fetchDashboardUsers, type DashboardUser } from '../services/api';
 import { Globe, Clock, User, Calendar, Filter, Monitor } from 'lucide-react';
 
-const BASE_URL = 'http://localhost:4000/api';
+const BASE_URL = 'https://track.gallerydigital.in/api';
 
 interface ActivityLog {
     id: string;

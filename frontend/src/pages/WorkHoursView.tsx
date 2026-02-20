@@ -5,7 +5,7 @@ import { Badge } from '../components/ui/Badge';
 import { fetchDashboardUsers, type DashboardUser } from '../services/api'; // Reuse existing API
 import { User, Calendar, Clock, BarChart } from 'lucide-react';
 
-const BASE_URL = 'http://localhost:4000/api';
+const BASE_URL = 'https://track.gallerydigital.in/api';
 
 // Reusing TimeLog structure or fetching aggregated stats?
 // Let's fetch raw time logs and aggregate on frontend for now, or use existing dashboard endpoint?
