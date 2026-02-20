@@ -321,6 +321,8 @@ async fn update_task(task: String, state: State<'_, SharedState>) -> Result<(), 
 // Tauri App Entry
 // ─────────────────────────────────────────────
 
+use tauri::Manager;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let shared_state: SharedState = Arc::new(AppState::new());
@@ -337,6 +339,27 @@ pub fn run() {
             Ok(())
         })
         .manage(shared_state)
+        .on_window_event(|window, event| match event {
+            tauri::WindowEvent::CloseRequested { .. } => {
+                if let Some(state) = window.try_state::<SharedState>() {
+                    let (token, uid, task, work_state_val) = {
+                        let mut ws = state.work_state.lock().unwrap();
+                        let current_ws = ws.clone();
+                        *ws = WorkState::Offline;
+
+                        let ct = state.current_task.lock().unwrap().clone();
+                        let t = state.auth_token.lock().unwrap().clone().unwrap_or_default();
+                        let u = state.user_id.lock().unwrap().clone().unwrap_or_default();
+                        (t, u, ct, current_ws)
+                    };
+
+                    if !token.is_empty() && work_state_val == WorkState::Working {
+                        api::log_time_event_sync("Offline", &task, &uid, &token);
+                    }
+                }
+            }
+            _ => {}
+        })
         .invoke_handler(tauri::generate_handler![
             set_auth,
             start_work,

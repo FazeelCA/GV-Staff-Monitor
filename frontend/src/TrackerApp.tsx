@@ -260,8 +260,26 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
 
             // Load today's history to init timer
             const history = await apiFetch("/api/staff/history?days=1", token);
-            if (history && history.length > 0 && history[0].totalWorkedSeconds) {
-                setSecs(history[0].totalWorkedSeconds);
+            if (history && history.length > 0) {
+                const todayHistory = history[0];
+                if (todayHistory.totalWorkedSeconds) {
+                    setSecs(todayHistory.totalWorkedSeconds);
+                }
+
+                if (todayHistory.sessions && todayHistory.sessions.length > 0) {
+                    const lastSession = todayHistory.sessions[todayHistory.sessions.length - 1];
+                    if (lastSession.type === "START" || lastSession.type === "BREAK_END") {
+                        setWorkState("Working");
+                        setTaskInput(lastSession.currentTask || "");
+                        startTimer();
+                        await tauriCmd("resume_work");
+                    } else if (lastSession.type === "BREAK_START") {
+                        setWorkState("OnBreak");
+                        setTaskInput(lastSession.currentTask || "");
+                        stopTimer();
+                        await tauriCmd("take_break");
+                    }
+                }
             }
         } catch { }
     }

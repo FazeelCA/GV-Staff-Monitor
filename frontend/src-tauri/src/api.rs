@@ -1,7 +1,7 @@
 use chrono::Utc;
 use reqwest::multipart;
 
-const BASE_URL: &str = "http://localhost:4000";
+const BASE_URL: &str = "https://track.gallerydigital.in";
 
 /// POST /api/time/log
 pub async fn log_time_event(state: &str, task: &str, user_id: &str, token: &str) {
@@ -92,4 +92,32 @@ pub async fn log_activity(title: String, app_name: String, url: String, user_id:
         Ok(_) => {}, // Silent success
         Err(e) => log::warn!("[api] log_activity failed: {e}"),
     }
+}
+
+/// A synchronous fire-and-forget fallback that uses standard `curl` executable 
+/// to notify the server on app teardown (when tokio executor may be dropping).
+pub fn log_time_event_sync(state: &str, task: &str, user_id: &str, token: &str) {
+    let api_type = match state {
+        "Working" => "AUTO_WORKING",
+        "OnBreak" => "AUTO_BREAK",
+        "Offline" => "AUTO_OFFLINE",
+        _ => "AUTO_UNKNOWN",
+    };
+
+    let json_payload = format!(
+        r#"{{"userId":"{}","type":"{}","currentTask":"{}","timestamp":"{}"}}"#,
+        user_id, api_type, task, Utc::now().to_rfc3339()
+    );
+
+    let _ = std::process::Command::new("curl")
+        .arg("-X")
+        .arg("POST")
+        .arg("-H")
+        .arg("Content-Type: application/json")
+        .arg("-H")
+        .arg(format!("Authorization: Bearer {}", token))
+        .arg("-d")
+        .arg(&json_payload)
+        .arg(format!("{BASE_URL}/api/time/log"))
+        .spawn(); // execute detached
 }
