@@ -56,6 +56,25 @@ export async function login(email: string, password: string) {
     return data;
 }
 
+export async function updateProfile(data: { name: string; email: string; bio?: string }) {
+    const res = await fetch(`${BASE}/auth/me`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update profile');
+    }
+    const updatedUser = await res.json();
+
+    // Update local storage user data
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    localStorage.setItem('user', JSON.stringify({ ...currentUser, ...updatedUser }));
+
+    return updatedUser;
+}
+
 export function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');

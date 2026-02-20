@@ -50,4 +50,33 @@ router.post("/login", async (req: Request, res: Response) => {
     }
 });
 
+// require authenticateToken for this route
+import { authenticateToken, AuthRequest } from "../middleware/authenticate";
+
+// PUT /api/auth/me
+router.put("/me", authenticateToken, async (req: Request, res: Response) => {
+    try {
+        const authReq = req as AuthRequest;
+        const userId = authReq.user?.userId;
+
+        if (!userId) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        const { name, email, bio } = req.body;
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { name, email },
+            select: { id: true, name: true, email: true, role: true }
+        });
+
+        res.json(updatedUser);
+    } catch (err: any) {
+        console.error("auth/me update error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;
