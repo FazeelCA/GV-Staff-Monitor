@@ -23,6 +23,11 @@ function requireAdmin(req: Request, res: Response, next: Function) {
 router.get("/", requireAdmin, async (_req: Request, res: Response) => {
     try {
         const users = await prisma.user.findMany({
+            where: {
+                role: {
+                    not: "ADMIN",
+                },
+            },
             select: { id: true, name: true, email: true, role: true, createdAt: true },
             orderBy: { name: "asc" },
         });
