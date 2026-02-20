@@ -1,0 +1,75 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  engineType      = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum LogType {
+  START
+  BREAK_START
+  BREAK_END
+  STOP
+}
+
+model User {
+  id           String       @id @default(cuid())
+  name         String
+  email        String       @unique
+  passwordHash String       @default("")
+  role         Role         @default(STAFF)
+  timeLogs     TimeLog[]
+  screenshots  Screenshot[]
+  tasks        Task[]
+  activities   ActivityLog[]
+  createdAt    DateTime     @default(now())
+}
+
+model TimeLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        LogType
+  currentTask String   @default("")
+  timestamp   DateTime @default(now())
+}
+
+model Screenshot {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  imageUrl      String
+  hash          String?  @default("")
+  taskAtTheTime String   @default("")
+  timestamp     DateTime @default(now())
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  note      String   @default("")
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  appName   String?
+  url       String?
+  startTime DateTime @default(now())
+  endTime   DateTime?
+  duration  Int?     // In seconds
+}

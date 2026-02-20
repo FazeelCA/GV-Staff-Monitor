@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-ssr/
+.env
+.env.*
+!.env.example
+.DS_Store
+debug_rust.log
+backend/node_modules/
+frontend/node_modules/
+.svelte-kit/
+build/
+coverage/
+*.log
