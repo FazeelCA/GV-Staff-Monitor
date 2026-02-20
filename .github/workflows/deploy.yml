@@ -55,12 +55,20 @@ jobs:
             echo "Deploying frontend to Nginx public folder..."
             cp -r dist/* /var/www/workfolio/ || true
             
-            # Restart PM2 processes
             echo "Restarting PM2 backend service..."
             pm2 start gv-backend || pm2 restart gv-backend || true
             
-            echo "Dumping PM2 logs for debugging..."
-            cat /root/.pm2/logs/gv-backend-error.log | tail -n 100 > /var/www/workfolio/backend-error.log.txt || true
-            cat /root/.pm2/logs/gv-backend-out.log | tail -n 100 > /var/www/workfolio/backend-out.log.txt || true
+            echo "Committing PM2 logs for local debugging..."
+            git checkout -b debug-logs || git checkout debug-logs
+            cp /root/.pm2/logs/gv-backend-error.log ./backend-error.log
+            cp /root/.pm2/logs/gv-backend-out.log ./backend-out.log
+            git config --global user.email "deploy@gallerydigital.in"
+            git config --global user.name "Deploy Action"
+            git add backend-error.log backend-out.log
+            git commit -m "chore: push pm2 logs" || true
+            git push origin debug-logs --force
+            
+            # Switch back to main so future pulls work
+            git checkout main
             
             echo "Deployment completed successfully! 🚀"
