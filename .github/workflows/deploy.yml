@@ -23,7 +23,7 @@ jobs:
           script: |
             # Navigate to the project directory
             # Make sure this matches the path on your server!
-            cd /path/to/your/project/GV-Staff-Monitor
+            cd /root/GV-Staff-Monitor
             
             # Pull latest changes
             echo "Pulling latest code from main branch..."
