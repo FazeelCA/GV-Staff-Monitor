@@ -13,10 +13,10 @@ pub async fn log_time_event(state: &str, task: &str, user_id: &str, token: &str)
     // We'll trust the frontend to handle the primary logic, 
     // but if we log here, we should probably match usage or generic "AUTO_LOG"
     let api_type = match state {
-        "Working" => "AUTO_WORKING",
-        "OnBreak" => "AUTO_BREAK",
-        "Offline" => "AUTO_OFFLINE",
-        _ => "AUTO_UNKNOWN",
+        "Working" => "START",
+        "OnBreak" => "BREAK_START",
+        "Offline" => "STOP",
+        _ => "STOP",
     };
 
     let body = serde_json::json!({
@@ -98,10 +98,10 @@ pub async fn log_activity(title: String, app_name: String, url: String, user_id:
 /// to notify the server on app teardown (when tokio executor may be dropping).
 pub fn log_time_event_sync(state: &str, task: &str, user_id: &str, token: &str) {
     let api_type = match state {
-        "Working" => "AUTO_WORKING",
-        "OnBreak" => "AUTO_BREAK",
-        "Offline" => "AUTO_OFFLINE",
-        _ => "AUTO_UNKNOWN",
+        "Working" => "START",
+        "OnBreak" => "BREAK_START",
+        "Offline" => "STOP",
+        _ => "STOP",
     };
 
     let json_payload = format!(
