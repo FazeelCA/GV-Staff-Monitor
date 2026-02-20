@@ -1,0 +1,55 @@
+name: Deploy to Production (Hetzner)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            # Navigate to the project directory
+            # Make sure this matches the path on your server!
+            cd /path/to/your/project/GV-Staff-Monitor
+            
+            # Pull latest changes
+            echo "Pulling latest code from main branch..."
+            git pull origin main
+            
+            # Backend installation & build
+            echo "Installing backend dependencies..."
+            cd backend
+            npm install
+            
+            echo "Generating Prisma client..."
+            npx prisma generate
+            
+            echo "Building backend..."
+            npm run build
+            
+            # Frontend installation & build
+            echo "Installing frontend dependencies..."
+            cd ../frontend
+            npm install
+            
+            echo "Building frontend dashboard..."
+            npm run build
+            
+            # Restart PM2 processes
+            echo "Restarting PM2 backend service..."
+            pm2 restart backend || pm2 start dist/index.js --name "backend"
+            
+            echo "Deployment completed successfully! 🚀"
