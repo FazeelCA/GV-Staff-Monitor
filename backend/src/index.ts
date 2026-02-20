@@ -38,8 +38,8 @@ app.get("/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-    console.log(`\n🚀 GV Staff Monitor API running at http://localhost:${PORT}\n`);
+app.listen(PORT, "::", () => {
+    console.log(`\n🚀 GV Staff Monitor API running on port ${PORT} (IPv4 and IPv6)\n`);
 });
 
 export default app;
