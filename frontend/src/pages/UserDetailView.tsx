@@ -106,18 +106,16 @@ export default function UserDetailView() {
                                     </Badge>
                                 )}
                             </h1>
-                            <p className="text-muted-foreground mt-1 flex items-center gap-2">
-                                {user?.role || 'Staff Member'}
-                                {user?.currentTask && (
-                                    <>
-                                        <span className="text-white/20">•</span>
-                                        <span className="text-primary flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded text-xs font-medium">
-                                            <Monitor size={12} />
-                                            Working on: {user.currentTask}
-                                        </span>
-                                    </>
+                            <div className="flex flex-col mt-1 gap-1">
+                                <p className="text-muted-foreground uppercase tracking-widest text-sm font-semibold">
+                                    {user?.role || 'STAFF'}
+                                </p>
+                                {user?.status === 'Working' && user?.currentTask && (
+                                    <p className="text-foreground text-sm font-medium">
+                                        {user.currentTask}
+                                    </p>
                                 )}
-                            </p>
+                            </div>
                         </div>
                     </div>
 
@@ -244,9 +242,11 @@ export default function UserDetailView() {
                                         {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Date unknown'}
                                     </p>
                                 </div>
-                                <Badge variant={task.status === 'COMPLETED' ? 'success' : task.status === 'IN_PROGRESS' ? 'warning' : 'outline'}>
-                                    {(task.status || 'UNKNOWN').replace('_', ' ')}
-                                </Badge>
+                                {task.status && task.status !== 'UNKNOWN' && (
+                                    <Badge variant={task.status === 'COMPLETED' ? 'success' : task.status === 'IN_PROGRESS' ? 'warning' : 'outline'}>
+                                        {task.status.replace('_', ' ')}
+                                    </Badge>
+                                )}
                             </GlassCard>
                         ))}
                         {(!tasks || tasks.length === 0) && (
