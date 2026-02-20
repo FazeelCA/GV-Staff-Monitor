@@ -1,0 +1,230 @@
+﻿2026-02-20T11:04:55.8234465Z ##[group]Run appleboy/ssh-action@v1.0.3
+2026-02-20T11:04:55.8234797Z with:
+2026-02-20T11:04:55.8235107Z   host: ***
+2026-02-20T11:04:55.8235463Z   username: ***
+2026-02-20T11:04:55.8237258Z   key: ***
+2026-02-20T11:04:55.8237463Z   port: 22
+2026-02-20T11:04:55.8242066Z   script: # Navigate to the project directory
+
+cd /***/GV-Staff-Monitor
+
+# Pull latest changes
+echo "Pulling latest code from main branch..."
+git pull origin main
+
+# Backend installation & build
+echo "Installing backend dependencies..."
+cd backend
+npm install
+
+echo "Stopping PM2 backend service for SQLite schema update..."
+pm2 stop gv-backend || true
+
+echo "Generating Prisma client and pushing schema..."
+npx prisma generate || true
+npx prisma db push --accept-data-loss || true
+
+echo "Building backend..."
+npm run build || true
+
+# Frontend installation & build
+echo "Installing frontend dependencies..."
+cd ../frontend
+npm install || true
+
+echo "Building frontend dashboard (bypassing strict TS compiler)..."
+npx vite build || true
+
+echo "Deploying frontend to Nginx public folder..."
+cp -r dist/* /var/www/workfolio/ || true
+
+echo "Restarting PM2 backend service..."
+pm2 start gv-backend || pm2 restart gv-backend || true
+
+echo "Committing PM2 logs for local debugging..."
+git checkout -b debug-logs || git checkout debug-logs
+cp /***/.pm2/logs/gv-backend-error.log ./backend-error.log
+cp /***/.pm2/logs/gv-backend-out.log ./backend-out.log
+git config --global user.email "deploy@gallerydigital.in"
+git config --global user.name "Deploy Action"
+git add backend-error.log backend-out.log
+git commit -m "chore: push pm2 logs" || true
+git push origin debug-logs --force
+
+# Switch back to main so future pulls work
+git checkout main
+
+echo "Deployment completed successfully! 🚀"
+
+2026-02-20T11:04:55.8246963Z   timeout: 30s
+2026-02-20T11:04:55.8247170Z   command_timeout: 10m
+2026-02-20T11:04:55.8247395Z   proxy_port: 22
+2026-02-20T11:04:55.8247602Z   proxy_timeout: 30s
+2026-02-20T11:04:55.8247814Z ##[endgroup]
+2026-02-20T11:04:55.8348357Z ##[command]/usr/bin/docker run --name baac690d692d716476bb941c18d2fb97729_b24faf --label 498baa --workdir /github/workspace --rm -e "INPUT_HOST" -e "INPUT_USERNAME" -e "INPUT_KEY" -e "INPUT_PORT" -e "INPUT_SCRIPT" -e "INPUT_PASSPHRASE" -e "INPUT_PASSWORD" -e "INPUT_SYNC" -e "INPUT_USE_INSECURE_CIPHER" -e "INPUT_CIPHER" -e "INPUT_TIMEOUT" -e "INPUT_COMMAND_TIMEOUT" -e "INPUT_KEY_PATH" -e "INPUT_FINGERPRINT" -e "INPUT_PROXY_HOST" -e "INPUT_PROXY_PORT" -e "INPUT_PROXY_USERNAME" -e "INPUT_PROXY_PASSWORD" -e "INPUT_PROXY_PASSPHRASE" -e "INPUT_PROXY_TIMEOUT" -e "INPUT_PROXY_KEY" -e "INPUT_PROXY_KEY_PATH" -e "INPUT_PROXY_FINGERPRINT" -e "INPUT_PROXY_CIPHER" -e "INPUT_PROXY_USE_INSECURE_CIPHER" -e "INPUT_SCRIPT_STOP" -e "INPUT_ENVS" -e "INPUT_ENVS_FORMAT" -e "INPUT_DEBUG" -e "INPUT_ALLENVS" -e "INPUT_REQUEST_PTY" -e "HOME" -e "GITHUB_JOB" -e "GITHUB_REF" -e "GITHUB_SHA" -e "GITHUB_REPOSITORY" -e "GITHUB_REPOSITORY_OWNER" -e "GITHUB_REPOSITORY_OWNER_ID" -e "GITHUB_RUN_ID" -e "GITHUB_RUN_NUMBER" -e "GITHUB_RETENTION_DAYS" -e "GITHUB_RUN_ATTEMPT" -e "GITHUB_ACTOR_ID" -e "GITHUB_ACTOR" -e "GITHUB_WORKFLOW" -e "GITHUB_HEAD_REF" -e "GITHUB_BASE_REF" -e "GITHUB_EVENT_NAME" -e "GITHUB_SERVER_URL" -e "GITHUB_API_URL" -e "GITHUB_GRAPHQL_URL" -e "GITHUB_REF_NAME" -e "GITHUB_REF_PROTECTED" -e "GITHUB_REF_TYPE" -e "GITHUB_WORKFLOW_REF" -e "GITHUB_WORKFLOW_SHA" -e "GITHUB_REPOSITORY_ID" -e "GITHUB_TRIGGERING_ACTOR" -e "GITHUB_WORKSPACE" -e "GITHUB_ACTION" -e "GITHUB_EVENT_PATH" -e "GITHUB_ACTION_REPOSITORY" -e "GITHUB_ACTION_REF" -e "GITHUB_PATH" -e "GITHUB_ENV" -e "GITHUB_STEP_SUMMARY" -e "GITHUB_STATE" -e "GITHUB_OUTPUT" -e "RUNNER_OS" -e "RUNNER_ARCH" -e "RUNNER_NAME" -e "RUNNER_ENVIRONMENT" -e "RUNNER_TOOL_CACHE" -e "RUNNER_TEMP" -e "RUNNER_WORKSPACE" -e "ACTIONS_RUNTIME_URL" -e "ACTIONS_RUNTIME_TOKEN" -e "ACTIONS_CACHE_URL" -e "ACTIONS_RESULTS_URL" -e "ACTIONS_ORCHESTRATION_ID" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work/_temp":"/github/runner_temp" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v "/home/runner/work/GV-Staff-Monitor/GV-Staff-Monitor":"/github/workspace" 498baa:c690d692d716476bb941c18d2fb97729
+2026-02-20T11:04:56.0353817Z ======CMD======
+2026-02-20T11:04:56.0355613Z # Navigate to the project directory
+2026-02-20T11:04:56.0355858Z 
+2026-02-20T11:04:56.0356122Z cd /***/GV-Staff-Monitor
+2026-02-20T11:04:56.0356277Z 
+2026-02-20T11:04:56.0356368Z # Pull latest changes
+2026-02-20T11:04:56.0356641Z echo "Pulling latest code from main branch..."
+2026-02-20T11:04:56.0357026Z git pull origin main
+2026-02-20T11:04:56.0357166Z 
+2026-02-20T11:04:56.0357273Z # Backend installation & build
+2026-02-20T11:04:56.0357573Z echo "Installing backend dependencies..."
+2026-02-20T11:04:56.0357842Z cd backend
+2026-02-20T11:04:56.0358030Z npm install
+2026-02-20T11:04:56.0358143Z 
+2026-02-20T11:04:56.0358334Z echo "Stopping PM2 backend service for SQLite schema update..."
+2026-02-20T11:04:56.0358723Z pm2 stop gv-backend || true
+2026-02-20T11:04:56.0358880Z 
+2026-02-20T11:04:56.0359097Z echo "Generating Prisma client and pushing schema..."
+2026-02-20T11:04:56.0359428Z npx prisma generate || true
+2026-02-20T11:04:56.0359726Z npx prisma db push --accept-data-loss || true
+2026-02-20T11:04:56.0359930Z 
+2026-02-20T11:04:56.0360035Z echo "Building backend..."
+2026-02-20T11:04:56.0360271Z npm run build || true
+2026-02-20T11:04:56.0360405Z 
+2026-02-20T11:04:56.0360513Z # Frontend installation & build
+2026-02-20T11:04:56.0360795Z echo "Installing frontend dependencies..."
+2026-02-20T11:04:56.0361068Z cd ../frontend
+2026-02-20T11:04:56.0361276Z npm install || true
+2026-02-20T11:04:56.0361393Z 
+2026-02-20T11:04:56.0361598Z echo "Building frontend dashboard (bypassing strict TS compiler)..."
+2026-02-20T11:04:56.0361959Z npx vite build || true
+2026-02-20T11:04:56.0362097Z 
+2026-02-20T11:04:56.0362252Z echo "Deploying frontend to Nginx public folder..."
+2026-02-20T11:04:56.0362581Z cp -r dist/* /var/www/workfolio/ || true
+2026-02-20T11:04:56.0362801Z 
+2026-02-20T11:04:56.0362960Z echo "Restarting PM2 backend service..."
+2026-02-20T11:04:56.0363302Z pm2 start gv-backend || pm2 restart gv-backend || true
+2026-02-20T11:04:56.0363512Z 
+2026-02-20T11:04:56.0363653Z echo "Committing PM2 logs for local debugging..."
+2026-02-20T11:04:56.0364003Z git checkout -b debug-logs || git checkout debug-logs
+2026-02-20T11:04:56.0364597Z cp /***/.pm2/logs/gv-backend-error.log ./backend-error.log
+2026-02-20T11:04:56.0365005Z cp /***/.pm2/logs/gv-backend-out.log ./backend-out.log
+2026-02-20T11:04:56.0365383Z git config --global user.email "deploy@gallerydigital.in"
+2026-02-20T11:04:56.0365744Z git config --global user.name "Deploy Action"
+2026-02-20T11:04:56.0366053Z git add backend-error.log backend-out.log
+2026-02-20T11:04:56.0366364Z git commit -m "chore: push pm2 logs" || true
+2026-02-20T11:04:56.0366673Z git push origin debug-logs --force
+2026-02-20T11:04:56.0366839Z 
+2026-02-20T11:04:56.0366961Z # Switch back to main so future pulls work
+2026-02-20T11:04:56.0367239Z git checkout main
+2026-02-20T11:04:56.0367363Z 
+2026-02-20T11:04:56.0367703Z echo "Deployment completed successfully! 🚀"
+2026-02-20T11:04:56.0367894Z 
+2026-02-20T11:04:56.0367984Z ======END======
+2026-02-20T11:04:58.0036654Z out: Pulling latest code from main branch...
+2026-02-20T11:04:59.8261052Z err: From github.com:FazeelCA/GV-Staff-Monitor
+2026-02-20T11:04:59.8261670Z err:  * branch            main       -> FETCH_HEAD
+2026-02-20T11:04:59.8274877Z err:    bc54ebd..a1443c1  main       -> origin/main
+2026-02-20T11:04:59.8392928Z out: Updating bc54ebd..a1443c1
+2026-02-20T11:04:59.8393389Z out: Fast-forward
+2026-02-20T11:04:59.8432311Z out:  .github/workflows/deploy.yml | 16 ++++++++++++----
+2026-02-20T11:04:59.8432927Z out:  1 file changed, 12 insertions(+), 4 deletions(-)
+2026-02-20T11:04:59.8442925Z out: Installing backend dependencies...
+2026-02-20T11:05:04.0741822Z out: > backend@1.0.0 postinstall
+2026-02-20T11:05:04.0742335Z out: > prisma generate
+2026-02-20T11:05:05.4398699Z err: Loaded Prisma config from prisma.config.ts.
+2026-02-20T11:05:05.8160115Z err: Prisma schema loaded from prisma/schema.prisma.
+2026-02-20T11:05:06.3128748Z out: ✔ Generated Prisma Client (v7.4.0) to ./node_modules/@prisma/client in 277ms
+2026-02-20T11:05:06.3129827Z out: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+2026-02-20T11:05:06.3673720Z out: up to date, audited 443 packages in 6s
+2026-02-20T11:05:06.3674398Z out: 59 packages are looking for funding
+2026-02-20T11:05:06.3674855Z out:   run `npm fund` for details
+2026-02-20T11:05:06.4971232Z out: 12 vulnerabilities (8 moderate, 4 high)
+2026-02-20T11:05:06.4971941Z out: To address issues that do not require attention, run:
+2026-02-20T11:05:06.4972490Z out:   npm audit fix
+2026-02-20T11:05:06.4973007Z out: To address all issues possible (including breaking changes), run:
+2026-02-20T11:05:06.4973377Z out:   npm audit fix --force
+2026-02-20T11:05:06.4973673Z out: Some issues need review, and may require choosing
+2026-02-20T11:05:06.4974006Z out: a different dependency.
+2026-02-20T11:05:06.4974539Z out: Run `npm audit` for details.
+2026-02-20T11:05:06.5232722Z out: Stopping PM2 backend service for SQLite schema update...
+2026-02-20T11:05:06.7481768Z out: [PM2] Applying action stopProcessId on app [gv-backend](ids: [ 0 ])
+2026-02-20T11:05:06.7529855Z out: [PM2] [gv-backend](0) ✓
+2026-02-20T11:05:06.7577352Z out: ┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+2026-02-20T11:05:06.7578897Z out: │ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+2026-02-20T11:05:06.7580403Z out: ├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+2026-02-20T11:05:06.7582028Z out: │ 0  │ gv-backend    │ default     │ 1.0.0   │ fork    │ 0        │ 0      │ 155  │ stopped   │ 0%       │ 0b       │ ***     │ disabled │
+2026-02-20T11:05:06.7583671Z out: └────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+2026-02-20T11:05:06.7624197Z out: Generating Prisma client and pushing schema...
+2026-02-20T11:05:08.6205743Z err: Loaded Prisma config from prisma.config.ts.
+2026-02-20T11:05:08.9181628Z err: Prisma schema loaded from prisma/schema.prisma.
+2026-02-20T11:05:09.4003221Z out: ✔ Generated Prisma Client (v7.4.0) to ./node_modules/@prisma/client in 290ms
+2026-02-20T11:05:09.4004379Z out: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+2026-02-20T11:05:11.2430840Z err: Loaded Prisma config from prisma.config.ts.
+2026-02-20T11:05:11.5640357Z err: Prisma schema loaded from prisma/schema.prisma.
+2026-02-20T11:05:11.5721001Z out: Datasource "db": PostgreSQL database "gv_staff_monitoring", schema "public" at "localhost:5432"
+2026-02-20T11:05:11.8964407Z out: The database is already in sync with the Prisma schema.
+2026-02-20T11:05:11.9334488Z out: Building backend...
+2026-02-20T11:05:12.1101162Z out: > backend@1.0.0 build
+2026-02-20T11:05:12.1101638Z out: > tsc
+2026-02-20T11:05:17.2276155Z out: Installing frontend dependencies...
+2026-02-20T11:05:20.8282289Z out: up to date, audited 203 packages in 4s
+2026-02-20T11:05:20.8282820Z out: 53 packages are looking for funding
+2026-02-20T11:05:20.8283273Z out:   run `npm fund` for details
+2026-02-20T11:05:21.0645432Z out: 11 vulnerabilities (1 moderate, 10 high)
+2026-02-20T11:05:21.0646152Z out: To address all issues (including breaking changes), run:
+2026-02-20T11:05:21.0646740Z out:   npm audit fix --force
+2026-02-20T11:05:21.0647148Z out: Run `npm audit` for details.
+2026-02-20T11:05:21.0844793Z out: Building frontend dashboard (bypassing strict TS compiler)...
+2026-02-20T11:05:22.1252074Z out: vite v7.3.1 building client environment for production...
+2026-02-20T11:05:22.2548503Z out: transforming...
+2026-02-20T11:05:27.1625000Z out: ✓ 1756 modules transformed.
+2026-02-20T11:05:27.4146599Z out: rendering chunks...
+2026-02-20T11:05:27.6796002Z out: computing gzip size...
+2026-02-20T11:05:27.6986417Z out: dist/tracker.html                  0.48 kB │ gzip:  0.31 kB
+2026-02-20T11:05:27.6987843Z out: dist/index.html                    0.55 kB │ gzip:  0.33 kB
+2026-02-20T11:05:27.6988695Z out: dist/assets/index-DMWkkRcG.css    72.75 kB │ gzip: 10.94 kB
+2026-02-20T11:05:27.6989967Z out: dist/assets/core-DhEqZVGG.js       2.44 kB │ gzip:  0.98 kB
+2026-02-20T11:05:27.6990661Z out: dist/assets/tracker-BwJ5FUo0.js   24.82 kB │ gzip:  6.58 kB
+2026-02-20T11:05:27.6991368Z out: dist/assets/main-rKATKxqz.js     104.99 kB │ gzip: 27.87 kB
+2026-02-20T11:05:27.6992080Z out: dist/assets/index-BSSuoZNg.js    193.08 kB │ gzip: 60.57 kB
+2026-02-20T11:05:27.6992659Z out: ✓ built in 5.52s
+2026-02-20T11:05:27.7830857Z out: Deploying frontend to Nginx public folder...
+2026-02-20T11:05:27.8098620Z out: Restarting PM2 backend service...
+2026-02-20T11:05:28.0080225Z out: [PM2] Applying action restartProcessId on app [gv-backend](ids: [ 0 ])
+2026-02-20T11:05:28.0237127Z out: [PM2] [gv-backend](0) ✓
+2026-02-20T11:05:28.0238458Z out: [PM2] Process successfully started
+2026-02-20T11:05:28.0319292Z out: ┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+2026-02-20T11:05:28.0320442Z out: │ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+2026-02-20T11:05:28.0321578Z out: ├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+2026-02-20T11:05:28.0322791Z out: │ 0  │ gv-backend    │ default     │ 1.0.0   │ fork    │ 31637    │ 0s     │ 155  │ online    │ 0%       │ 23.8mb   │ ***     │ disabled │
+2026-02-20T11:05:28.0323797Z out: └────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+2026-02-20T11:05:28.0386929Z out: Committing PM2 logs for local debugging...
+2026-02-20T11:05:28.0442817Z err: Switched to a new branch 'debug-logs'
+2026-02-20T11:05:28.0608545Z err: The following paths are ignored by one of your .gitignore files:
+2026-02-20T11:05:28.0610005Z err: frontend/backend-error.log
+2026-02-20T11:05:28.0610463Z err: frontend/backend-out.log
+2026-02-20T11:05:28.0610943Z err: hint: Use -f if you really want to add them.
+2026-02-20T11:05:28.0611450Z err: hint: Turn this message off by running
+2026-02-20T11:05:28.0611993Z err: hint: "git config advice.addIgnoredFile false"
+2026-02-20T11:05:28.0649531Z out: On branch debug-logs
+2026-02-20T11:05:28.0650147Z out: Changes not staged for commit:
+2026-02-20T11:05:28.0650525Z out:   (use "git add <file>..." to update what will be committed)
+2026-02-20T11:05:28.0650961Z out:   (use "git restore <file>..." to discard changes in working directory)
+2026-02-20T11:05:28.0651370Z out: 	modified:   ../backend/package-lock.json
+2026-02-20T11:05:28.0651911Z out: 	modified:   package-lock.json
+2026-02-20T11:05:28.0652282Z out: Untracked files:
+2026-02-20T11:05:28.0652584Z out:   (use "git add <file>..." to include in what will be committed)
+2026-02-20T11:05:28.0652936Z out: 	../backend/delete-admin.js
+2026-02-20T11:05:28.0653188Z out: 	../backend/delete-admin.ts
+2026-02-20T11:05:28.0653435Z out: 	../package-lock.json
+2026-02-20T11:05:28.0653779Z out: no changes added to commit (use "git add" and/or "git commit -a")
+2026-02-20T11:05:29.7637298Z err: remote: 
+2026-02-20T11:05:29.7637921Z err: remote: Create a pull request for 'debug-logs' on GitHub by visiting:        
+2026-02-20T11:05:29.7638721Z err: remote:      https://github.com/FazeelCA/GV-Staff-Monitor/pull/new/debug-logs        
+2026-02-20T11:05:29.7639384Z err: remote: 
+2026-02-20T11:05:29.7652461Z err: To github.com:FazeelCA/GV-Staff-Monitor.git
+2026-02-20T11:05:29.7667220Z err:  * [new branch]      debug-logs -> debug-logs
+2026-02-20T11:05:29.7772757Z err: Switched to branch 'main'
+2026-02-20T11:05:29.7776288Z out: M	backend/package-lock.json
+2026-02-20T11:05:29.7776840Z out: M	frontend/package-lock.json
+2026-02-20T11:05:29.7777343Z out: Your branch is up to date with 'origin/main'.
+2026-02-20T11:05:29.7781045Z out: Deployment completed successfully! 🚀
+2026-02-20T11:05:29.7786407Z ==============================================
+2026-02-20T11:05:29.7787374Z ✅ Successfully executed commands to all host.
+2026-02-20T11:05:29.7788118Z ==============================================

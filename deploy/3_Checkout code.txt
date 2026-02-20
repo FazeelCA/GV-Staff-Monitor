@@ -1,0 +1,72 @@
+﻿2026-02-20T11:04:55.0621529Z ##[group]Run actions/checkout@v4
+2026-02-20T11:04:55.0622152Z with:
+2026-02-20T11:04:55.0622440Z   repository: FazeelCA/GV-Staff-Monitor
+2026-02-20T11:04:55.0623025Z   token: ***
+2026-02-20T11:04:55.0623293Z   ssh-strict: true
+2026-02-20T11:04:55.0623550Z   ssh-user: git
+2026-02-20T11:04:55.0623817Z   persist-credentials: true
+2026-02-20T11:04:55.0624094Z   clean: true
+2026-02-20T11:04:55.0624524Z   sparse-checkout-cone-mode: true
+2026-02-20T11:04:55.0624826Z   fetch-depth: 1
+2026-02-20T11:04:55.0625074Z   fetch-tags: false
+2026-02-20T11:04:55.0625332Z   show-progress: true
+2026-02-20T11:04:55.0625586Z   lfs: false
+2026-02-20T11:04:55.0625834Z   submodules: false
+2026-02-20T11:04:55.0626101Z   set-safe-directory: true
+2026-02-20T11:04:55.0626603Z ##[endgroup]
+2026-02-20T11:04:55.1709722Z Syncing repository: FazeelCA/GV-Staff-Monitor
+2026-02-20T11:04:55.1714857Z ##[group]Getting Git version info
+2026-02-20T11:04:55.1715717Z Working directory is '/home/runner/work/GV-Staff-Monitor/GV-Staff-Monitor'
+2026-02-20T11:04:55.1717048Z [command]/usr/bin/git version
+2026-02-20T11:04:55.1717646Z git version 2.52.0
+2026-02-20T11:04:55.1741976Z ##[endgroup]
+2026-02-20T11:04:55.1755780Z Temporarily overriding HOME='/home/runner/work/_temp/0f75bd68-983e-4aa5-9e80-e14c2f62a2df' before making global git config changes
+2026-02-20T11:04:55.1758692Z Adding repository directory to the temporary git global config as a safe directory
+2026-02-20T11:04:55.1774419Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/GV-Staff-Monitor/GV-Staff-Monitor
+2026-02-20T11:04:55.1810571Z Deleting the contents of '/home/runner/work/GV-Staff-Monitor/GV-Staff-Monitor'
+2026-02-20T11:04:55.1815447Z ##[group]Initializing the repository
+2026-02-20T11:04:55.1819376Z [command]/usr/bin/git init /home/runner/work/GV-Staff-Monitor/GV-Staff-Monitor
+2026-02-20T11:04:55.1888157Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-02-20T11:04:55.1889312Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-02-20T11:04:55.1890269Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-02-20T11:04:55.1890968Z hint: call:
+2026-02-20T11:04:55.1891386Z hint:
+2026-02-20T11:04:55.1891916Z hint: 	git config --global init.defaultBranch <name>
+2026-02-20T11:04:55.1892886Z hint:
+2026-02-20T11:04:55.1893445Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-02-20T11:04:55.1894564Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-02-20T11:04:55.1895277Z hint:
+2026-02-20T11:04:55.1895720Z hint: 	git branch -m <name>
+2026-02-20T11:04:55.1896208Z hint:
+2026-02-20T11:04:55.1896817Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-02-20T11:04:55.1898013Z Initialized empty Git repository in /home/runner/work/GV-Staff-Monitor/GV-Staff-Monitor/.git/
+2026-02-20T11:04:55.1901483Z [command]/usr/bin/git remote add origin https://github.com/FazeelCA/GV-Staff-Monitor
+2026-02-20T11:04:55.1931169Z ##[endgroup]
+2026-02-20T11:04:55.1932219Z ##[group]Disabling automatic garbage collection
+2026-02-20T11:04:55.1935677Z [command]/usr/bin/git config --local gc.auto 0
+2026-02-20T11:04:55.1961890Z ##[endgroup]
+2026-02-20T11:04:55.1962951Z ##[group]Setting up auth
+2026-02-20T11:04:55.1969297Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-02-20T11:04:55.1997124Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-02-20T11:04:55.2273107Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-02-20T11:04:55.2300470Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-02-20T11:04:55.2477278Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-02-20T11:04:55.2506748Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-02-20T11:04:55.2695812Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-02-20T11:04:55.2727980Z ##[endgroup]
+2026-02-20T11:04:55.2728953Z ##[group]Fetching the repository
+2026-02-20T11:04:55.2736705Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a1443c10ead00a31a113413930c3e4fbbc376c8d:refs/remotes/origin/main
+2026-02-20T11:04:55.7448224Z From https://github.com/FazeelCA/GV-Staff-Monitor
+2026-02-20T11:04:55.7451632Z  * [new ref]         a1443c10ead00a31a113413930c3e4fbbc376c8d -> origin/main
+2026-02-20T11:04:55.7503380Z ##[endgroup]
+2026-02-20T11:04:55.7504115Z ##[group]Determining the checkout info
+2026-02-20T11:04:55.7507207Z ##[endgroup]
+2026-02-20T11:04:55.7510859Z [command]/usr/bin/git sparse-checkout disable
+2026-02-20T11:04:55.7567672Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-02-20T11:04:55.7607739Z ##[group]Checking out the ref
+2026-02-20T11:04:55.7616467Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-02-20T11:04:55.7867156Z Switched to a new branch 'main'
+2026-02-20T11:04:55.7876673Z branch 'main' set up to track 'origin/main'.
+2026-02-20T11:04:55.7894767Z ##[endgroup]
+2026-02-20T11:04:55.7947645Z [command]/usr/bin/git log -1 --format=%H
+2026-02-20T11:04:55.7985113Z a1443c10ead00a31a113413930c3e4fbbc376c8d

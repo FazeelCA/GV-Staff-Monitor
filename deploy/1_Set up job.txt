@@ -1,0 +1,32 @@
+﻿2026-02-20T11:04:50.9072166Z Current runner version: '2.331.0'
+2026-02-20T11:04:50.9106930Z ##[group]Runner Image Provisioner
+2026-02-20T11:04:50.9108139Z Hosted Compute Agent
+2026-02-20T11:04:50.9109132Z Version: 20260123.484
+2026-02-20T11:04:50.9110064Z Commit: 6bd6555ca37d84114959e1c76d2c01448ff61c5d
+2026-02-20T11:04:50.9111256Z Build Date: 2026-01-23T19:41:17Z
+2026-02-20T11:04:50.9112494Z Worker ID: {eea76a5b-2814-42d1-945c-89dea6e0fdbf}
+2026-02-20T11:04:50.9113686Z Azure Region: northcentralus
+2026-02-20T11:04:50.9114878Z ##[endgroup]
+2026-02-20T11:04:50.9116865Z ##[group]Operating System
+2026-02-20T11:04:50.9118015Z Ubuntu
+2026-02-20T11:04:50.9118802Z 24.04.3
+2026-02-20T11:04:50.9119612Z LTS
+2026-02-20T11:04:50.9120521Z ##[endgroup]
+2026-02-20T11:04:50.9121344Z ##[group]Runner Image
+2026-02-20T11:04:50.9122342Z Image: ubuntu-24.04
+2026-02-20T11:04:50.9123262Z Version: 20260201.15.1
+2026-02-20T11:04:50.9125204Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260201.15/images/ubuntu/Ubuntu2404-Readme.md
+2026-02-20T11:04:50.9128067Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260201.15
+2026-02-20T11:04:50.9129632Z ##[endgroup]
+2026-02-20T11:04:50.9131525Z ##[group]GITHUB_TOKEN Permissions
+2026-02-20T11:04:50.9134573Z Contents: read
+2026-02-20T11:04:50.9135513Z Metadata: read
+2026-02-20T11:04:50.9136431Z Packages: read
+2026-02-20T11:04:50.9137333Z ##[endgroup]
+2026-02-20T11:04:50.9140679Z Secret source: Actions
+2026-02-20T11:04:50.9142061Z Prepare workflow directory
+2026-02-20T11:04:50.9655858Z Prepare all required actions
+2026-02-20T11:04:50.9713006Z Getting action download info
+2026-02-20T11:04:51.3998683Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-02-20T11:04:51.4862913Z Download action repository 'appleboy/ssh-action@v1.0.3' (SHA:029f5b4aeeeb58fdfe1410a5d17f967dacf36262)
+2026-02-20T11:04:51.8811028Z Complete job name: deploy
