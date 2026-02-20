@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
-import { fetchDashboardUsers, type DashboardUser } from '../services/api'; // Reuse existing API
-import { User, Calendar, Clock, BarChart } from 'lucide-react';
+import { type DashboardUser } from '../services/api'; // Reuse existing API
+import { Calendar, Clock, BarChart } from 'lucide-react';
 
 const BASE_URL = 'https://track.gallerydigital.in/api';
 
@@ -133,7 +133,7 @@ export default function WorkHoursView() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
                     Array.from({ length: 3 }).map((_, i) => (
-                        <GlassCard key={i} className="h-48 animate-pulse" />
+                        <div key={i} className="h-48 rounded-2xl bg-white/5 animate-pulse" />
                     ))
                 ) : users.length === 0 ? (
                     <div className="col-span-full text-center p-12 text-muted-foreground">No records found.</div>

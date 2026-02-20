@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, type Screenshot, type DashboardUser } from '../services/api';
+import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, type Screenshot, type DashboardUser } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge, StatusDot } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { ArrowLeft, Clock, Monitor } from 'lucide-react';
+import { ArrowLeft, Clock, Monitor, Lock, X } from 'lucide-react';
 
 function formatTime(iso: string) {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -26,6 +26,30 @@ export default function UserDetailView() {
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); // Default today
+
+    // Password Reset
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [resetting, setResetting] = useState(false);
+
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = currentUser?.role === 'ADMIN';
+
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!userId) return;
+        setResetting(true);
+        try {
+            await resetUserPassword(userId, newPassword);
+            setShowResetModal(false);
+            setNewPassword('');
+            alert('Password reset successfully.');
+        } catch (e: any) {
+            alert(e.message);
+        } finally {
+            setResetting(false);
+        }
+    };
 
     const load = useCallback(async () => {
         if (!userId) return;
@@ -111,6 +135,16 @@ export default function UserDetailView() {
                         </GlassCard>
                     )}
                 </div>
+
+                {/* Admin Actions */}
+                {isAdmin && user && (
+                    <div className="flex gap-4">
+                        <Button variant="outline" size="sm" onClick={() => setShowResetModal(true)} className="border-white/10 hover:bg-white/5">
+                            <Lock size={16} className="mr-2" />
+                            Reset Password
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Separator */}
@@ -234,6 +268,50 @@ export default function UserDetailView() {
                     hasPrev={lightboxIdx > 0}
                     hasNext={lightboxIdx < screenshots.length - 1}
                 />
+            )}
+
+            {/* Password Reset Modal */}
+            {showResetModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
+                    <div className="w-full max-w-md animate-in zoom-in-95 duration-200">
+                        <GlassCard className="border-white/10 shadow-2xl">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold text-foreground">Reset Password</h2>
+                                <button
+                                    onClick={() => setShowResetModal(false)}
+                                    className="text-muted-foreground hover:text-foreground p-1 hover:bg-white/5 rounded-lg transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleResetPassword} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">New Password</label>
+                                    <div className="relative">
+                                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                        <input
+                                            required
+                                            type="password"
+                                            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-black/20 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 focus:outline-none text-foreground placeholder:text-muted-foreground/50 transition-all"
+                                            value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    loading={resetting}
+                                    className="w-full mt-4"
+                                    size="lg"
+                                >
+                                    {resetting ? 'Resetting...' : 'Reset Password'}
+                                </Button>
+                            </form>
+                        </GlassCard>
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -110,6 +110,19 @@ export async function deleteUser(id: string) {
     return res.json();
 }
 
+export async function resetUserPassword(id: string, password: string) {
+    const res = await fetch(`${BASE}/users/${id}/password`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ password }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to reset password');
+    }
+    return res.json();
+}
+
 export async function fetchDashboardUsers(): Promise<DashboardUser[]> {
     const res = await fetch(`${BASE}/dashboard/users`, { headers: getHeaders() });
     if (res.status === 401) { logout(); throw new Error('Unauthorized'); }

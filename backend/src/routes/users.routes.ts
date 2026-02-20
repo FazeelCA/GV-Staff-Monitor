@@ -77,4 +77,27 @@ router.delete("/:id", requireAdmin, async (req: Request, res: Response) => {
     }
 });
 
+// PUT /:id/password - Reset User Password
+router.put("/:id/password", requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params as { id: string };
+        const { password } = req.body;
+
+        if (!password) {
+            res.status(400).json({ error: "Password is required" });
+            return;
+        }
+
+        const hash = await bcrypt.hash(password, 10);
+        await prisma.user.update({
+            where: { id },
+            data: { passwordHash: hash },
+        });
+
+        res.json({ success: true });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;

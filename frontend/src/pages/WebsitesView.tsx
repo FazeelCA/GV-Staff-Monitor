@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
+import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { fetchDashboardUsers, type DashboardUser } from '../services/api';
-import { Globe, Clock, User, Calendar, Filter, Monitor } from 'lucide-react';
+import { Globe, User, Calendar } from 'lucide-react';
 
 const BASE_URL = 'https://track.gallerydigital.in/api';
 
