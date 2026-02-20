@@ -1,5 +1,5 @@
 
-const BASE = '/api';
+const BASE = 'https://track.gallerydigital.in/api';
 
 export type UserRole = 'ADMIN' | 'STAFF';
 export type UserStatus = 'Working' | 'On Break' | 'Offline';
