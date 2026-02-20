@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "GV Staff Monitor",
+  "productName": "GV Staff Monitoring Tool",
   "version": "0.1.0",
   "identifier": "com.gv.staffmonitor",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "GV Staff Monitor",
+        "title": "GV Staff Monitoring Tool",
         "width": 520,
         "height": 740,
         "resizable": false,
