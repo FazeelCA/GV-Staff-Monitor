@@ -12,6 +12,8 @@ import staffRoutes from "./routes/staff.routes";
 import usersRoutes from "./routes/users.routes";
 import activityRoutes from "./routes/activity.routes";
 
+import { startAutoDeleteCron } from "./tasks/autoDelete";
+
 const app = express();
 const PORT = parseInt(process.env.PORT || "4000", 10);
 
@@ -21,6 +23,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve local upload files statically
+const storagePath = process.env.STORAGE_PATH;
+if (storagePath) {
+    app.use("/uploads/screenshots", express.static(storagePath));
+}
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Routes
@@ -40,6 +46,9 @@ app.get("/health", (_req, res) => {
 
 app.listen(PORT, "::", () => {
     console.log(`\n🚀 GV Staff Monitor API running on port ${PORT} (IPv4 and IPv6)\n`);
+
+    // Initialize background jobs
+    startAutoDeleteCron();
 });
 
 export default app;
