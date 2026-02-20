@@ -9,16 +9,15 @@ router.use(authenticateToken);
 
 // Helper: derive current status from latest time log and ping
 function deriveStatus(latestType?: string, lastActiveAt?: Date): "Working" | "On Break" | "Online" | "Offline" {
+    if (!lastActiveAt) return "Offline";
+
+    const threeMinsAgo = new Date(Date.now() - 3 * 60 * 1000);
+    if (lastActiveAt < threeMinsAgo) return "Offline";
+
     if (latestType === "START" || latestType === "BREAK_END") return "Working";
     if (latestType === "BREAK_START") return "On Break";
 
-    // If app is open (pinged within last 2 minutes) but not working
-    if (lastActiveAt) {
-        const twoMinsAgo = new Date(Date.now() - 2 * 60 * 1000);
-        if (lastActiveAt >= twoMinsAgo) return "Online";
-    }
-
-    return "Offline";
+    return "Online";
 }
 
 // GET /api/dashboard/users
@@ -65,7 +64,15 @@ router.get("/users", async (_req: Request, res: Response) => {
 
             // If still working (no STOP/BREAK_START yet)
             if (workStart && latestLog?.type !== "BREAK_START" && latestLog?.type !== "STOP") {
-                totalMs += Date.now() - workStart.getTime();
+                const now = Date.now();
+                const lastPing = user.lastActiveAt ? user.lastActiveAt.getTime() : now;
+                const isOffline = now - lastPing > 3 * 60 * 1000;
+
+                // If offline, cap the work time at the last seen ping
+                const effectiveEnd = isOffline ? lastPing : now;
+                if (effectiveEnd > workStart.getTime()) {
+                    totalMs += effectiveEnd - workStart.getTime();
+                }
             }
 
             const totalHours = Math.round((totalMs / 3_600_000) * 100) / 100;
