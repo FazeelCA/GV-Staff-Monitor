@@ -38,9 +38,7 @@
       "icons/icon.ico"
     ],
     "macOS": {
-      "infoPlist": {
-        "NSScreenCaptureUsageDescription": "This app needs to record your screen to capture activity logs during your working session."
-      }
+      "infoPlist": "Info.plist"
     }
   }
 }
