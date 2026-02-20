@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { fetchAllScreenshots, fetchDashboardUsers, type Screenshot, type DashboardUser } from '../services/api';
+import { fetchAllScreenshots, fetchDashboardUsers, deleteScreenshot, type Screenshot, type DashboardUser } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
-import { Monitor, Clock, Calendar, Filter, User, AlertTriangle } from 'lucide-react';
+import { Monitor, Clock, Calendar, Filter, User, AlertTriangle, Trash2 } from 'lucide-react';
 // remove useNavigate
 
 type ScreenshotWithUser = Screenshot & { user: { name: string; email: string }; hash?: string };
@@ -33,7 +33,19 @@ export default function ScreenshotsView() {
     const [selectedUser, setSelectedUser] = useState<string>('ALL');
     const [selectedDate, setSelectedDate] = useState<string>(''); // YYYY-MM-DD
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
-    // remove navigate
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = currentUser?.role === 'ADMIN';
+
+    const handleDeleteScreenshot = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        if (!window.confirm('Are you sure you want to delete this screenshot?')) return;
+        try {
+            await deleteScreenshot(id);
+            setScreenshots((prev) => prev.filter((s) => s.id !== id));
+        } catch (e: any) {
+            alert(e.message);
+        }
+    };
 
     useEffect(() => {
         loadData();
@@ -172,9 +184,21 @@ export default function ScreenshotsView() {
                                             <p className="text-xs font-medium text-white/90 line-clamp-1 mb-1">
                                                 {shot.taskAtTheTime || 'No task detected'}
                                             </p>
-                                            <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                                                <Clock size={10} />
-                                                {formatTime(shot.timestamp)}
+                                            <div className="flex items-center justify-between mt-1">
+                                                <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                                                    <Clock size={10} />
+                                                    {formatTime(shot.timestamp)}
+                                                </div>
+
+                                                {isAdmin && (
+                                                    <button
+                                                        onClick={(e) => handleDeleteScreenshot(e, shot.id)}
+                                                        className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white transition-all border border-red-500/20"
+                                                        title="Delete Screenshot"
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </GlassCard>
@@ -192,6 +216,10 @@ export default function ScreenshotsView() {
                     onClose={() => setLightboxIdx(null)}
                     onPrev={() => setLightboxIdx(i => (i !== null && i > 0 ? i - 1 : null))}
                     onNext={() => setLightboxIdx(i => (i !== null && i < screenshots.length - 1 ? i + 1 : null))}
+                    onDelete={(id) => {
+                        handleDeleteScreenshot({ stopPropagation: () => { } } as any, id);
+                        setLightboxIdx(null);
+                    }}
                     hasPrev={lightboxIdx > 0}
                     hasNext={lightboxIdx < screenshots.length - 1}
                 />

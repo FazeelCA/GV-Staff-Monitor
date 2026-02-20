@@ -74,3 +74,43 @@ export async function uploadFile(
   // Return a URL that the static file server will serve
   return `/uploads/screenshots/${localFilename}`;
 }
+
+export async function deleteFile(imageUrl: string): Promise<void> {
+  // 1. Handle S3 deletion
+  if (s3Client && hasS3Config && imageUrl.startsWith("http")) {
+    try {
+      const url = new URL(imageUrl);
+      const bucketName = process.env.S3_BUCKET_NAME!;
+      // Assume the key is everything after the bucket name or the first part of the path
+      // More reliably, if it's standard S3 URL: https://bucket.s3.region.amazonaws.com/key
+      const key = url.pathname.startsWith("/") ? url.pathname.slice(1) : url.pathname;
+
+      const { DeleteObjectCommand } = await import("@aws-sdk/client-s3");
+      await s3Client.send(new DeleteObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+      }));
+      console.log(`Deleted from S3: ${key}`);
+    } catch (error) {
+      console.error("S3 deletion failed:", error);
+    }
+    return;
+  }
+
+  // 2. Handle local deletion
+  if (imageUrl.startsWith("/uploads/")) {
+    try {
+      const filename = path.basename(imageUrl);
+      const baseUploadsDir = process.env.STORAGE_PATH || path.join(__dirname, "../../uploads");
+      const screenshotsDir = process.env.STORAGE_PATH ? baseUploadsDir : path.join(baseUploadsDir, "screenshots");
+      const localPath = path.join(screenshotsDir, filename);
+
+      if (fs.existsSync(localPath)) {
+        fs.unlinkSync(localPath);
+        console.log(`Deleted local file: ${localPath}`);
+      }
+    } catch (error) {
+      console.error("Local file deletion failed:", error);
+    }
+  }
+}

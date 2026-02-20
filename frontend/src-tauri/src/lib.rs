@@ -353,7 +353,7 @@ pub fn run() {
                         (t, u, ct, current_ws)
                     };
 
-                    if !token.is_empty() && work_state_val == WorkState::Working {
+                    if !token.is_empty() {
                         api::log_time_event_sync("Offline", &task, &uid, &token);
                     }
                 }

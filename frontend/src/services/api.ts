@@ -223,3 +223,15 @@ export const fetchUserTasks = async (userId: string, date?: string): Promise<Tas
     if (!res.ok) throw new Error('Failed to fetch user tasks');
     return res.json();
 };
+
+export async function deleteScreenshot(id: string) {
+    const res = await fetch(`${BASE}/screenshots/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to delete screenshot');
+    }
+    return res.json();
+}

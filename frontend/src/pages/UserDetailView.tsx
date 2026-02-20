@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, type Screenshot, type DashboardUser } from '../services/api';
+import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, deleteScreenshot, type Screenshot, type DashboardUser } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge, StatusDot } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { ArrowLeft, Clock, Monitor, Lock, X } from 'lucide-react';
+import { ArrowLeft, Clock, Monitor, Lock, X, Trash2 } from 'lucide-react';
 
 function formatTime(iso: string) {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -34,6 +34,17 @@ export default function UserDetailView() {
 
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = currentUser?.role === 'ADMIN';
+
+    const handleDeleteScreenshot = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        if (!window.confirm('Are you sure you want to delete this screenshot?')) return;
+        try {
+            await deleteScreenshot(id);
+            setScreenshots((prev) => prev.filter((s) => s.id !== id));
+        } catch (e: any) {
+            alert(e.message);
+        }
+    };
 
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -209,6 +220,16 @@ export default function UserDetailView() {
                                         <Clock size={10} />
                                         {formatTime(shot.timestamp)}
                                     </Badge>
+
+                                    {isAdmin && (
+                                        <button
+                                            onClick={(e) => handleDeleteScreenshot(e, shot.id)}
+                                            className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white transition-all border border-red-500/20"
+                                            title="Delete Screenshot"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </GlassCard>
@@ -265,6 +286,10 @@ export default function UserDetailView() {
                     onClose={() => setLightboxIdx(null)}
                     onPrev={() => setLightboxIdx(i => (i !== null && i > 0 ? i - 1 : null))}
                     onNext={() => setLightboxIdx(i => (i !== null && i < screenshots.length - 1 ? i + 1 : null))}
+                    onDelete={(id) => {
+                        handleDeleteScreenshot({ stopPropagation: () => { } } as any, id);
+                        setLightboxIdx(null);
+                    }}
                     hasPrev={lightboxIdx > 0}
                     hasNext={lightboxIdx < screenshots.length - 1}
                 />

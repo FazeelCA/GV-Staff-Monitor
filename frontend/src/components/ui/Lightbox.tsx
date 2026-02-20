@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Button } from './Button';
-import { X, ChevronLeft, ChevronRight, Monitor, Clock } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Monitor, Clock, Trash2 } from 'lucide-react';
 import type { Screenshot } from '../../services/api';
 
 interface LightboxProps {
@@ -8,11 +8,14 @@ interface LightboxProps {
     onClose: () => void;
     onPrev: () => void;
     onNext: () => void;
+    onDelete: (id: string) => void;
     hasPrev: boolean;
     hasNext: boolean;
 }
 
-export function Lightbox({ screenshot, onClose, onPrev, onNext, hasPrev, hasNext }: LightboxProps) {
+export function Lightbox({ screenshot, onClose, onPrev, onNext, onDelete, hasPrev, hasNext }: LightboxProps) {
+    const isAdmin = JSON.parse(localStorage.getItem('user') || '{}')?.role === 'ADMIN';
+
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
@@ -54,6 +57,21 @@ export function Lightbox({ screenshot, onClose, onPrev, onNext, hasPrev, hasNext
                                 <ChevronRight size={18} />
                             </Button>
                         </div>
+
+                        {isAdmin && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    if (window.confirm('Are you sure you want to delete this screenshot?')) {
+                                        onDelete(screenshot.id);
+                                    }
+                                }}
+                                className="text-red-500 hover:text-white hover:bg-red-500 p-0 w-10 h-10 rounded-full border border-red-500/20"
+                            >
+                                <Trash2 size={18} />
+                            </Button>
+                        )}
                         <Button variant="ghost" size="sm" onClick={onClose} className="rounded-full w-10 h-10 p-0">
                             <X size={20} />
                         </Button>

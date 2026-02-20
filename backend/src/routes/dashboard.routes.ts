@@ -9,6 +9,7 @@ router.use(authenticateToken);
 
 // Helper: derive current status from latest time log and ping
 function deriveStatus(latestType?: string, lastActiveAt?: Date): "Working" | "On Break" | "Online" | "Offline" {
+    if (latestType === "STOP") return "Offline";
     if (!lastActiveAt) return "Offline";
 
     const threeMinsAgo = new Date(Date.now() - 3 * 60 * 1000);

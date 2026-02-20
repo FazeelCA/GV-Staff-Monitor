@@ -309,7 +309,7 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
         setWorkState("Working"); startTimer();
     }
     async function takeBreak() {
-        await logTime("BREAK_START");
+        await logTime("BREAK_START", taskInput);
         await tauriCmd("take_break");
         setWorkState("OnBreak"); stopTimer();
     }
@@ -319,7 +319,7 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
         setWorkState("Working"); startTimer();
     }
     async function checkOut() {
-        await logTime("STOP");
+        await logTime("STOP", taskInput);
         await tauriCmd("stop_work");
         setWorkState("Online"); stopTimer();
         // Note: We do NOT reset secs to 0 here because "Time Today" should persist visually until new day
