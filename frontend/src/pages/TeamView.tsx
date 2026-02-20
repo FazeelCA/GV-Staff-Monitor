@@ -4,15 +4,15 @@ import { fetchDashboardUsers, type DashboardUser, type UserStatus } from '../ser
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge, StatusDot } from '../components/ui/Badge';
 
-const STATUS_VARIANTS: Record<UserStatus, 'success' | 'warning' | 'outline'> = {
+const STATUS_VARIANTS: Record<UserStatus, 'success' | 'warning' | 'outline' | 'info'> = {
     Working: 'success',
     'On Break': 'warning',
     Offline: 'outline',
+    Online: 'info',
 };
 
 function Avatar({ name, status }: { name: string; status: UserStatus }) {
     const initials = name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
-    const isOnline = status !== 'Offline';
 
     return (
         <div className="relative">
@@ -22,7 +22,9 @@ function Avatar({ name, status }: { name: string; status: UserStatus }) {
             >
                 {initials}
             </div>
-            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#18181b] flex items-center justify-center ${isOnline ? 'bg-green-500' : 'bg-gray-500'
+            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#18181b] flex items-center justify-center ${status === 'Working' ? 'bg-green-500' :
+                status === 'On Break' ? 'bg-yellow-500' :
+                    status === 'Online' ? 'bg-blue-500' : 'bg-gray-500'
                 }`}>
                 {status === 'Working' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
             </div>
@@ -123,6 +125,7 @@ export default function TeamView() {
 
     const working = users.filter((u) => u.status === 'Working').length;
     const onBreak = users.filter((u) => u.status === 'On Break').length;
+    const online = users.filter((u) => u.status === 'Online').length;
     const offline = users.filter((u) => u.status === 'Offline').length;
     const critical = users.filter((u) => u.totalHoursToday < 7).length;
 
@@ -168,7 +171,7 @@ export default function TeamView() {
 
             {/* Stats bar */}
             {!loading && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                     <GlassCard
                         className={`flex items-center justify-between p-6 cursor-pointer transition-all duration-300 ${statusFilter === 'Working' ? 'border-green-500/50 bg-green-500/10' : 'hover:border-green-500/30'}`}
                         onClick={() => handleFilterClick('Working')}
@@ -195,6 +198,22 @@ export default function TeamView() {
                         </div>
                         <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500">
                             ☕
+                        </div>
+                    </GlassCard>
+
+                    <GlassCard
+                        className={`flex items-center justify-between p-6 cursor-pointer transition-all duration-300 ${statusFilter === 'Online' ? 'border-blue-500/50 bg-blue-500/10' : 'hover:border-blue-500/30'}`}
+                        onClick={() => handleFilterClick('Online')}
+                    >
+                        <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Online</p>
+                            <p className="text-3xl font-bold text-blue-400">{online}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                            <span className="relative flex h-3 w-3">
+                                <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                            </span>
                         </div>
                     </GlassCard>
 

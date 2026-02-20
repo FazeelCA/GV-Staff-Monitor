@@ -30,6 +30,7 @@ model User {
   tasks        Task[]
   activities   ActivityLog[]
   createdAt    DateTime     @default(now())
+  lastActiveAt DateTime     @default(now())
 }
 
 model TimeLog {

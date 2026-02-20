@@ -2,7 +2,7 @@
 const BASE = 'https://track.gallerydigital.in/api';
 
 export type UserRole = 'ADMIN' | 'STAFF';
-export type UserStatus = 'Working' | 'On Break' | 'Offline';
+export type UserStatus = 'Working' | 'On Break' | 'Offline' | 'Online';
 
 export interface DashboardUser {
     id: string;
@@ -124,7 +124,7 @@ export async function resetUserPassword(id: string, password: string) {
 }
 
 export async function fetchDashboardUsers(): Promise<DashboardUser[]> {
-    const res = await fetch(`${BASE}/dashboard/users`, { headers: getHeaders() });
+    const res = await fetch(`${BASE}/dashboard/users?t=${Date.now()}`, { headers: getHeaders() });
     if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
     if (!res.ok) throw new Error('Failed to fetch users');
     return res.json();

@@ -233,6 +233,17 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
         loadData();
     }, []);
 
+    // Ping the server every 60 seconds to report that the app is open
+    useEffect(() => {
+        if (!token) return;
+        const ping = async () => {
+            try { await apiFetch("/api/users/ping", token, { method: "PUT" }); } catch { }
+        };
+        ping();
+        const interval = setInterval(ping, 60_000);
+        return () => clearInterval(interval);
+    }, [token]);
+
     async function loadData() {
         try {
             // Load tasks

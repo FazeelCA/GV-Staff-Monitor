@@ -100,4 +100,25 @@ router.put("/:id/password", requireAdmin, async (req: Request, res: Response) =>
     }
 });
 
+// PUT /ping - Update last interaction time for online status
+router.put("/ping", async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.userId;
+        if (!userId) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: { lastActiveAt: new Date() },
+        });
+
+        res.json({ success: true });
+    } catch (err: any) {
+        console.error("ping error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;

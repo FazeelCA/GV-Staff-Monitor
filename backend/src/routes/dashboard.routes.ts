@@ -7,12 +7,18 @@ const router = Router();
 // Apply middleware to all routes in this router
 router.use(authenticateToken);
 
-// Helper: derive current status from latest time log
-function deriveStatus(latestType?: string): "Working" | "On Break" | "Offline" {
-    if (!latestType) return "Offline";
+// Helper: derive current status from latest time log and ping
+function deriveStatus(latestType?: string, lastActiveAt?: Date): "Working" | "On Break" | "Online" | "Offline" {
     if (latestType === "START" || latestType === "BREAK_END") return "Working";
     if (latestType === "BREAK_START") return "On Break";
-    return "Offline"; // STOP
+
+    // If app is open (pinged within last 2 minutes) but not working
+    if (lastActiveAt) {
+        const twoMinsAgo = new Date(Date.now() - 2 * 60 * 1000);
+        if (lastActiveAt >= twoMinsAgo) return "Online";
+    }
+
+    return "Offline";
 }
 
 // GET /api/dashboard/users
@@ -24,6 +30,11 @@ router.get("/users", async (_req: Request, res: Response) => {
         tomorrow.setDate(today.getDate() + 1);
 
         const users = await prisma.user.findMany({
+            where: {
+                role: {
+                    not: "ADMIN",
+                },
+            },
             include: {
                 timeLogs: {
                     where: { timestamp: { gte: today, lt: tomorrow } },
@@ -64,7 +75,7 @@ router.get("/users", async (_req: Request, res: Response) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                status: deriveStatus(latestLog?.type),
+                status: deriveStatus(latestLog?.type, user.lastActiveAt),
                 currentTask: latestLog?.currentTask || "",
                 totalHoursToday: totalHours,
             };
