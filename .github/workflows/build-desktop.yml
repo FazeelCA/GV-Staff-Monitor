@@ -17,7 +17,7 @@ jobs:
       matrix:
         include:
           - platform: "macos-latest"
-            args: ""
+            args: "--target universal-apple-darwin"
           - platform: "windows-latest"
             args: ""
 
@@ -50,7 +50,7 @@ jobs:
 
       - name: Build Desktop App
         working-directory: frontend
-        run: npm run tauri build ${{ matrix.args }}
+        run: npx tauri build ${{ matrix.args }}
         env:
           # Disable Apple code signing — use ad-hoc signing instead
           APPLE_SIGNING_IDENTITY: "-"
@@ -58,7 +58,7 @@ jobs:
       - name: Ad-hoc sign & remove quarantine (macOS)
         if: matrix.platform == 'macos-latest'
         run: |
-          APP_PATH="frontend/src-tauri/target/release/bundle/macos/GV Staff Monitoring Tool.app"
+          APP_PATH=$(find frontend/src-tauri/target -path "*/release/bundle/macos/*.app" | head -n 1)
           # Ad-hoc sign the entire .app bundle
           codesign --force --deep --sign - "$APP_PATH"
           # Remove macOS quarantine attribute so users don't get "damaged" error
@@ -70,8 +70,8 @@ jobs:
         with:
           name: Mac-App.zip
           path: |
-            frontend/src-tauri/target/release/bundle/dmg/*.dmg
-            frontend/src-tauri/target/release/bundle/macos/*.app
+            frontend/src-tauri/target/**/release/bundle/dmg/*.dmg
+            frontend/src-tauri/target/**/release/bundle/macos/*.app
 
       - name: Upload Windows Artifacts
         if: matrix.platform == 'windows-latest'
