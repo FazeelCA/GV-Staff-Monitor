@@ -9,7 +9,7 @@ use tauri::State;
 use tokio::sync::oneshot;
 use tokio::time::{interval, Duration};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use rdev::{listen, Event, EventType};
+use device_query::{DeviceQuery, DeviceState};
 
 lazy_static::lazy_static! {
     static ref ACTIVITY_COUNT: AtomicUsize = AtomicUsize::new(0);
@@ -17,23 +17,37 @@ lazy_static::lazy_static! {
 
 fn start_rdev_listener() {
     std::thread::spawn(|| {
-        log::info!("[rdev] Starting global input listener...");
-        if let Err(e) = listen(rdev_callback) {
-            log::warn!("[rdev] listener failed (likely missing Accessibility permissions on macOS): {:?}", e);
+        log::info!("[input_tracker] Starting global input polling with device_query...");
+        let device_state = DeviceState::new();
+        let mut last_mouse = device_state.get_mouse().coords;
+        let mut last_keys = device_state.get_keys();
+        
+        loop {
+            std::thread::sleep(Duration::from_millis(100)); // Poll every 100ms
+            
+            // Check mouse movement and clicks
+            let mouse = device_state.get_mouse();
+            let mut active = false;
+            
+            if mouse.coords != last_mouse {
+                active = true;
+                last_mouse = mouse.coords;
+            } else if mouse.button_pressed.iter().any(|&b| b) {
+                active = true;
+            }
+
+            // Check keys
+            let keys = device_state.get_keys();
+            if keys != last_keys {
+                active = true;
+                last_keys = keys;
+            }
+
+            if active {
+                ACTIVITY_COUNT.fetch_add(1, Ordering::Relaxed);
+            }
         }
     });
-}
-
-fn rdev_callback(event: Event) {
-    match event.event_type {
-        EventType::MouseMove { .. } |
-        EventType::KeyPress(_) |
-        EventType::ButtonPress(_) |
-        EventType::Wheel { .. } => {
-            ACTIVITY_COUNT.fetch_add(1, Ordering::Relaxed);
-        }
-        _ => (),
-    }
 }
 
 // ─────────────────────────────────────────────
