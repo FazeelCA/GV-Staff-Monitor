@@ -10,6 +10,47 @@ use tokio::sync::oneshot;
 use tokio::time::{interval, Duration};
 
 // ─────────────────────────────────────────────
+// macOS Screen Recording Permission
+// ─────────────────────────────────────────────
+
+/// Check if Screen Recording permission is granted.
+/// On macOS 10.15+, this also triggers the system permission prompt
+/// the first time it's called (so the user sees the dialog).
+/// Returns true if permission is granted, false otherwise.
+#[tauri::command]
+fn check_screen_permission() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+        // Use screencapture -x to test access; if it fails (non-zero exit), permission denied
+        // We also use CGRequestScreenCaptureAccess via osascript approach
+        let status = Command::new("screencapture")
+            .args(["-x", "-t", "png", "/tmp/gv_perm_test.png"])
+            .status();
+        let _ = std::fs::remove_file("/tmp/gv_perm_test.png");
+        match status {
+            Ok(s) => s.success(),
+            Err(_) => false,
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        true
+    }
+}
+
+/// Open System Preferences → Screen Recording so user can grant access.
+#[tauri::command]
+fn open_screen_privacy_settings() {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open")
+            .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+            .spawn();
+    }
+}
+
+// ─────────────────────────────────────────────
 // Shared state type alias
 // ─────────────────────────────────────────────
 type SharedState = Arc<AppState>;
@@ -367,6 +408,8 @@ pub fn run() {
             stop_work,
             resume_work,
             update_task,
+            check_screen_permission,
+            open_screen_privacy_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
