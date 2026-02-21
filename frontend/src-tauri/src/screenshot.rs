@@ -1,38 +1,45 @@
 use sha2::{Sha256, Digest};
 use hex;
-use xcap::Monitor;
+use screenshots::Screen;
 use image::DynamicImage;
 use std::io::Cursor;
 use image::codecs::jpeg::JpegEncoder;
 
-/// Captures the primary monitor and returns JPEG bytes compressed to ~<200 KB + SHA256 Hash.
+/// Captures the primary monitor and returns JPEG bytes + SHA256 Hash.
+/// Uses the `screenshots` crate which uses native ScreenCaptureKit on macOS
+/// to reliably capture the full display (not just the frontmost window).
 pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
-    // Grab all monitors, prefer primary
-    let monitors = Monitor::all().map_err(|e| format!("Monitor error: {e}"))?;
-
-    let monitor = monitors
+    // Get all screens; take the first (primary) one
+    let screens = Screen::all().map_err(|e| format!("Screen error: {e}"))?;
+    let screen = screens
         .into_iter()
-        .find(|m| m.is_primary().unwrap_or(false))
-        .or_else(|| Monitor::all().ok()?.into_iter().next())
-        .ok_or_else(|| "No monitor found".to_string())?;
+        .next()
+        .ok_or_else(|| "No screen found".to_string())?;
 
-    // Capture a frame — xcap 0.8 returns RgbaImage
-    let rgba_image = monitor
-        .capture_image()
+    // Capture the full screen — returns screenshots' own ImageBuffer (image 0.24)
+    let captured = screen
+        .capture()
         .map_err(|e| format!("Capture error: {e}"))?;
 
-    // Convert to DynamicImage for encoding
-    let dynamic = DynamicImage::ImageRgba8(rgba_image);
+    // Extract dimensions and raw RGBA pixel bytes
+    // use_raw() / into_raw() avoids any image-version type conflicts
+    let width = captured.width();
+    let height = captured.height();
+    let raw_rgba: Vec<u8> = captured.into_raw();
 
-    // Convert RGBA → RGB (JPEG does not support alpha)
-    let rgb_image = dynamic.to_rgb8();
+    // Re-wrap into image 0.25's RgbaImage via raw bytes — avoids cross-version type mismatch
+    let rgba_image = image::RgbaImage::from_raw(width, height, raw_rgba)
+        .ok_or_else(|| "Failed to build RgbaImage from screen capture".to_string())?;
 
-    // Compute SHA256 Hash of raw pixels (detects identical screens instantly)
+    // Convert RGBA → RGB (JPEG does not support alpha channel)
+    let rgb_image = DynamicImage::ImageRgba8(rgba_image).to_rgb8();
+
+    // Compute SHA256 hash of raw pixels (detects identical/static screens)
     let mut hasher = Sha256::new();
     hasher.update(rgb_image.as_raw());
     let hash = hex::encode(hasher.finalize());
 
-    // Encode to JPEG with quality 60 (reliably <200 KB for typical HD screens)
+    // Encode to JPEG at quality 60 (reliably <200 KB for typical HD screens)
     let mut buf = Cursor::new(Vec::new());
     let mut encoder = JpegEncoder::new_with_quality(&mut buf, 60);
     encoder
@@ -46,7 +53,9 @@ pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
 
     let bytes = buf.into_inner();
     log::info!(
-        "[screenshot] Captured {} KB | Hash: {:.8}...",
+        "[screenshot] Captured {}x{} @ {} KB | Hash: {:.8}...",
+        width,
+        height,
         bytes.len() / 1024,
         hash
     );
