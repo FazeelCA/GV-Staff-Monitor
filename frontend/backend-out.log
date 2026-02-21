@@ -113,3 +113,7 @@ Deleted local file: /root/GV-Staff-Monitor/backend/dist/uploads/screenshots/66af
 Deleted local file: /root/GV-Staff-Monitor/backend/dist/uploads/screenshots/18794b1b-32d9-4b2b-b8cf-93c0694c5072.webp
 Deleted local file: /root/GV-Staff-Monitor/backend/dist/uploads/screenshots/f81f9d6d-8ed3-4201-95a1-68b357ac84e9.webp
 Deleted local file: /root/GV-Staff-Monitor/backend/dist/uploads/screenshots/3960efc2-963c-47e8-b04a-dc0e945cf48d.webp
+
+🚀 GV Staff Monitor API running on port 5000 (IPv4 and IPv6)
+
+Auto-delete cron job scheduled (runs daily at 2:00 AM).
