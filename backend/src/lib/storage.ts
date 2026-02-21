@@ -71,8 +71,9 @@ export async function uploadFile(
   const localPath = path.join(screenshotsDir, localFilename);
   fs.writeFileSync(localPath, processedBuffer);
 
-  // Return a URL that the static file server will serve
-  return `/uploads/screenshots/${localFilename}`;
+  // Return an absolute URL so the frontend can resolve it regardless of origin
+  const appUrl = (process.env.APP_URL || 'https://track.gallerydigital.in').replace(/\/$/, '');
+  return `${appUrl}/uploads/screenshots/${localFilename}`;
 }
 
 export async function deleteFile(imageUrl: string): Promise<void> {

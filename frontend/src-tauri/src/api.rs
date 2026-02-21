@@ -50,7 +50,7 @@ pub async fn upload_screenshot(jpeg_bytes: Vec<u8>, hash: String, task: String, 
     let form = multipart::Form::new()
         .part("image", part)
         .text("hash", hash)
-        .text("task", task)
+        .text("taskAtTheTime", task)
         .text("userId", user_id);
 
     match client
