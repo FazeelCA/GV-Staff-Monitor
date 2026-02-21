@@ -51,6 +51,18 @@ jobs:
       - name: Build Desktop App
         working-directory: frontend
         run: npm run tauri build ${{ matrix.args }}
+        env:
+          # Disable Apple code signing — use ad-hoc signing instead
+          APPLE_SIGNING_IDENTITY: "-"
+
+      - name: Ad-hoc sign & remove quarantine (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          APP_PATH="frontend/src-tauri/target/release/bundle/macos/GV Staff Monitoring Tool.app"
+          # Ad-hoc sign the entire .app bundle
+          codesign --force --deep --sign - "$APP_PATH"
+          # Remove macOS quarantine attribute so users don't get "damaged" error
+          xattr -cr "$APP_PATH"
 
       - name: Upload Mac Artifacts
         if: matrix.platform == 'macos-latest'
