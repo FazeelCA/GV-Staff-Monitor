@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, deleteScreenshot, type Screenshot, type DashboardUser } from '../services/api';
+import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, resetUserHours, deleteScreenshot, fetchUserHistory, type Screenshot, type DashboardUser } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge, StatusDot } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -15,6 +15,7 @@ function formatDate(iso: string) {
 }
 
 import { Lightbox } from '../components/ui/Lightbox';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 export default function UserDetailView() {
     const { userId } = useParams<{ userId: string }>();
@@ -22,7 +23,16 @@ export default function UserDetailView() {
     const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
     const [user, setUser] = useState<DashboardUser | null>(null);
     const [tasks, setTasks] = useState<any[]>([]);
+    const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
+    const [activityLogs, setActivityLogs] = useState<any[]>([]);
+    const [filterUnproductive, setFilterUnproductive] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    const UNPRODUCTIVE_KEYWORDS = ['youtube', 'facebook', 'instagram', 'twitter', 'tiktok', 'netflix', 'reddit', 'whatsapp', 'telegram', 'discord'];
+    const isUnproductive = (log: any) => {
+        const text = (`${log.appName || ''} ${log.title || ''} ${log.url || ''}`).toLowerCase();
+        return UNPRODUCTIVE_KEYWORDS.some(kw => text.includes(kw));
+    };
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); // Default today
@@ -31,6 +41,7 @@ export default function UserDetailView() {
     const [showResetModal, setShowResetModal] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [resetting, setResetting] = useState(false);
+    const [resettingHours, setResettingHours] = useState(false);
 
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = currentUser?.role === 'ADMIN';
@@ -62,17 +73,44 @@ export default function UserDetailView() {
         }
     };
 
+    const handleResetHours = async () => {
+        if (!userId) return;
+        if (!window.confirm(`Are you sure you want to completely wipe all tracked hours for ${user?.name} today? This cannot be undone.`)) return;
+        setResettingHours(true);
+        try {
+            await resetUserHours(userId);
+            alert('Hours reset successfully.');
+            load(); // Reload to reflect changes
+        } catch (e: any) {
+            alert(e.message);
+        } finally {
+            setResettingHours(false);
+        }
+    };
+
     const load = useCallback(async () => {
         if (!userId) return;
         try {
-            const [shots, users, userTasks] = await Promise.all([
+            const [shots, users, userTasks, hist] = await Promise.all([
                 fetchUserScreenshots(userId, selectedDate),
                 fetchDashboardUsers(),
                 fetchUserTasks(userId, selectedDate),
+                fetchUserHistory(userId, selectedDate)
             ]);
             setScreenshots(shots);
             setUser(users.find((u) => u.id === userId) ?? null);
             setTasks(userTasks);
+
+            // Build Timeline Events
+            const events: any[] = [];
+            hist.timeLogs.forEach((l: any) => events.push({ time: new Date(l.timestamp).getTime(), type: 'TIME_LOG', data: l }));
+            hist.screenshots.forEach((s: any) => events.push({ time: new Date(s.timestamp).getTime(), type: 'SCREENSHOT', data: s }));
+            hist.activityLogs.forEach((a: any) => events.push({ time: new Date(a.startTime).getTime(), type: 'ACTIVITY', data: a }));
+            events.sort((a, b) => b.time - a.time); // Newest first
+            setTimelineEvents(events);
+
+            setActivityLogs(hist.activityLogs || []);
+
         } catch (e) {
             console.error(e);
         } finally {
@@ -148,6 +186,10 @@ export default function UserDetailView() {
                 {/* Admin Actions */}
                 {isAdmin && user && (
                     <div className="flex gap-4">
+                        <Button variant="outline" size="sm" onClick={handleResetHours} disabled={resettingHours} className="border-red-500/30 text-red-400 hover:bg-red-500/10">
+                            <Clock size={16} className="mr-2" />
+                            {resettingHours ? 'Resetting...' : 'Reset Hours Today'}
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => setShowResetModal(true)} className="border-white/10 hover:bg-white/5">
                             <Lock size={16} className="mr-2" />
                             Reset Password
@@ -171,6 +213,30 @@ export default function UserDetailView() {
                     <Badge variant="outline" className="font-mono hidden sm:inline-flex">{formatDate(selectedDate)}</Badge>
                 </div>
             </div>
+
+            {/* Productivity Graph */}
+            {!loading && screenshots.length > 0 && (
+                <GlassCard className="p-4 h-[250px] w-full mt-4 bg-black/10">
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-4 ml-2 uppercase tracking-wide">Productivity Trend (Activity Count)</h3>
+                    <ResponsiveContainer width="100%" height="80%">
+                        <AreaChart data={[...screenshots].reverse().map(s => ({ time: new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), activity: s.activityCount || 0 }))}>
+                            <defs>
+                                <linearGradient id="colorActivity" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5} />
+                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <XAxis dataKey="time" stroke="#ffffff40" fontSize={11} tickLine={false} axisLine={false} minTickGap={30} />
+                            <YAxis stroke="#ffffff40" fontSize={11} tickLine={false} axisLine={false} width={30} />
+                            <RechartsTooltip
+                                contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                                itemStyle={{ color: '#fff' }}
+                            />
+                            <Area type="monotone" dataKey="activity" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorActivity)" />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </GlassCard>
+            )}
 
             {/* Loading */}
             {loading && (
@@ -257,8 +323,69 @@ export default function UserDetailView() {
             )}
 
 
+            {/* Timeline View */}
+            <div className="space-y-4 mt-8">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-foreground">Timeline History</h2>
+                </div>
+
+                {loading ? (
+                    <div className="space-y-4">
+                        <SkeletonGlassCard className="h-20" />
+                        <SkeletonGlassCard className="h-20" />
+                    </div>
+                ) : timelineEvents.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground bg-white/5 rounded-xl border border-white/5">
+                        No timeline events available for this day.
+                    </div>
+                ) : (
+                    <div className="relative pl-6 space-y-6 before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/10 before:to-transparent">
+                        {timelineEvents.map((ev, i) => {
+                            const dateObj = new Date(ev.time);
+                            return (
+                                <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                    <div className="flex items-center justify-center w-5 h-5 rounded-full border-2 border-[#080a0f] bg-primary text-white shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-lg shadow-white/20 absolute left-[-28px] md:static" />
+
+                                    <GlassCard className="w-[calc(100%-1rem)] md:w-[calc(50%-1.5rem)] p-4 hover:shadow-xl hover:shadow-primary/5 transition-all">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs font-bold text-primary uppercase tracking-wider">{ev.type.replace('_', ' ')}</span>
+                                            <span className="text-xs text-muted-foreground font-mono bg-black/20 px-2 py-0.5 rounded-full border border-white/5">
+                                                {formatTime(dateObj.toISOString())}
+                                            </span>
+                                        </div>
+
+                                        {ev.type === 'TIME_LOG' && (
+                                            <div>
+                                                <p className={`font-semibold ${ev.data.type === 'START' ? 'text-emerald-400' : ev.data.type === 'STOP' ? 'text-rose-400' : 'text-amber-400'}`}>
+                                                    {ev.data.type === 'START' ? 'Started Work' : ev.data.type === 'STOP' ? 'Stopped Work' : ev.data.type === 'BREAK_START' ? 'Took a Break' : 'Returned from Break'}
+                                                </p>
+                                                {ev.data.currentTask && <p className="text-sm text-foreground mt-1">Task: <span className="opacity-80">{ev.data.currentTask}</span></p>}
+                                            </div>
+                                        )}
+
+                                        {ev.type === 'SCREENSHOT' && (
+                                            <div className="space-y-2 cursor-zoom-in" onClick={() => setLightboxIdx(screenshots.findIndex(s => s.id === ev.data.id))}>
+                                                <img src={ev.data.imageUrl} className="w-full h-24 object-cover rounded-lg border border-white/10 hover:border-primary/50 transition-colors" />
+                                                <p className="text-xs text-muted-foreground line-clamp-1">{ev.data.taskAtTheTime}</p>
+                                            </div>
+                                        )}
+
+                                        {ev.type === 'ACTIVITY' && (
+                                            <div>
+                                                <p className="text-sm font-medium text-foreground line-clamp-1">{ev.data.appName || 'Unknown App'}</p>
+                                                {ev.data.title && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{ev.data.title}</p>}
+                                            </div>
+                                        )}
+                                    </GlassCard>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
             {/* Task History */}
-            <div className="space-y-4">
+            <div className="space-y-4 pt-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-foreground">Task History</h2>
                 </div>
@@ -292,6 +419,56 @@ export default function UserDetailView() {
                         {(!tasks || tasks.length === 0) && (
                             <div className="text-center py-8 text-muted-foreground bg-white/5 rounded-xl border border-white/5">
                                 No tasks recorded.
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Websites & Apps History */}
+            <div className="space-y-4 pt-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-foreground">Websites & Apps</h2>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Show Unproductive Only</span>
+                        <button
+                            onClick={() => setFilterUnproductive(!filterUnproductive)}
+                            className={`w-10 h-5 rounded-full transition-colors relative ${filterUnproductive ? 'bg-red-500' : 'bg-white/10'}`}
+                        >
+                            <span className={`block w-4 h-4 rounded-full bg-white absolute top-0.5 transition-all ${filterUnproductive ? 'left-5' : 'left-1'}`} />
+                        </button>
+                    </div>
+                </div>
+
+                {loading ? (
+                    <SkeletonGlassCard className="h-32" />
+                ) : (
+                    <div className="space-y-3">
+                        {activityLogs
+                            .filter(log => filterUnproductive ? isUnproductive(log) : true)
+                            .map(log => {
+                                const bad = isUnproductive(log);
+                                return (
+                                    <GlassCard
+                                        key={log.id}
+                                        className={`flex flex-col p-4 transition-colors ${bad ? 'border-red-500/50 bg-red-500/10' : ''}`}
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h3 className="font-semibold text-foreground">{log.appName || 'Unknown App'}</h3>
+                                            <span className="text-xs text-muted-foreground font-mono bg-black/20 px-2 py-0.5 rounded border border-white/10">
+                                                {formatTime(log.startTime)} {log.duration ? `(${Math.floor(log.duration / 60)}m ${log.duration % 60}s)` : ''}
+                                            </span>
+                                        </div>
+                                        {log.title && <p className="text-sm text-muted-foreground mb-1 line-clamp-1">{log.title}</p>}
+                                        {log.url && <a href={log.url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline line-clamp-1">{log.url}</a>}
+                                        {bad && <Badge variant="outline" className="mt-2 self-start text-red-400 border-red-500/30 bg-red-500/10 text-[10px] py-0">Unproductive</Badge>}
+                                    </GlassCard>
+                                )
+                            })}
+
+                        {(activityLogs.length === 0 || (filterUnproductive && !activityLogs.some(isUnproductive))) && (
+                            <div className="text-center py-8 text-muted-foreground bg-white/5 rounded-xl border border-white/5">
+                                No websites or apps recorded.
                             </div>
                         )}
                     </div>

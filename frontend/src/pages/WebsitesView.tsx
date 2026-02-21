@@ -22,6 +22,13 @@ interface ActivityLog {
     };
 }
 
+export const UNPRODUCTIVE_KEYWORDS = ['youtube', 'facebook', 'instagram', 'twitter', 'tiktok', 'netflix', 'reddit', 'whatsapp', 'telegram', 'discord'];
+
+export function isUnproductive(log: { appName?: string | null, title?: string, url?: string | null }): boolean {
+    const text = (`${log.appName || ''} ${log.title || ''} ${log.url || ''}`).toLowerCase();
+    return UNPRODUCTIVE_KEYWORDS.some(kw => text.includes(kw));
+}
+
 export default function WebsitesView() {
     const [activities, setActivities] = useState<ActivityLog[]>([]);
     const [users, setUsers] = useState<DashboardUser[]>([]);
@@ -194,42 +201,45 @@ export default function WebsitesView() {
                                     </td>
                                 </tr>
                             ) : (
-                                activities.map((log) => (
-                                    <tr key={log.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
-                                                    {log.user?.name.charAt(0)}
-                                                </div>
-                                                <span className="text-sm">{log.user?.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex flex-col">
+                                activities.map((log) => {
+                                    const unproductive = isUnproductive(log);
+                                    return (
+                                        <tr key={log.id} className={`border-b border-white/5 transition-colors ${unproductive ? 'bg-red-500/10 hover:bg-red-500/20' : 'hover:bg-white/5'}`}>
+                                            <td className="p-4">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-medium text-foreground">{log.appName || 'Unknown App'}</span>
-                                                    {log.url && (
-                                                        <a href={log.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline flex items-center gap-1">
-                                                            <Globe size={10} />
-                                                            Link
-                                                        </a>
-                                                    )}
+                                                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
+                                                        {log.user?.name.charAt(0)}
+                                                    </div>
+                                                    <span className="text-sm">{log.user?.name}</span>
                                                 </div>
-                                                <span className="text-xs text-muted-foreground line-clamp-1" title={log.title}>
-                                                    {log.title}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="p-4 text-sm text-muted-foreground">
-                                            {new Date(log.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </td>
-                                        <td className="p-4">
-                                            <Badge variant="glass" className="bg-white/5 text-xs">
-                                                {formatDuration(log.duration)}
-                                            </Badge>
-                                        </td>
-                                    </tr>
-                                ))
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex flex-col">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-medium text-foreground">{log.appName || 'Unknown App'}</span>
+                                                        {log.url && (
+                                                            <a href={log.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline flex items-center gap-1">
+                                                                <Globe size={10} />
+                                                                Link
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground line-clamp-1" title={log.title}>
+                                                        {log.title}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4 text-sm text-muted-foreground">
+                                                {new Date(log.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </td>
+                                            <td className="p-4">
+                                                <Badge variant="glass" className="bg-white/5 text-xs">
+                                                    {formatDuration(log.duration)}
+                                                </Badge>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

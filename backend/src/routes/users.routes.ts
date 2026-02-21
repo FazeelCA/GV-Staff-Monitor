@@ -126,4 +126,64 @@ router.put("/ping", async (req: Request, res: Response) => {
     }
 });
 
+// GET /:id/history - Fetch detailed timeline for a user
+router.get("/:id/history", requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const dateParam = req.query.date as string;
+
+        let startOfDay, endOfDay;
+        if (dateParam) {
+            startOfDay = new Date(dateParam);
+            startOfDay.setHours(0, 0, 0, 0);
+        } else {
+            startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+        }
+        endOfDay = new Date(startOfDay);
+        endOfDay.setDate(startOfDay.getDate() + 1);
+
+        const [timeLogs, screenshots, activityLogs] = await Promise.all([
+            prisma.timeLog.findMany({
+                where: { userId: id, timestamp: { gte: startOfDay, lt: endOfDay } },
+                orderBy: { timestamp: "asc" }
+            }),
+            prisma.screenshot.findMany({
+                where: { userId: id, timestamp: { gte: startOfDay, lt: endOfDay } },
+                orderBy: { timestamp: "asc" }
+            }),
+            prisma.activityLog.findMany({
+                where: { userId: id, startTime: { gte: startOfDay, lt: endOfDay } },
+                orderBy: { startTime: "asc" }
+            })
+        ]);
+
+        res.json({ timeLogs, screenshots, activityLogs });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// DELETE /:id/time-logs/today - Reset User's Hours for Today
+router.delete("/:id/time-logs/today", requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params as { id: string };
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        await prisma.timeLog.deleteMany({
+            where: {
+                userId: id,
+                timestamp: {
+                    gte: today,
+                },
+            },
+        });
+
+        res.json({ success: true, message: "Hours reset for today" });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;

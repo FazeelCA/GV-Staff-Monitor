@@ -125,6 +125,18 @@ export async function resetUserPassword(id: string, password: string) {
     return res.json();
 }
 
+export async function resetUserHours(id: string) {
+    const res = await fetch(`${BASE}/users/${id}/time-logs/today`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to reset hours');
+    }
+    return res.json();
+}
+
 export async function fetchDashboardUsers(): Promise<DashboardUser[]> {
     const res = await fetch(`${BASE}/dashboard/users?t=${Date.now()}`, { headers: getHeaders() });
     if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
@@ -139,6 +151,16 @@ export async function fetchUserScreenshots(userId: string, date?: string): Promi
     const res = await fetch(url, { headers: getHeaders() });
     if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
     if (!res.ok) throw new Error('Failed to fetch screenshots');
+    return res.json();
+}
+
+export async function fetchUserHistory(userId: string, date?: string) {
+    const url = date
+        ? `${BASE}/users/${userId}/history?date=${date}`
+        : `${BASE}/users/${userId}/history`;
+    const res = await fetch(url, { headers: getHeaders() });
+    if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
+    if (!res.ok) throw new Error('Failed to fetch history');
     return res.json();
 }
 

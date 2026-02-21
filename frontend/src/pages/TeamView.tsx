@@ -33,19 +33,27 @@ function Avatar({ name, status }: { name: string; status: UserStatus }) {
 }
 
 function UserCard({ user, onClick }: { user: DashboardUser; onClick: () => void }) {
+    const now = new Date();
+    const isLate = user.totalHoursToday === 0 && user.status !== 'Working' && now.getHours() >= 10 && now.getHours() < 13;
+    const isAbsent = user.totalHoursToday === 0 && user.status !== 'Working' && now.getHours() >= 13;
+
     return (
         <GlassCard
             onClick={onClick}
             hoverEffect={true}
-            className="cursor-pointer group h-full flex flex-col relative overflow-hidden"
+            className={`cursor-pointer group h-full flex flex-col relative overflow-hidden transition-all ${isAbsent ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : isLate ? 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : ''}`}
         >
             {/* Header */}
             <div className="flex items-start justify-between mb-4 z-10 relative">
                 <Avatar name={user.name} status={user.status} />
-                <Badge variant={STATUS_VARIANTS[user.status] || 'outline'}>
-                    <StatusDot className={user.status === 'Working' ? 'animate-pulse bg-current' : 'bg-current'} />
-                    {user.status || 'Unknown'}
-                </Badge>
+                <div className="flex flex-col items-end gap-2">
+                    <Badge variant={STATUS_VARIANTS[user.status] || 'outline'}>
+                        <StatusDot className={user.status === 'Working' ? 'animate-pulse bg-current' : 'bg-current'} />
+                        {user.status || 'Unknown'}
+                    </Badge>
+                    {isAbsent && <Badge variant="outline" className="text-red-400 border-red-500/30 bg-red-500/10 text-[10px] py-0">Absent</Badge>}
+                    {isLate && <Badge variant="outline" className="text-amber-400 border-amber-500/30 bg-amber-500/10 text-[10px] py-0">Late Check-in</Badge>}
+                </div>
             </div>
 
             {/* Name & Role */}
@@ -141,6 +149,27 @@ export default function TeamView() {
         filteredUsers = filteredUsers.filter((u) => u.status === statusFilter);
     }
 
+    const exportToCSV = () => {
+        const headers = ["Name", "Email", "Role", "Status", "Current Task", "Hours Today"];
+        const rows = filteredUsers.map(u => [
+            u.name,
+            u.email,
+            u.role,
+            u.status,
+            u.currentTask || "None",
+            u.totalHoursToday.toFixed(2)
+        ]);
+        const csvContent = [headers.join(","), ...rows.map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(","))].join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `team_report_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     if (sortBy === 'hours-asc') {
         filteredUsers.sort((a, b) => a.totalHoursToday - b.totalHoursToday);
     } else if (sortBy === 'hours-desc') {
@@ -186,6 +215,13 @@ export default function TeamView() {
                             ▼
                         </div>
                     </div>
+
+                    <button
+                        onClick={exportToCSV}
+                        className="text-sm font-semibold bg-primary hover:bg-primary/80 text-white transition-colors px-4 py-1.5 rounded-lg shadow shadow-primary/20 flex items-center gap-2"
+                    >
+                        <span>⬇</span> Export CSV
+                    </button>
 
                     <Badge variant="glass" className="self-start md:self-auto py-1.5 px-3">
                         <StatusDot className="bg-green-500 animate-pulse" />
