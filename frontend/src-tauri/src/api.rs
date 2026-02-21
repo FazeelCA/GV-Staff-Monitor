@@ -110,6 +110,8 @@ pub fn log_time_event_sync(state: &str, task: &str, user_id: &str, token: &str) 
     );
 
     let _ = std::process::Command::new("curl")
+        .arg("--max-time")
+        .arg("3") // prevent hanging shutdown
         .arg("-X")
         .arg("POST")
         .arg("-H")
@@ -119,5 +121,5 @@ pub fn log_time_event_sync(state: &str, task: &str, user_id: &str, token: &str) 
         .arg("-d")
         .arg(&json_payload)
         .arg(format!("{BASE_URL}/api/time/log"))
-        .spawn(); // execute detached
+        .status(); // block until curl finishes so the app doesn't exit before the request sends
 }

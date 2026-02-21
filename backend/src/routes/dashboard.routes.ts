@@ -9,15 +9,16 @@ router.use(authenticateToken);
 
 // Helper: derive current status from latest time log and ping
 function deriveStatus(latestType?: string, lastActiveAt?: Date): "Working" | "On Break" | "Online" | "Offline" {
-    if (latestType === "STOP") return "Offline";
-    if (!lastActiveAt) return "Offline";
-
     const threeMinsAgo = new Date(Date.now() - 3 * 60 * 1000);
-    if (lastActiveAt < threeMinsAgo) return "Offline";
+    const isRecentlyActive = lastActiveAt && lastActiveAt >= threeMinsAgo;
+
+    // If we haven't seen a ping in 3 minutes, they are offline regardless of tracking state
+    if (!isRecentlyActive) return "Offline";
 
     if (latestType === "START" || latestType === "BREAK_END") return "Working";
     if (latestType === "BREAK_START") return "On Break";
 
+    // If recently active but not working/on break (e.g. tracking is STOPped but app is open)
     return "Online";
 }
 
