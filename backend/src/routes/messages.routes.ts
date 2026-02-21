@@ -29,7 +29,7 @@ router.get("/unread", async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
         const messages = await prisma.adminMessage.findMany({
-            where: { userId: user.id, isRead: false },
+            where: { userId: user.userId, isRead: false },
             orderBy: { createdAt: 'asc' }
         });
         res.json(messages);
@@ -46,7 +46,7 @@ router.put("/:id/read", async (req: Request, res: Response) => {
 
         const message = await prisma.adminMessage.findUnique({ where: { id: msgId } });
         if (!message) return res.status(404).json({ error: "Message not found" });
-        if (message.userId !== user.id) return res.status(403).json({ error: "Forbidden" });
+        if (message.userId !== user.userId) return res.status(403).json({ error: "Forbidden" });
 
         await prisma.adminMessage.update({
             where: { id: msgId },

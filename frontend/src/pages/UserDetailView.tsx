@@ -35,6 +35,11 @@ export default function UserDetailView() {
     };
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
+    // Pagination for timeline
+    const [timelinePage, setTimelinePage] = useState(1);
+    const timelineLimit = 20;
+
+
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); // Default today
 
     // Password Reset
@@ -365,7 +370,7 @@ export default function UserDetailView() {
                     </div>
                 ) : (
                     <div className="relative pl-6 space-y-6 before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/10 before:to-transparent">
-                        {timelineEvents.map((ev, i) => {
+                        {timelineEvents.slice(0, timelinePage * timelineLimit).map((ev, i) => {
                             const dateObj = new Date(ev.time);
                             return (
                                 <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
@@ -405,6 +410,19 @@ export default function UserDetailView() {
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {timelineEvents.length > timelinePage * timelineLimit && (
+                    <div className="flex justify-center mt-6">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setTimelinePage(p => p + 1)}
+                            className="bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground"
+                        >
+                            Load More Events
+                        </Button>
                     </div>
                 )}
             </div>
