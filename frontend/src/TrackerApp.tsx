@@ -236,6 +236,7 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [taskErr, setTaskErr] = useState("");
     const [addingTask, setAddingTask] = useState(false);
+    const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
     const [screenPermGranted, setScreenPermGranted] = useState(true);
     const ticker = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -264,7 +265,8 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
     async function loadData() {
         try {
             // Load tasks
-            setTasks(await apiFetch("/api/tasks", token));
+            const loadedTasks = await apiFetch("/api/tasks", token);
+            setTasks(loadedTasks);
 
             // Load today's history to init timer
             const history = await apiFetch("/api/staff/history?days=1", token);
@@ -276,14 +278,19 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
 
                 if (todayHistory.sessions && todayHistory.sessions.length > 0) {
                     const lastSession = todayHistory.sessions[todayHistory.sessions.length - 1];
+
+                    // Recover active task from last session (even if not strictly "working")
+                    if (lastSession.currentTask) {
+                        const matched = loadedTasks.find((t: Task) => t.title === lastSession.currentTask);
+                        if (matched) setActiveTaskId(matched.id);
+                    }
+
                     if (lastSession.type === "START" || lastSession.type === "BREAK_END") {
                         setWorkState("Working");
-                        setTaskInput(lastSession.currentTask || "");
                         startTimer();
                         await tauriCmd("resume_work");
                     } else if (lastSession.type === "BREAK_START") {
                         setWorkState("OnBreak");
-                        setTaskInput(lastSession.currentTask || "");
                         stopTimer();
                         await tauriCmd("take_break");
                     }
@@ -301,6 +308,23 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
     }, []);
     useEffect(() => () => { if (ticker.current) clearInterval(ticker.current); }, []);
 
+    const getActiveTaskTitle = () => {
+        if (!activeTaskId) return "";
+        const t = tasks.find(t => t.id === activeTaskId);
+        return t ? t.title : "";
+    };
+
+    async function selectTask(id: string) {
+        if (id === activeTaskId) return;
+        setActiveTaskId(id);
+        const task = tasks.find(t => t.id === id);
+        if (task && workState === "Working") {
+            // Tell backend and tauri we switched tasks
+            await logTime("SWITCH_TASK", task.title);
+            await tauriCmd("update_task", { task: task.title });
+        }
+    }
+
     async function logTime(type: string, task = "") {
         try {
             await fetch(`${API}/api/time/log`, {
@@ -312,22 +336,26 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
     }
 
     async function checkIn() {
-        await logTime("START", taskInput);
-        await tauriCmd("start_work", { task: taskInput });
+        const title = getActiveTaskTitle();
+        await logTime("START", title);
+        await tauriCmd("start_work", { task: title });
         setWorkState("Working"); startTimer();
     }
     async function takeBreak() {
-        await logTime("BREAK_START", taskInput);
+        const title = getActiveTaskTitle();
+        await logTime("BREAK_START", title);
         await tauriCmd("take_break");
         setWorkState("OnBreak"); stopTimer();
     }
     async function resumeWork() {
-        await logTime("BREAK_END", taskInput);
+        const title = getActiveTaskTitle();
+        await logTime("BREAK_END", title);
         await tauriCmd("resume_work");
         setWorkState("Working"); startTimer();
     }
     async function checkOut() {
-        await logTime("STOP", taskInput);
+        const title = getActiveTaskTitle();
+        await logTime("STOP", title);
         await tauriCmd("stop_work");
         setWorkState("Online"); stopTimer();
         // Note: We do NOT reset secs to 0 here because "Time Today" should persist visually until new day
@@ -342,7 +370,12 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
                 method: "POST", body: JSON.stringify({ title }),
             });
             setTasks(p => [...p, task]);
-            setTaskInput("");
+            setActiveTaskId(task.id);
+            setTaskInput(""); // clear the input box
+            if (workState === "Working") {
+                await logTime("SWITCH_TASK", task.title);
+                await tauriCmd("update_task", { task: task.title });
+            }
         } catch (e: any) { setTaskErr(e.message); }
         finally { setAddingTask(false); }
     }
@@ -480,23 +513,31 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
                                 <span className="text-[10px] text-slate-600 font-mono bg-white/[0.05] px-1.5 py-0.5 rounded">{tasks.length}</span>
                             </div>
                             <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-1" style={{ scrollbarWidth: "none" }}>
-                                {tasks.map((t, i) => (
-                                    <div key={t.id}
-                                        className="group flex items-center gap-3 bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] rounded-xl px-4 py-3 transition-all"
-                                        style={{ animationDelay: `${i * 50}ms` }}>
-                                        <div className="w-4 h-4 rounded-full border-2 border-indigo-500/50 flex items-center justify-center shrink-0">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                {tasks.map((t, i) => {
+                                    const isActive = t.id === activeTaskId;
+                                    return (
+                                        <div key={t.id}
+                                            onClick={() => selectTask(t.id)}
+                                            className={`group flex items-center gap-3 cursor-pointer rounded-xl px-4 py-3 transition-all border
+                                                ${isActive ? "bg-white/[0.08] border-indigo-500/30" : "bg-white/[0.04] hover:bg-white/[0.07] border-white/[0.06]"}`}
+                                            style={{ animationDelay: `${i * 50}ms` }}>
+                                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
+                                                ${isActive ? "border-indigo-500/50" : "border-slate-600"}`}>
+                                                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />}
+                                            </div>
+                                            <p className={`text-sm flex-1 truncate font-medium transition-colors ${isActive ? "text-indigo-300" : "text-slate-300"}`}>
+                                                {t.title}
+                                            </p>
+                                            <button onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }}
+                                                className="w-6 h-6 flex items-center justify-center rounded-lg text-slate-700 hover:text-rose-400 hover:bg-rose-500/10
+                                                    opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
                                         </div>
-                                        <p className="text-sm text-slate-300 flex-1 truncate font-medium">{t.title}</p>
-                                        <button onClick={() => deleteTask(t.id)}
-                                            className="w-6 h-6 flex items-center justify-center rounded-lg text-slate-700 hover:text-rose-400 hover:bg-rose-500/10
-                        opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </>
                     ) : (
