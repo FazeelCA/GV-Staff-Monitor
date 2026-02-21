@@ -14,7 +14,7 @@ router.post("/push/:userId", requireAdmin, async (req: Request, res: Response) =
 
         const msg = await prisma.adminMessage.create({
             data: {
-                userId: req.params.userId,
+                userId: req.params.userId as string,
                 message,
             }
         });
@@ -42,7 +42,7 @@ router.get("/unread", async (req: Request, res: Response) => {
 router.put("/:id/read", async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
-        const msgId = req.params.id;
+        const msgId = req.params.id as string;
 
         const message = await prisma.adminMessage.findUnique({ where: { id: msgId } });
         if (!message) return res.status(404).json({ error: "Message not found" });
