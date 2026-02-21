@@ -25,9 +25,10 @@ jobs:
 
             cd /root/GV-Staff-Monitor
             
-            # Pull latest changes
-            echo "Pulling latest code from main branch..."
-            git pull origin main
+            # Pull latest changes forcefully
+            echo "Fetching and forcefully resetting local branch to match origin/main..."
+            git fetch --all
+            git reset --hard origin/main
             
             # Backend installation & build
             echo "Installing backend dependencies..."
