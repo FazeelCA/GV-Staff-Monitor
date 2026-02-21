@@ -222,6 +222,7 @@ export interface Task {
     status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
     userId: string;
     createdAt: string;
+    updatedAt?: string;
     user?: {
         name: string;
         email: string;

@@ -73,8 +73,8 @@ export default function TasksView() {
                                 key={f}
                                 onClick={() => setFilter(f)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${filter === f
-                                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
                                     }`}
                             >
                                 {f.replace('_', ' ')}
@@ -95,7 +95,16 @@ export default function TasksView() {
                     {filteredTasks.map(task => (
                         <GlassCard
                             key={task.id}
-                            className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:border-primary/30 transition-all hover:bg-white/[0.02]"
+                            className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:border-primary/30 transition-all hover:bg-white/[0.02] cursor-pointer"
+                            onClick={() => {
+                                if (!task.userId || !task.createdAt) return;
+                                const date = new Date(task.createdAt).toISOString().split('T')[0];
+                                const startTime = new Date(task.createdAt).toISOString();
+                                const endTime = task.status === 'COMPLETED' && task.updatedAt
+                                    ? new Date(task.updatedAt).toISOString()
+                                    : new Date().toISOString();
+                                navigate(`/screenshots?userId=${task.userId}&date=${date}&startTime=${startTime}&endTime=${endTime}`);
+                            }}
                         >
                             <div className="flex items-start sm:items-center gap-4">
                                 <div className={`p-3 rounded-xl bg-white/5 text-muted-foreground group-hover:text-primary transition-colors`}>
@@ -106,7 +115,13 @@ export default function TasksView() {
                                         {task.title}
                                     </h3>
                                     <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                                        <div className="flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer" onClick={() => task.userId && navigate(`/user/${task.userId}`)}>
+                                        <div
+                                            className="flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                task.userId && navigate(`/user/${task.userId}`);
+                                            }}
+                                        >
                                             <User size={14} />
                                             <span>{task.user?.name || 'Unknown User'}</span>
                                         </div>

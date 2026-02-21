@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { fetchAllScreenshots, fetchDashboardUsers, deleteScreenshot, type Screenshot, type DashboardUser } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
-import { Monitor, Clock, Calendar, Filter, User, AlertTriangle, Trash2, Activity } from 'lucide-react';
-// remove useNavigate
+import { Monitor, Clock, Calendar, Filter, User, AlertTriangle, Trash2, Activity, X } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 type ScreenshotWithUser = Screenshot & { user: { name: string; email: string }; hash?: string };
 
@@ -27,11 +27,15 @@ function formatDate(iso: string) {
 import { Lightbox } from '../components/ui/Lightbox';
 
 export default function ScreenshotsView() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const initialUser = searchParams.get('userId') || 'ALL';
+    const initialDate = searchParams.get('date') || '';
+
     const [screenshots, setScreenshots] = useState<ScreenshotWithUser[]>([]);
     const [users, setUsers] = useState<DashboardUser[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedUser, setSelectedUser] = useState<string>('ALL');
-    const [selectedDate, setSelectedDate] = useState<string>(''); // YYYY-MM-DD
+    const [selectedUser, setSelectedUser] = useState<string>(initialUser);
+    const [selectedDate, setSelectedDate] = useState<string>(initialDate); // YYYY-MM-DD
     const [activityFilter, setActivityFilter] = useState<'All' | 'Low Activity'>('All');
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -84,9 +88,29 @@ export default function ScreenshotsView() {
     });
 
     const displayedScreenshots = processedScreenshots.filter(shot => {
+        // Enforce Query Parameter Timestamp Filter
+        const qStart = searchParams.get('startTime');
+        const qEnd = searchParams.get('endTime');
+        if (qStart && qEnd) {
+            const shotTime = new Date(shot.timestamp).getTime();
+            const minTime = new Date(qStart).getTime();
+            const maxTime = new Date(qEnd).getTime();
+            if (shotTime < minTime || shotTime > maxTime) return false;
+        }
+
         if (activityFilter === 'All') return true;
         return shot.isLowActivity || shot.isStatic;
     });
+
+    const clearCustomFilters = () => {
+        searchParams.delete('userId');
+        searchParams.delete('date');
+        searchParams.delete('startTime');
+        searchParams.delete('endTime');
+        setSearchParams(searchParams);
+        setSelectedUser('ALL');
+        setSelectedDate('');
+    };
 
     return (
         <div className="space-y-8">
@@ -99,6 +123,17 @@ export default function ScreenshotsView() {
                         Monitor activity across all staff members.
                     </p>
                 </div>
+
+                {searchParams.get('startTime') && searchParams.get('endTime') && (
+                    <div className="bg-primary/20 border border-primary/50 text-white px-4 py-2 rounded-xl flex items-center justify-between shadow-lg shadow-primary/10">
+                        <span className="text-sm font-medium">
+                            Showing screenshots for a specific time window.
+                        </span>
+                        <button onClick={clearCustomFilters} className="text-white/80 hover:text-white flex items-center gap-1 text-sm bg-white/10 px-2 py-1 rounded-lg transition-colors">
+                            <X size={14} /> Clear Selection
+                        </button>
+                    </div>
+                )}
 
                 <div className="flex flex-col sm:flex-row gap-3">
                     {/* User Filter */}

@@ -4,6 +4,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { fetchDashboardUsers, type DashboardUser } from '../services/api';
 import { Globe, User, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const BASE_URL = 'https://track.gallerydigital.in/api';
 
@@ -36,6 +37,7 @@ export default function WebsitesView() {
     const [selectedUser, setSelectedUser] = useState<string>('ALL');
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [filterUnproductive, setFilterUnproductive] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const loadInitial = async () => {
@@ -215,7 +217,17 @@ export default function WebsitesView() {
                                 activities.filter(log => filterUnproductive ? isUnproductive(log) : true).map((log) => {
                                     const unproductive = isUnproductive(log);
                                     return (
-                                        <tr key={log.id} className={`border-b border-white/5 transition-colors ${unproductive ? 'bg-red-500/10 hover:bg-red-500/20' : 'hover:bg-white/5'}`}>
+                                        <tr
+                                            key={log.id}
+                                            className={`border-b border-white/5 transition-colors cursor-pointer ${unproductive ? 'bg-red-500/10 hover:bg-red-500/20' : 'hover:bg-white/5'}`}
+                                            onClick={() => {
+                                                const date = new Date(log.startTime).toISOString().split('T')[0];
+                                                const startTime = new Date(log.startTime).toISOString();
+                                                const endMs = new Date(log.startTime).getTime() + (log.duration || 300) * 1000;
+                                                const endTime = new Date(endMs).toISOString();
+                                                navigate(`/screenshots?userId=${log.userId}&date=${date}&startTime=${startTime}&endTime=${endTime}`);
+                                            }}
+                                        >
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
