@@ -3256,3 +3256,22 @@ constructor() {
   errorCode: undefined,
   retryable: undefined
 }
+screenshots/delete error: PrismaClientKnownRequestError: 
+Invalid `prisma_1.prisma.screenshot.delete()` invocation in
+/root/GV-Staff-Monitor/backend/dist/src/routes/screenshots.routes.js:59:48
+
+  56 // 1. Delete from storage (S3 or local)
+  57 await (0, storage_1.deleteFile)(screenshot.imageUrl);
+  58 // 2. Delete from database
+→ 59 await prisma_1.prisma.screenshot.delete(
+An operation failed because it depends on one or more records that were required but not found. No record was found for a delete.
+    at zr.handleRequestError (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:65:8172)
+    at zr.handleAndLogRequestError (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:65:7467)
+    at zr.request (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:65:7174)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async a (/root/GV-Staff-Monitor/backend/node_modules/@prisma/client/runtime/client.js:75:5816)
+    at async /root/GV-Staff-Monitor/backend/dist/src/routes/screenshots.routes.js:59:9 {
+  code: 'P2025',
+  meta: { modelName: 'Screenshot', operation: 'a delete' },
+  clientVersion: '7.4.0'
+}
