@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { fetchAllScreenshots, fetchDashboardUsers, deleteScreenshot, type Screenshot, type DashboardUser } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
-import { Monitor, Clock, Calendar, Filter, User, AlertTriangle, Trash2 } from 'lucide-react';
+import { Monitor, Clock, Calendar, Filter, User, AlertTriangle, Trash2, Activity } from 'lucide-react';
 // remove useNavigate
 
 type ScreenshotWithUser = Screenshot & { user: { name: string; email: string }; hash?: string };
@@ -145,11 +145,12 @@ export default function ScreenshotsView() {
                                 const prevShot = screenshots[idx + 1];
                                 // Check for identical hash with previous (older) screenshot
                                 const isStatic = shot.hash && prevShot?.hash && shot.hash === prevShot.hash;
+                                const isLowActivity = shot.activityCount !== undefined && shot.activityCount < 50;
 
                                 return (
                                     <GlassCard
                                         key={shot.id}
-                                        className={`group p-0 overflow-hidden relative aspect-video transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 cursor-pointer ${isStatic ? 'ring-2 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : ''}`}
+                                        className={`group p-0 overflow-hidden relative aspect-video transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 cursor-pointer ${isStatic ? 'ring-2 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : isLowActivity ? 'ring-2 ring-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]' : ''}`}
                                         onClick={() => setLightboxIdx(screenshots.indexOf(shot))}
                                     >
                                         <img
@@ -159,12 +160,17 @@ export default function ScreenshotsView() {
                                             loading="lazy"
                                         />
 
-                                        {isStatic && (
+                                        {isStatic ? (
                                             <div className="absolute top-2 right-2 z-20 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg flex items-center gap-1 animate-pulse">
                                                 <AlertTriangle className="w-3 h-3" />
                                                 <span>Static</span>
                                             </div>
-                                        )}
+                                        ) : isLowActivity ? (
+                                            <div className="absolute top-2 right-2 z-20 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg flex items-center gap-1">
+                                                <Activity className="w-3 h-3" />
+                                                <span>Low Act</span>
+                                            </div>
+                                        ) : null}
 
                                         {/* Overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300" />

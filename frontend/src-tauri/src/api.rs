@@ -39,7 +39,7 @@ pub async fn log_time_event(state: &str, task: &str, user_id: &str, token: &str)
 }
 
 /// POST /api/screenshots/upload
-pub async fn upload_screenshot(jpeg_bytes: Vec<u8>, hash: String, task: String, user_id: String, token: String) {
+pub async fn upload_screenshot(jpeg_bytes: Vec<u8>, hash: String, task: String, user_id: String, token: String, activity_count: usize) {
     let client = reqwest::Client::new();
 
     let part = multipart::Part::bytes(jpeg_bytes)
@@ -50,6 +50,7 @@ pub async fn upload_screenshot(jpeg_bytes: Vec<u8>, hash: String, task: String, 
     let form = multipart::Form::new()
         .part("image", part)
         .text("hash", hash)
+        .text("activityCount", activity_count.to_string())
         .text("taskAtTheTime", task)
         .text("userId", user_id);
 

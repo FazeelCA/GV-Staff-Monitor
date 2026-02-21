@@ -102,6 +102,7 @@ export default function TeamView() {
     const [error, setError] = useState<string | null>(null);
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
     const [statusFilter, setStatusFilter] = useState<UserStatus | 'All' | 'Critical'>('All');
+    const [sortBy, setSortBy] = useState<'hours-asc' | 'hours-desc' | 'name-asc'>('name-asc');
     const navigate = useNavigate();
 
     const load = useCallback(async () => {
@@ -133,11 +134,19 @@ export default function TeamView() {
         setStatusFilter(prev => prev === status ? 'All' : status);
     };
 
-    let filteredUsers = users;
+    let filteredUsers = [...users];
     if (statusFilter === 'Critical') {
-        filteredUsers = users.filter((u) => u.totalHoursToday < 7);
+        filteredUsers = filteredUsers.filter((u) => u.totalHoursToday < 7);
     } else if (statusFilter !== 'All') {
-        filteredUsers = users.filter((u) => u.status === statusFilter);
+        filteredUsers = filteredUsers.filter((u) => u.status === statusFilter);
+    }
+
+    if (sortBy === 'hours-asc') {
+        filteredUsers.sort((a, b) => a.totalHoursToday - b.totalHoursToday);
+    } else if (sortBy === 'hours-desc') {
+        filteredUsers.sort((a, b) => b.totalHoursToday - a.totalHoursToday);
+    } else {
+        filteredUsers.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     return (
@@ -153,7 +162,7 @@ export default function TeamView() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                     {statusFilter !== 'All' && (
                         <button
                             onClick={() => setStatusFilter('All')}
@@ -162,6 +171,22 @@ export default function TeamView() {
                             Clear Filter
                         </button>
                     )}
+
+                    <div className="relative">
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                            className="appearance-none bg-black/20 border border-white/10 hover:border-white/20 rounded-xl px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:border-primary/50 transition-all cursor-pointer pr-8"
+                        >
+                            <option value="name-asc" className="bg-[#18181b]">Sort: Name (A-Z)</option>
+                            <option value="hours-desc" className="bg-[#18181b]">Sort: Hours (High to Low)</option>
+                            <option value="hours-asc" className="bg-[#18181b]">Sort: Hours (Low to High)</option>
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/50 text-xs">
+                            ▼
+                        </div>
+                    </div>
+
                     <Badge variant="glass" className="self-start md:self-auto py-1.5 px-3">
                         <StatusDot className="bg-green-500 animate-pulse" />
                         Live · Updated {lastUpdate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

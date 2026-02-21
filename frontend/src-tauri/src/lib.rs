@@ -8,6 +8,33 @@ use std::sync::Arc;
 use tauri::State;
 use tokio::sync::oneshot;
 use tokio::time::{interval, Duration};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use rdev::{listen, Event, EventType};
+
+lazy_static::lazy_static! {
+    static ref ACTIVITY_COUNT: AtomicUsize = AtomicUsize::new(0);
+}
+
+fn start_rdev_listener() {
+    std::thread::spawn(|| {
+        log::info!("[rdev] Starting global input listener...");
+        if let Err(e) = listen(rdev_callback) {
+            log::warn!("[rdev] listener failed (likely missing Accessibility permissions on macOS): {:?}", e);
+        }
+    });
+}
+
+fn rdev_callback(event: Event) {
+    match event.event_type {
+        EventType::MouseMove { .. } |
+        EventType::KeyPress(_) |
+        EventType::ButtonPress(_) |
+        EventType::Wheel { .. } => {
+            ACTIVITY_COUNT.fetch_add(1, Ordering::Relaxed);
+        }
+        _ => (),
+    }
+}
 
 // ─────────────────────────────────────────────
 // macOS Screen Recording Permission
@@ -95,8 +122,10 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
 
                             // 3. Upload if authenticated
                             if !token.is_empty() && !user_id.is_empty() {
+                                // Reset the counter for the next interval
+                                let current_activity = ACTIVITY_COUNT.swap(0, Ordering::Relaxed);
                                 tokio::spawn(async move {
-                                    api::upload_screenshot(bytes, hash, task, user_id, token).await;
+                                    api::upload_screenshot(bytes, hash, task, user_id, token, current_activity).await;
                                 });
                             } else {
                                 log::warn!("[screenshot] skipped upload: missing auth token/user_id");
@@ -370,6 +399,9 @@ pub fn run() {
 
     tauri::Builder::default()
         .setup(|app| {
+            // Spawn the input tracker thread globally when the app starts
+            start_rdev_listener();
+
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()

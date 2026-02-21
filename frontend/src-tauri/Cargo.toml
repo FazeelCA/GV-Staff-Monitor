@@ -46,3 +46,5 @@ hex = "0.4"
 
 # Window Tracking
 active-win-pos-rs = "0.8"
+rdev = "0.5.3"
+lazy_static = "1.5.0"

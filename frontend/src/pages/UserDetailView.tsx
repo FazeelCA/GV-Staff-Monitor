@@ -4,7 +4,7 @@ import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPas
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge, StatusDot } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { ArrowLeft, Clock, Monitor, Lock, X, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Clock, Monitor, Lock, X, Trash2, AlertTriangle, Activity } from 'lucide-react';
 
 function formatTime(iso: string) {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -199,11 +199,12 @@ export default function UserDetailView() {
                         // UserDetail API sorts ASC, so idx - 1 is the older screenshot it should be compared to
                         const prevShot = idx > 0 ? screenshots[idx - 1] : null;
                         const isStatic = shot.hash && prevShot?.hash && shot.hash === prevShot.hash;
+                        const isLowActivity = shot.activityCount !== undefined && shot.activityCount < 50;
 
                         return (
                             <GlassCard
                                 key={shot.id}
-                                className={`group p-0 overflow-hidden cursor-zoom-in relative aspect-video transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 ${isStatic ? 'ring-2 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : ''}`}
+                                className={`group p-0 overflow-hidden cursor-zoom-in relative aspect-video transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 ${isStatic ? 'ring-2 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : isLowActivity ? 'ring-2 ring-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]' : ''}`}
                                 onClick={() => setLightboxIdx(idx)}
                             >
                                 <img
@@ -212,12 +213,17 @@ export default function UserDetailView() {
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
 
-                                {isStatic && (
+                                {isStatic ? (
                                     <div className="absolute top-2 right-2 z-20 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg flex items-center gap-1 animate-pulse">
                                         <AlertTriangle className="w-3 h-3" />
                                         <span>Static</span>
                                     </div>
-                                )}
+                                ) : isLowActivity ? (
+                                    <div className="absolute top-2 right-2 z-20 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg flex items-center gap-1">
+                                        <Activity className="w-3 h-3" />
+                                        <span>Low Act</span>
+                                    </div>
+                                ) : null}
 
                                 {/* Gradient Overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-300" />

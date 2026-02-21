@@ -19,6 +19,7 @@ export interface Screenshot {
     userId: string;
     imageUrl: string;
     hash?: string;
+    activityCount?: number;
     taskAtTheTime: string;
     timestamp: string;
 }

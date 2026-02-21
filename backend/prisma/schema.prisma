@@ -48,6 +48,7 @@ model Screenshot {
   user          User     @relation(fields: [userId], references: [id])
   imageUrl      String
   hash          String?  @default("")
+  activityCount Int?     @default(0)
   taskAtTheTime String   @default("")
   timestamp     DateTime @default(now())
 }

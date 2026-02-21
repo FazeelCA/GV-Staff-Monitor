@@ -10,7 +10,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10_
 // POST /api/screenshots/upload
 router.post("/upload", upload.single("image"), async (req: Request, res: Response) => {
     try {
-        const { userId, taskAtTheTime, hash } = req.body;
+        const { userId, taskAtTheTime, hash, activityCount } = req.body;
 
         if (!userId) {
             res.status(400).json({ error: "userId is required" });
@@ -33,6 +33,7 @@ router.post("/upload", upload.single("image"), async (req: Request, res: Respons
                 userId,
                 imageUrl,
                 hash: hash || "",
+                activityCount: activityCount ? parseInt(activityCount, 10) : 0,
                 taskAtTheTime: taskAtTheTime || "",
             },
         });
