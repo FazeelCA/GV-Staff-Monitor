@@ -56,6 +56,12 @@ export async function login(email: string, password: string) {
         throw new Error(err.error || 'Login failed');
     }
     const data = await res.json();
+
+    // Web Dashboard Security Check: Block non-admins from entering the Manager Portal
+    if (data.user.role !== 'ADMIN') {
+        throw new Error("Access denied: You must be an Administrator to access the Manager Portal. Please use the Desktop Tracker App.");
+    }
+
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     return data;

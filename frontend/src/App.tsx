@@ -13,11 +13,26 @@ import Layout from './components/Layout';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
   const location = useLocation();
 
-  if (!token) {
+  if (!token || !userStr) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
+  try {
+    const user = JSON.parse(userStr);
+    if (user.role !== 'ADMIN') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+  } catch (e) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
   return <Layout>{children}</Layout>;
 }
 
