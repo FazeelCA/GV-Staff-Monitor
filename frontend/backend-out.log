@@ -92,3 +92,9 @@ Deleted local file: /root/GV-Staff-Monitor/backend/dist/uploads/screenshots/fab5
 Deleted local file: /root/GV-Staff-Monitor/backend/dist/uploads/screenshots/7f20ce0e-7d92-4baf-9a85-cebbf61cbb50.webp
 Deleted local file: /root/GV-Staff-Monitor/backend/dist/uploads/screenshots/16380ea9-11a2-46b8-8411-0022e25078bd.webp
 Deleted local file: /root/GV-Staff-Monitor/backend/dist/uploads/screenshots/47389e9e-9dbc-4ed6-9218-378950bbefa0.webp
+
+🚀 GV Staff Monitor API running on port 5000 (IPv4 and IPv6)
+
+Auto-delete cron job scheduled (runs daily at 2:00 AM).
+Running 60-day auto-delete cron job for screenshots...
+No screenshots found older than 60 days.
