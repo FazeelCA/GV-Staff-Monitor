@@ -106,6 +106,19 @@ export async function createUser(data: any): Promise<User> {
     return res.json();
 }
 
+export async function updateUserRole(userId: string, role: 'STAFF' | 'ADMIN') {
+    const res = await fetch(`${BASE}/users/${userId}/role`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ role }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update user role');
+    }
+    return res.json();
+}
+
 export async function updateUserStartTime(userId: string, expectedStartTime: string) {
     const res = await fetch(`${BASE}/users/${userId}/start-time`, {
         method: 'PUT',

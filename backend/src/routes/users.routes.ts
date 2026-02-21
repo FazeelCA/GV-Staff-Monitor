@@ -3,6 +3,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcryptjs";
 import { authenticateToken, AuthRequest } from "../middleware/authenticate";
+import { deleteFile } from "../lib/storage";
 
 const router = Router();
 
@@ -75,8 +76,43 @@ router.post("/", requireAdmin, async (req: Request, res: Response) => {
 router.delete("/:id", requireAdmin, async (req: Request, res: Response) => {
     try {
         const { id } = req.params as { id: string };
+
+        // 1. Find all screenshots associated with the user
+        const screenshots = await prisma.screenshot.findMany({
+            where: { userId: id },
+            select: { imageUrl: true }
+        });
+
+        // 2. Physically delete the files off the server disk / S3
+        await Promise.all(screenshots.map(s => deleteFile(s.imageUrl)));
+
+        // 3. Delete the user (Prisma cascade schema will automatically wipe TimeLogs, ActivityLogs, Tasks, Messages, and DB Screenshot records)
         await prisma.user.delete({ where: { id } });
+
         res.json({ success: true });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// PUT /:id/role - Edit User Permissions
+router.put("/:id/role", requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params as { id: string };
+        const { role } = req.body;
+
+        if (!role || !["ADMIN", "STAFF"].includes(role)) {
+            res.status(400).json({ error: "Invalid role specified. Must be ADMIN or STAFF." });
+            return;
+        }
+
+        const user = await prisma.user.update({
+            where: { id },
+            data: { role },
+            select: { id: true, name: true, email: true, role: true }
+        });
+
+        res.json(user);
     } catch (err: any) {
         res.status(500).json({ error: err.message });
     }

@@ -38,7 +38,7 @@ model User {
 model TimeLog {
   id          String   @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type        LogType
   currentTask String   @default("")
   timestamp   DateTime @default(now())
@@ -47,7 +47,7 @@ model TimeLog {
 model Screenshot {
   id            String   @id @default(cuid())
   userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   imageUrl      String
   hash          String?  @default("")
   activityCount Int?     @default(0)
@@ -58,7 +58,7 @@ model Screenshot {
 model Task {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   note      String   @default("")
   date      DateTime @default(now())
@@ -68,7 +68,7 @@ model Task {
 model ActivityLog {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   appName   String?
   url       String?
@@ -80,7 +80,7 @@ model ActivityLog {
 model AdminMessage {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchUsers, createUser, deleteUser, type User } from '../services/api';
-import { UserPlus, Trash2, Shield, User as UserIcon, X, Mail, Lock } from 'lucide-react';
+import { fetchUsers, createUser, deleteUser, updateUserRole, type User } from '../services/api';
+import { UserPlus, Trash2, Shield, User as UserIcon, X, Mail, Lock, Edit3 } from 'lucide-react';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -61,6 +61,17 @@ export default function UsersView() {
         }
     };
 
+    const handleRoleUpdate = async (id: string, currentRole: string) => {
+        const newRole = currentRole === 'STAFF' ? 'ADMIN' : 'STAFF';
+        if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
+        try {
+            await updateUserRole(id, newRole as 'STAFF' | 'ADMIN');
+            setUsers(u => u.map(user => user.id === id ? { ...user, role: newRole as 'STAFF' | 'ADMIN' } : user));
+        } catch (e: any) {
+            alert(e.message);
+        }
+    };
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -111,9 +122,15 @@ export default function UsersView() {
                                     {user.name.charAt(0)}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Badge variant={user.role === 'ADMIN' ? 'glass' : 'outline'} className={user.role === 'ADMIN' ? 'bg-purple-500/10 text-purple-300 border-purple-500/20' : ''}>
-                                        {user.role}
-                                    </Badge>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleRoleUpdate(user.id, user.role); }}
+                                        className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                                        title={`Change Role (Current: ${user.role})`}
+                                    >
+                                        <Badge variant={user.role === 'ADMIN' ? 'glass' : 'outline'} className={user.role === 'ADMIN' ? 'bg-purple-500/10 text-purple-300 border-purple-500/20 cursor-pointer' : 'cursor-pointer'}>
+                                            {user.role} <Edit3 size={10} className="ml-1 opacity-50" />
+                                        </Badge>
+                                    </button>
 
                                     {user.role !== 'ADMIN' && (
                                         <button
