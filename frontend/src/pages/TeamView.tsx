@@ -109,7 +109,7 @@ export default function TeamView() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-    const [statusFilter, setStatusFilter] = useState<UserStatus | 'All' | 'Critical'>('All');
+    const [statusFilter, setStatusFilter] = useState<UserStatus | 'All' | 'Critical' | 'Late'>('All');
     const [sortBy, setSortBy] = useState<'hours-asc' | 'hours-desc' | 'name-asc'>('name-asc');
     const navigate = useNavigate();
 
@@ -132,19 +132,39 @@ export default function TeamView() {
         return () => clearInterval(interval);
     }, [load]);
 
+    const isLate = (u: DashboardUser) => {
+        if (!u.expectedStartTime) return false;
+
+        const expected = u.expectedStartTime.split(':').map(Number);
+        const expectedTimeMins = expected[0] * 60 + expected[1];
+
+        if (u.firstStartTime) {
+            const actual = new Date(u.firstStartTime);
+            const actualMins = actual.getHours() * 60 + actual.getMinutes();
+            return actualMins > expectedTimeMins + 5; // adding 5 mins grace period
+        } else {
+            const now = new Date();
+            const nowMins = now.getHours() * 60 + now.getMinutes();
+            return nowMins > expectedTimeMins + 5;
+        }
+    };
+
     const working = users.filter((u) => u.status === 'Working').length;
     const onBreak = users.filter((u) => u.status === 'On Break').length;
     const online = users.filter((u) => u.status === 'Online').length;
     const offline = users.filter((u) => u.status === 'Offline').length;
     const critical = users.filter((u) => u.totalHoursToday < 7).length;
+    const lateCount = users.filter(isLate).length;
 
-    const handleFilterClick = (status: UserStatus | 'Critical') => {
+    const handleFilterClick = (status: UserStatus | 'Critical' | 'Late') => {
         setStatusFilter(prev => prev === status ? 'All' : status);
     };
 
     let filteredUsers = [...users];
     if (statusFilter === 'Critical') {
         filteredUsers = filteredUsers.filter((u) => u.totalHoursToday < 7);
+    } else if (statusFilter === 'Late') {
+        filteredUsers = filteredUsers.filter(isLate);
     } else if (statusFilter !== 'All') {
         filteredUsers = filteredUsers.filter((u) => u.status === statusFilter);
     }
@@ -232,7 +252,7 @@ export default function TeamView() {
 
             {/* Stats bar */}
             {!loading && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                     <GlassCard
                         className={`flex items-center justify-between p-6 cursor-pointer transition-all duration-300 ${statusFilter === 'Working' ? 'border-green-500/50 bg-green-500/10' : 'hover:border-green-500/30'}`}
                         onClick={() => handleFilterClick('Working')}
@@ -304,6 +324,19 @@ export default function TeamView() {
                         </div>
                         <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
                             ⚠️
+                        </div>
+                    </GlassCard>
+
+                    <GlassCard
+                        className={`flex items-center justify-between p-6 cursor-pointer transition-all duration-300 ${statusFilter === 'Late' ? 'border-orange-500/50 bg-orange-500/10' : 'hover:border-orange-500/30'}`}
+                        onClick={() => handleFilterClick('Late')}
+                    >
+                        <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Late Check-ins</p>
+                            <p className="text-3xl font-bold text-orange-400">{lateCount}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
+                            ⏱️
                         </div>
                     </GlassCard>
                 </div>

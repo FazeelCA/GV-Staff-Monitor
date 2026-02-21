@@ -35,6 +35,7 @@ export default function WebsitesView() {
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<string>('ALL');
     const [selectedDate, setSelectedDate] = useState<string>('');
+    const [filterUnproductive, setFilterUnproductive] = useState(false);
 
     useEffect(() => {
         const loadInitial = async () => {
@@ -143,7 +144,17 @@ export default function WebsitesView() {
                     </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                    {/* Unproductive Toggle */}
+                    <div className="flex items-center gap-2 bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">Show Unproductive</span>
+                        <button
+                            onClick={() => setFilterUnproductive(!filterUnproductive)}
+                            className={`w-10 h-5 rounded-full transition-colors relative ${filterUnproductive ? 'bg-red-500' : 'bg-white/10'}`}
+                        >
+                            <span className={`block w-4 h-4 rounded-full bg-white absolute top-0.5 transition-all ${filterUnproductive ? 'left-5' : 'left-1'}`} />
+                        </button>
+                    </div>
                     {/* User Filter */}
                     <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
@@ -194,14 +205,14 @@ export default function WebsitesView() {
                                         <td className="p-4"><div className="h-4 w-16 bg-white/5 rounded animate-pulse" /></td>
                                     </tr>
                                 ))
-                            ) : activities.length === 0 ? (
+                            ) : activities.filter(log => filterUnproductive ? isUnproductive(log) : true).length === 0 ? (
                                 <tr>
                                     <td colSpan={4} className="p-8 text-center text-muted-foreground">
-                                        No activity logs found.
+                                        No matching activity logs found.
                                     </td>
                                 </tr>
                             ) : (
-                                activities.map((log) => {
+                                activities.filter(log => filterUnproductive ? isUnproductive(log) : true).map((log) => {
                                     const unproductive = isUnproductive(log);
                                     return (
                                         <tr key={log.id} className={`border-b border-white/5 transition-colors ${unproductive ? 'bg-red-500/10 hover:bg-red-500/20' : 'hover:bg-white/5'}`}>

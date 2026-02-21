@@ -25,6 +25,7 @@ model User {
   email        String       @unique
   passwordHash String       @default("")
   role         Role         @default(STAFF)
+  expectedStartTime String  @default("09:00")
   timeLogs     TimeLog[]
   screenshots  Screenshot[]
   tasks        Task[]

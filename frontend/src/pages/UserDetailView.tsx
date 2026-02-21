@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, resetUserHours, deleteScreenshot, fetchUserHistory, pushAdminMessage, type Screenshot, type DashboardUser } from '../services/api';
+import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, resetUserHours, deleteScreenshot, fetchUserHistory, pushAdminMessage, updateUserStartTime, type Screenshot, type DashboardUser } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge, StatusDot } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { ArrowLeft, Clock, Monitor, Lock, X, Trash2, AlertTriangle, Activity } from 'lucide-react';
+import { ArrowLeft, Clock, Monitor, Lock, X, Trash2, AlertTriangle, Activity, Check, Edit2 } from 'lucide-react';
 
 function formatTime(iso: string) {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -35,8 +35,9 @@ export default function UserDetailView() {
     };
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
-    // Pagination for timeline
+    // Pagination and Filtering for timeline
     const [timelinePage, setTimelinePage] = useState(1);
+    const [timelineTypeFilter, setTimelineTypeFilter] = useState<'ALL' | 'TIME_LOG' | 'SCREENSHOT' | 'ACTIVITY'>('ALL');
     const timelineLimit = 20;
 
 
@@ -52,6 +53,11 @@ export default function UserDetailView() {
     const [showPushModal, setShowPushModal] = useState(false);
     const [pushMessage, setPushMessage] = useState('');
     const [pushing, setPushing] = useState(false);
+
+    // Expected Start Time
+    const [editingStartTime, setEditingStartTime] = useState(false);
+    const [tempStartTime, setTempStartTime] = useState('');
+    const [savingStartTime, setSavingStartTime] = useState(false);
 
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = currentUser?.role === 'ADMIN';
@@ -111,6 +117,21 @@ export default function UserDetailView() {
             alert(err.message);
         } finally {
             setPushing(false);
+        }
+    };
+
+    const handleSaveStartTime = async () => {
+        if (!userId || !user) return;
+        setSavingStartTime(true);
+        try {
+            const data = await updateUserStartTime(userId, tempStartTime);
+            setUser({ ...user, expectedStartTime: data.expectedStartTime });
+            setEditingStartTime(false);
+        } catch (error) {
+            console.error(error);
+            alert("Failed to save expected start time.");
+        } finally {
+            setSavingStartTime(false);
         }
     };
 
@@ -211,7 +232,34 @@ export default function UserDetailView() {
 
                 {/* Admin Actions */}
                 {isAdmin && user && (
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-4 items-center">
+                        <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hidden sm:flex">
+                            <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Expected Check-in:</span>
+                            {editingStartTime ? (
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="time"
+                                        value={tempStartTime}
+                                        onChange={e => setTempStartTime(e.target.value)}
+                                        className="bg-black/30 border border-white/20 rounded px-1 min-h-6 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                                    />
+                                    <button onClick={handleSaveStartTime} disabled={savingStartTime} className="text-emerald-400 hover:text-emerald-300 transition-colors p-1">
+                                        <Check size={14} />
+                                    </button>
+                                    <button onClick={() => setEditingStartTime(false)} className="text-rose-400 hover:text-rose-300 transition-colors p-1">
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-foreground">{user.expectedStartTime || '09:00'}</span>
+                                    <button onClick={() => { setTempStartTime(user.expectedStartTime || '09:00'); setEditingStartTime(true); }} className="text-muted-foreground hover:text-foreground transition-colors p-1">
+                                        <Edit2 size={12} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
                         <Button variant="outline" size="sm" onClick={handleResetHours} disabled={resettingHours} className="border-red-500/30 text-red-400 hover:bg-red-500/10">
                             <Clock size={16} className="mr-2" />
                             {resettingHours ? 'Resetting...' : 'Reset Hours Today'}
@@ -355,8 +403,34 @@ export default function UserDetailView() {
 
             {/* Timeline View */}
             <div className="space-y-4 mt-8">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <h2 className="text-lg font-semibold text-foreground">Timeline History</h2>
+                    <div className="flex bg-white/5 p-1 rounded-lg border border-white/10 overflow-x-auto hide-scrollbar self-start md:self-auto">
+                        <button
+                            onClick={() => { setTimelineTypeFilter('ALL'); setTimelinePage(1); }}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${timelineTypeFilter === 'ALL' ? 'bg-primary text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            All
+                        </button>
+                        <button
+                            onClick={() => { setTimelineTypeFilter('TIME_LOG'); setTimelinePage(1); }}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${timelineTypeFilter === 'TIME_LOG' ? 'bg-primary text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            Time Logs
+                        </button>
+                        <button
+                            onClick={() => { setTimelineTypeFilter('SCREENSHOT'); setTimelinePage(1); }}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${timelineTypeFilter === 'SCREENSHOT' ? 'bg-primary text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            Screenshots
+                        </button>
+                        <button
+                            onClick={() => { setTimelineTypeFilter('ACTIVITY'); setTimelinePage(1); }}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${timelineTypeFilter === 'ACTIVITY' ? 'bg-primary text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            Apps & Sites
+                        </button>
+                    </div>
                 </div>
 
                 {loading ? (
@@ -364,13 +438,13 @@ export default function UserDetailView() {
                         <SkeletonGlassCard className="h-20" />
                         <SkeletonGlassCard className="h-20" />
                     </div>
-                ) : timelineEvents.length === 0 ? (
+                ) : timelineEvents.filter(ev => timelineTypeFilter === 'ALL' || ev.type === timelineTypeFilter).length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground bg-white/5 rounded-xl border border-white/5">
-                        No timeline events available for this day.
+                        No timeline events match the selected filter.
                     </div>
                 ) : (
                     <div className="relative pl-6 space-y-6 before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/10 before:to-transparent">
-                        {timelineEvents.slice(0, timelinePage * timelineLimit).map((ev, i) => {
+                        {timelineEvents.filter(ev => timelineTypeFilter === 'ALL' || ev.type === timelineTypeFilter).slice(0, timelinePage * timelineLimit).map((ev, i) => {
                             const dateObj = new Date(ev.time);
                             return (
                                 <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
@@ -413,7 +487,7 @@ export default function UserDetailView() {
                     </div>
                 )}
 
-                {timelineEvents.length > timelinePage * timelineLimit && (
+                {timelineEvents.filter(ev => timelineTypeFilter === 'ALL' || ev.type === timelineTypeFilter).length > timelinePage * timelineLimit && (
                     <div className="flex justify-center mt-6">
                         <Button
                             variant="outline"

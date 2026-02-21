@@ -12,6 +12,8 @@ export interface DashboardUser {
     status: UserStatus;
     currentTask: string;
     totalHoursToday: number;
+    expectedStartTime?: string;
+    firstStartTime?: string | null;
 }
 
 export interface Screenshot {
@@ -30,6 +32,7 @@ export interface User {
     name: string;
     email: string;
     role: 'ADMIN' | 'STAFF';
+    expectedStartTime?: string;
     createdAt: string;
 }
 
@@ -99,6 +102,19 @@ export async function createUser(data: any): Promise<User> {
     if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Failed to create user');
+    }
+    return res.json();
+}
+
+export async function updateUserStartTime(userId: string, expectedStartTime: string) {
+    const res = await fetch(`${BASE}/users/${userId}/start-time`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ expectedStartTime }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update expected start time');
     }
     return res.json();
 }

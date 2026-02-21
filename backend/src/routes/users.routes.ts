@@ -28,7 +28,7 @@ router.get("/", requireAdmin, async (_req: Request, res: Response) => {
                     not: "ADMIN",
                 },
             },
-            select: { id: true, name: true, email: true, role: true, createdAt: true },
+            select: { id: true, name: true, email: true, role: true, expectedStartTime: true, createdAt: true },
             orderBy: { name: "asc" },
         });
         res.json(users);
@@ -62,7 +62,7 @@ router.post("/", requireAdmin, async (req: Request, res: Response) => {
                 passwordHash: hash,
                 role: role || "STAFF",
             },
-            select: { id: true, name: true, email: true, role: true },
+            select: { id: true, name: true, email: true, role: true, expectedStartTime: true },
         });
 
         res.json(user);
@@ -181,6 +181,28 @@ router.delete("/:id/time-logs/today", requireAdmin, async (req: Request, res: Re
         });
 
         res.json({ success: true, message: "Hours reset for today" });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// PUT /:id/start-time - Set Expected Start Time
+router.put("/:id/start-time", requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params as { id: string };
+        const { expectedStartTime } = req.body;
+
+        if (!expectedStartTime) {
+            res.status(400).json({ error: "expectedStartTime is required" });
+            return;
+        }
+
+        await prisma.user.update({
+            where: { id },
+            data: { expectedStartTime },
+        });
+
+        res.json({ success: true, expectedStartTime });
     } catch (err: any) {
         res.status(500).json({ error: err.message });
     }

@@ -77,6 +77,8 @@ router.get("/users", async (_req: Request, res: Response) => {
                 }
             }
 
+            const firstStartLog = logs.find(l => l.type === "START");
+
             const totalHours = Math.round((totalMs / 3_600_000) * 100) / 100;
 
             return {
@@ -87,6 +89,8 @@ router.get("/users", async (_req: Request, res: Response) => {
                 status: deriveStatus(latestLog?.type, user.lastActiveAt),
                 currentTask: latestLog?.currentTask || "",
                 totalHoursToday: totalHours,
+                expectedStartTime: user.expectedStartTime,
+                firstStartTime: firstStartLog ? firstStartLog.timestamp.toISOString() : null,
             };
         });
 
