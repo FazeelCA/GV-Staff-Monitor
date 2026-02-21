@@ -50,8 +50,8 @@ function greeting() {
 async function tauriCmd(name: string, args?: Record<string, unknown>) {
     try {
         const { invoke } = await import("@tauri-apps/api/core");
-        await invoke(name, args ?? {});
-    } catch { /* graceful no-op outside Tauri */ }
+        return await invoke(name, args ?? {});
+    } catch { return null; }
 }
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
@@ -236,11 +236,19 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [taskErr, setTaskErr] = useState("");
     const [addingTask, setAddingTask] = useState(false);
+    const [screenPermGranted, setScreenPermGranted] = useState(true);
     const ticker = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
         loadData();
+        checkPermission();
     }, []);
+
+    async function checkPermission() {
+        // Only shows false if strictly denied. Non-Tauri environments return null (ignored).
+        const ok = await tauriCmd("check_screen_permission");
+        if (ok === false) setScreenPermGranted(false);
+    }
 
     // Ping the server every 60 seconds to report that the app is open
     useEffect(() => {
@@ -390,12 +398,34 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
                 </div>
 
                 {/* ── Greeting ── */}
-                <div className="shrink-0">
-                    <p className="text-slate-500 text-[11px] font-medium tracking-wide uppercase">
-                        {now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
-                    </p>
-                    <p className="text-white text-xl font-bold mt-0.5 tracking-tight">{greeting()}, {user.name.split(" ")[0]} 👋</p>
+                <div className="shrink-0 flex items-center justify-between">
+                    <div>
+                        <p className="text-slate-500 text-[11px] font-medium tracking-wide uppercase">
+                            {now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
+                        </p>
+                        <p className="text-white text-xl font-bold mt-0.5 tracking-tight">{greeting()}, {user.name.split(" ")[0]} 👋</p>
+                    </div>
                 </div>
+
+                {/* ── macOS Permission Warning ── */}
+                {!screenPermGranted && (
+                    <div className="shrink-0 bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 flex flex-col gap-2 shadow-lg shadow-rose-500/10">
+                        <div className="flex items-center gap-2">
+                            <span className="text-rose-400 text-lg">⚠️</span>
+                            <p className="text-rose-300 font-bold text-sm">Screen Recording Blocked</p>
+                        </div>
+                        <p className="text-rose-200/80 text-[11px] leading-relaxed">
+                            macOS is blocking windows from being captured. Because the app was updated, the existing permission is stale even if toggled ON.
+                            <br /><br />
+                            <strong>To fix:</strong> Open System Settings → Privacy & Security → Screen Recording. <strong>Select GV Staff Monitoring Tool, click the minus (-) button to remove it, then toggle it back ON.</strong>
+                        </p>
+                        <button
+                            onClick={() => tauriCmd("open_screen_privacy_settings")}
+                            className="mt-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 px-4 py-2 rounded-lg text-xs font-bold transition-all w-fit border border-rose-500/20">
+                            Open System Settings
+                        </button>
+                    </div>
+                )}
 
                 {/* ── Timer Block (Full Width) ── */}
                 <div className="shrink-0 rounded-2xl overflow-hidden relative group shadow-2xl">
