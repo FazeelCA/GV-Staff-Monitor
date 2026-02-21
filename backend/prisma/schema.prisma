@@ -29,6 +29,7 @@ model User {
   screenshots  Screenshot[]
   tasks        Task[]
   activities   ActivityLog[]
+  messages     AdminMessage[]
   createdAt    DateTime     @default(now())
   lastActiveAt DateTime     @default(now())
 }
@@ -73,4 +74,13 @@ model ActivityLog {
   startTime DateTime @default(now())
   endTime   DateTime?
   duration  Int?     // In seconds
+}
+
+model AdminMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

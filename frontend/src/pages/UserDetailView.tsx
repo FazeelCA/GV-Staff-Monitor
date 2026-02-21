@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, resetUserHours, deleteScreenshot, fetchUserHistory, type Screenshot, type DashboardUser } from '../services/api';
+import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, resetUserHours, deleteScreenshot, fetchUserHistory, pushAdminMessage, type Screenshot, type DashboardUser } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge, StatusDot } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -15,7 +15,7 @@ function formatDate(iso: string) {
 }
 
 import { Lightbox } from '../components/ui/Lightbox';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 export default function UserDetailView() {
     const { userId } = useParams<{ userId: string }>();
@@ -42,6 +42,11 @@ export default function UserDetailView() {
     const [newPassword, setNewPassword] = useState('');
     const [resetting, setResetting] = useState(false);
     const [resettingHours, setResettingHours] = useState(false);
+
+    // Push Message Modal
+    const [showPushModal, setShowPushModal] = useState(false);
+    const [pushMessage, setPushMessage] = useState('');
+    const [pushing, setPushing] = useState(false);
 
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = currentUser?.role === 'ADMIN';
@@ -85,6 +90,22 @@ export default function UserDetailView() {
             alert(e.message);
         } finally {
             setResettingHours(false);
+        }
+    };
+
+    const handlePushMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!userId || !pushMessage.trim()) return;
+        setPushing(true);
+        try {
+            await pushAdminMessage(userId, pushMessage.trim());
+            alert('Message pushed successfully.');
+            setShowPushModal(false);
+            setPushMessage('');
+        } catch (err: any) {
+            alert(err.message);
+        } finally {
+            setPushing(false);
         }
     };
 
@@ -189,6 +210,10 @@ export default function UserDetailView() {
                         <Button variant="outline" size="sm" onClick={handleResetHours} disabled={resettingHours} className="border-red-500/30 text-red-400 hover:bg-red-500/10">
                             <Clock size={16} className="mr-2" />
                             {resettingHours ? 'Resetting...' : 'Reset Hours Today'}
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setShowPushModal(true)} className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hidden sm:flex">
+                            <AlertTriangle size={16} className="mr-2" />
+                            Push Message
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => setShowResetModal(true)} className="border-white/10 hover:bg-white/5">
                             <Lock size={16} className="mr-2" />
@@ -529,6 +554,70 @@ export default function UserDetailView() {
                                 >
                                     {resetting ? 'Resetting...' : 'Reset Password'}
                                 </Button>
+                            </form>
+                        </GlassCard>
+                    </div>
+                </div>
+            )}
+
+            {/* Push Message Modal */}
+            {showPushModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
+                    <div className="w-full max-w-md animate-in zoom-in-95 duration-200">
+                        <GlassCard className="border-white/10 shadow-2xl">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold text-foreground">Push Admin Message</h2>
+                                <button
+                                    onClick={() => setShowPushModal(false)}
+                                    className="text-muted-foreground hover:text-foreground p-1 hover:bg-white/5 rounded-lg transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="mb-4">
+                                <p className="text-sm text-muted-foreground mb-2">Quick Templates:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    <button onClick={() => setPushMessage("Late Login - Half Day Cut Applied")} className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-full px-3 py-1 text-foreground transition-colors">Half Day Cut</button>
+                                    <button onClick={() => setPushMessage("No Activity Detected - Please Resume Work")} className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-full px-3 py-1 text-foreground transition-colors">No Activity</button>
+                                    <button onClick={() => setPushMessage("Please check your tasks list.")} className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-full px-3 py-1 text-foreground transition-colors">Check Tasks</button>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handlePushMessage} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-2">
+                                        Custom Message
+                                    </label>
+                                    <textarea
+                                        value={pushMessage}
+                                        onChange={(e) => setPushMessage(e.target.value)}
+                                        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors placeholder:text-muted-foreground resize-none"
+                                        placeholder="Type a custom message here..."
+                                        rows={4}
+                                        required
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                        This message will pop up directly on the user's screen and they must acknowledge it to dismiss it.
+                                    </p>
+                                </div>
+
+                                <div className="flex justify-end gap-3 mt-6">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setShowPushModal(false)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={pushing || !pushMessage.trim()}
+                                        className="bg-primary text-white hover:bg-primary/90"
+                                    >
+                                        {pushing ? 'Sending...' : 'Push to Staff'}
+                                    </Button>
+                                </div>
                             </form>
                         </GlassCard>
                     </div>

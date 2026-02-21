@@ -259,3 +259,31 @@ export async function deleteScreenshot(id: string) {
     }
     return res.json();
 }
+
+export async function pushAdminMessage(userId: string, message: string) {
+    const res = await fetch(`${BASE}/messages/push/${userId}`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ message }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to send message');
+    }
+    return res.json();
+}
+
+export async function fetchUnreadMessages() {
+    const res = await fetch(`${BASE}/messages/unread`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch messages');
+    return res.json();
+}
+
+export async function markMessageRead(id: string) {
+    const res = await fetch(`${BASE}/messages/${id}/read`, {
+        method: 'PUT',
+        headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error('Failed to mark message read');
+    return res.json();
+}

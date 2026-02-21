@@ -11,6 +11,7 @@ import tasksRoutes from "./routes/tasks.routes";
 import staffRoutes from "./routes/staff.routes";
 import usersRoutes from "./routes/users.routes";
 import activityRoutes from "./routes/activity.routes";
+import messagesRoutes from "./routes/messages.routes";
 
 import { startAutoDeleteCron } from "./tasks/autoDelete";
 
@@ -38,6 +39,7 @@ app.use("/api/tasks", tasksRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/activity", activityRoutes);
+app.use("/api/messages", messagesRoutes);
 
 // Health check
 app.get("/health", (_req, res) => {

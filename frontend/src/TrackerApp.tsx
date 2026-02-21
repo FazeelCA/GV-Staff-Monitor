@@ -238,6 +238,8 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
     const [addingTask, setAddingTask] = useState(false);
     const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
     const [screenPermGranted, setScreenPermGranted] = useState(true);
+    const [unreadMessage, setUnreadMessage] = useState<any>(null);
+    const [acknowledging, setAcknowledging] = useState(false);
     const ticker = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
@@ -261,6 +263,35 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
         const interval = setInterval(ping, 60_000);
         return () => clearInterval(interval);
     }, [token]);
+
+    // Poll for push messages every 30 seconds
+    useEffect(() => {
+        if (!token) return;
+        const checkMessages = async () => {
+            if (unreadMessage) return; // Don't fetch if one is already showing
+            try {
+                const msgs = await apiFetch("/api/messages/unread", token);
+                if (msgs && msgs.length > 0) {
+                    setUnreadMessage(msgs[0]);
+                    // Auto-open window if hidden (via tauri command)
+                    await tauriCmd("show_window");
+                }
+            } catch { }
+        };
+        checkMessages();
+        const interval = setInterval(checkMessages, 30_000);
+        return () => clearInterval(interval);
+    }, [token, unreadMessage]);
+
+    async function handleAcknowledgeMessage() {
+        if (!unreadMessage) return;
+        setAcknowledging(true);
+        try {
+            await apiFetch(`/api/messages/${unreadMessage.id}/read`, token, { method: "PUT" });
+            setUnreadMessage(null);
+        } catch { } // fail silently and retry next poll if needed
+        finally { setAcknowledging(false); }
+    }
 
     async function loadData() {
         try {
@@ -609,6 +640,36 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
                     </button>
                 </div>
             </div>
+
+            {/* Admin Push Notification Modal Overlay */}
+            {unreadMessage && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="relative w-full max-w-sm bg-[#080a0f] border border-rose-500/40 rounded-2xl shadow-2xl shadow-rose-500/20 p-6 flex flex-col items-center animate-in zoom-in-95 duration-300">
+                        <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-4 border border-rose-500/30">
+                            <span className="text-3xl">⚠️</span>
+                        </div>
+                        <h2 className="text-xl font-bold text-white tracking-tight mb-2 text-center">Urgent Message From Admin</h2>
+
+                        <div className="w-full bg-white/[0.03] border border-white/5 rounded-xl p-4 my-4">
+                            <p className="text-rose-200 text-sm leading-relaxed font-medium text-center whitespace-pre-wrap">
+                                {unreadMessage.message}
+                            </p>
+                        </div>
+
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-6">
+                            Sent at {new Date(unreadMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+
+                        <button
+                            onClick={handleAcknowledgeMessage}
+                            disabled={acknowledging}
+                            className="w-full h-12 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-sm transition-all shadow-xl shadow-rose-500/20 active:scale-95 disabled:opacity-50 flex items-center justify-center"
+                        >
+                            {acknowledging ? "Acknowledging..." : "Acknowledge"}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
