@@ -56,9 +56,22 @@ router.get("/history", auth, async (req: Request, res: Response) => {
                     workStart = null;
                 }
             }
-            // Still working (no STOP yet — i.e., today and currently working)
+            const userRecord = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { lastActiveAt: true },
+            });
+
+            // Still working (no STOP/BREAK_START yet)
             if (workStart && i === 0) {
-                totalMs += Date.now() - workStart.getTime();
+                const now = Date.now();
+                const lastPing = userRecord?.lastActiveAt ? userRecord.lastActiveAt.getTime() : now;
+                const isOffline = now - lastPing > 3 * 60 * 1000;
+
+                // If offline for >3 mins without a STOP, cap at the last ping
+                const effectiveEnd = isOffline ? lastPing : now;
+                if (effectiveEnd > workStart.getTime()) {
+                    totalMs += effectiveEnd - workStart.getTime();
+                }
             }
 
             // Fetch tasks for this day
