@@ -53,9 +53,17 @@ fn capture_via_powershell() -> Result<Vec<u8>, String> {
         .map_err(|e| format!("Failed to write VBS wrapper: {e}"))?;
 
     // Execute via cscript
-    let output = Command::new("cscript")
-        .args(["//nologo", &vbs_path.to_string_lossy().to_string()])
-        .output()
+    let mut cmd = Command::new("cscript");
+    cmd.args(["//nologo", &vbs_path.to_string_lossy().to_string()]);
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    let output = cmd.output()
         .map_err(|e| format!("VBS launch failed: {e}"))?;
 
     // Clean up scripts
