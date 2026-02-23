@@ -1,45 +1,55 @@
 use sha2::{Sha256, Digest};
 use hex;
 use xcap::Monitor;
-use image::DynamicImage;
+use image::{DynamicImage, RgbaImage, imageops};
 use std::io::Cursor;
 use image::codecs::jpeg::JpegEncoder;
 
-/// Captures the primary monitor and returns JPEG bytes + SHA256 Hash.
-/// Uses the `xcap` crate which efficiently captures displays across Windows/Mac/Linux
-/// with stable fallbacks for DXGI hybrid graphics on Windows.
+/// Captures all monitors, stitches them horizontally, and returns JPEG bytes + SHA256 Hash.
 pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
-    // Get all monitors; take the first (primary) one
     let monitors = Monitor::all().map_err(|e| format!("Monitor error: {e}"))?;
-    let monitor = monitors
-        .into_iter()
-        .next()
-        .ok_or_else(|| "No monitor found".to_string())?;
 
-    // Capture the full screen — returns image buffer
-    let captured = monitor
-        .capture_image()
-        .map_err(|e| format!("Capture error: {e}"))?;
+    let mut captures = Vec::new();
+    let mut total_width = 0;
+    let mut max_height = 0;
 
-    // Extract dimensions and raw RGBA pixel bytes
-    // use_raw() / into_raw() avoids any image-version type conflicts
-    let width = captured.width();
-    let height = captured.height();
-    let raw_rgba: Vec<u8> = captured.into_raw();
+    // Capture every monitor to catch dual-screen workers and ignore phantom displays
+    for monitor in monitors {
+        if let Ok(captured) = monitor.capture_image() {
+            let width = captured.width();
+            let height = captured.height();
+            
+            // Extract and cleanly rebuild RgbaImage to prevent any version mismatches
+            let raw_rgba: Vec<u8> = captured.into_raw();
+            if let Some(rgba_image) = RgbaImage::from_raw(width, height, raw_rgba) {
+                total_width += width;
+                if height > max_height {
+                    max_height = height;
+                }
+                captures.push(rgba_image);
+            }
+        }
+    }
 
-    // Re-wrap into image 0.25's RgbaImage via raw bytes — avoids cross-version type mismatch
-    let rgba_image = image::RgbaImage::from_raw(width, height, raw_rgba)
-        .ok_or_else(|| "Failed to build RgbaImage from screen capture".to_string())?;
+    if captures.is_empty() {
+        return Err("No valid monitor frames captured. Display might be sleeping or locked.".to_string());
+    }
 
-    // Convert RGBA → RGB (JPEG does not support alpha channel)
-    let rgb_image = DynamicImage::ImageRgba8(rgba_image).to_rgb8();
+    // Horizontally stitch screens side-by-side
+    let mut stitched = RgbaImage::new(total_width, max_height);
+    let mut current_x = 0;
+    for cap in captures.iter() {
+        imageops::overlay(&mut stitched, cap, current_x as i64, 0);
+        current_x += cap.width();
+    }
 
-    // Compute SHA256 hash of raw pixels (detects identical/static screens)
+    // Convert RGBA → RGB for JPEG
+    let rgb_image = DynamicImage::ImageRgba8(stitched).to_rgb8();
+
     let mut hasher = Sha256::new();
     hasher.update(rgb_image.as_raw());
     let hash = hex::encode(hasher.finalize());
 
-    // Encode to JPEG at quality 60 (reliably <200 KB for typical HD screens)
     let mut buf = Cursor::new(Vec::new());
     let mut encoder = JpegEncoder::new_with_quality(&mut buf, 60);
     encoder
@@ -53,11 +63,11 @@ pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
 
     let bytes = buf.into_inner();
     log::info!(
-        "[screenshot] Captured {}x{} @ {} KB | Hash: {:.8}...",
-        width,
-        height,
-        bytes.len() / 1024,
-        hash
+        "[screenshot] Stitched {} screens | {}x{} @ {} KB",
+        captures.len(),
+        total_width,
+        max_height,
+        bytes.len() / 1024
     );
     Ok((bytes, hash))
 }
