@@ -36,36 +36,35 @@ fn capture_via_powershell() -> Result<Vec<u8>, String> {
         temp_str.replace('\\', "\\\\")
     );
 
-    let mut cmd = Command::new("powershell");
-    cmd.args([
-        "-WindowStyle", "Hidden",
-        "-ExecutionPolicy", "Bypass",
-        "-NoProfile", 
-        "-NonInteractive", 
-        "-Command", &ps_script
-    ]);
+    let ps_path = std::env::temp_dir().join("gv_screenshot.ps1");
+    let vbs_path = std::env::temp_dir().join("gv_screenshot.vbs");
     
-    // CRITICAL: When spawning from a GUI app with CREATE_NO_WINDOW, standard handles 
-    // must be explicitly piped or nulled, otherwise powershell crashes or hangs.
-    use std::process::Stdio;
-    cmd.stdin(Stdio::null())
-       .stdout(Stdio::piped())
-       .stderr(Stdio::piped());
+    // Save the PowerShell script to a file
+    std::fs::write(&ps_path, ps_script)
+        .map_err(|e| format!("Failed to write PS script: {e}"))?;
 
-    // CRITICAL: Hide the PowerShell window on Windows so users don't see a black box
-    #[cfg(target_os = "windows")]
-    {
-        use std::os::windows::process::CommandExt;
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-        cmd.creation_flags(CREATE_NO_WINDOW);
-    }
-    
-    let output = cmd.output()
-        .map_err(|e| format!("PowerShell launch failed: {e}"))?;
+    // Create a VBScript wrapper that runs the PS script completely invisibly 
+    // This entirely avoids the CREATE_NO_WINDOW hanging bugs
+    let vbs_script = format!(
+        r#"CreateObject("Wscript.Shell").Run "powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{}""", 0, True"#,
+        ps_path.to_string_lossy()
+    );
+    std::fs::write(&vbs_path, vbs_script)
+        .map_err(|e| format!("Failed to write VBS wrapper: {e}"))?;
+
+    // Execute via cscript
+    let output = Command::new("cscript")
+        .args(["//nologo", &vbs_path.to_string_lossy().to_string()])
+        .output()
+        .map_err(|e| format!("VBS launch failed: {e}"))?;
+
+    // Clean up scripts
+    let _ = std::fs::remove_file(&ps_path);
+    let _ = std::fs::remove_file(&vbs_path);
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("PowerShell capture failed: {stderr}"));
+        return Err(format!("VBS/PowerShell capture failed: {stderr}"));
     }
 
     let bytes = std::fs::read(&temp_path)
