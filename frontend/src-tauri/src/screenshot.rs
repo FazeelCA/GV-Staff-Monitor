@@ -28,15 +28,16 @@ pub fn capture_screen() -> Result<Vec<u8>, String> {
         }
 
         // 2. Get Device Contexts (DC)
+        // GetDesktopWindow() returns HWND. GetDC takes Option<HWND>.
         let hwnd_desktop = GetDesktopWindow();
-        let hdc_screen = GetDC(hwnd_desktop);
+        let hdc_screen = GetDC(Some(hwnd_desktop));
         if hdc_screen.is_invalid() {
             return Err("Failed to get desktop DC".to_string());
         }
 
-        let hdc_mem = CreateCompatibleDC(hdc_screen);
+        let hdc_mem = CreateCompatibleDC(Some(hdc_screen));
         if hdc_mem.is_invalid() {
-            ReleaseDC(hwnd_desktop, hdc_screen);
+            ReleaseDC(Some(hwnd_desktop), hdc_screen);
             return Err("Failed to create compatible DC".to_string());
         }
 
@@ -44,7 +45,7 @@ pub fn capture_screen() -> Result<Vec<u8>, String> {
         let hbitmap = CreateCompatibleBitmap(hdc_screen, width, height);
         if hbitmap.is_invalid() {
             DeleteDC(hdc_mem);
-            ReleaseDC(hwnd_desktop, hdc_screen);
+            ReleaseDC(Some(hwnd_desktop), hdc_screen);
             return Err("Failed to create compatible bitmap".to_string());
         }
 
@@ -58,7 +59,7 @@ pub fn capture_screen() -> Result<Vec<u8>, String> {
             0,
             width,
             height,
-            hdc_screen,
+            Some(hdc_screen),
             x,
             y,
             SRCCOPY,
@@ -68,7 +69,7 @@ pub fn capture_screen() -> Result<Vec<u8>, String> {
             SelectObject(hdc_mem, hobj_old);
             DeleteObject(hbitmap.into());
             DeleteDC(hdc_mem);
-            ReleaseDC(hwnd_desktop, hdc_screen);
+            ReleaseDC(Some(hwnd_desktop), hdc_screen);
             return Err(format!("BitBlt failed: {e}"));
         }
 
@@ -108,7 +109,7 @@ pub fn capture_screen() -> Result<Vec<u8>, String> {
         SelectObject(hdc_mem, hobj_old);
         DeleteObject(hbitmap.into());
         DeleteDC(hdc_mem);
-        ReleaseDC(hwnd_desktop, hdc_screen);
+        ReleaseDC(Some(hwnd_desktop), hdc_screen);
 
         if get_di_res == 0 {
             return Err("GetDIBits failed".to_string());
