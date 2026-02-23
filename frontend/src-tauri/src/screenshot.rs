@@ -36,9 +36,18 @@ fn capture_via_powershell() -> Result<Vec<u8>, String> {
         temp_str.replace('\\', "\\\\")
     );
 
-    let output = Command::new("powershell")
-        .args(["-NoProfile", "-NonInteractive", "-Command", &ps_script])
-        .output()
+    let mut cmd = Command::new("powershell");
+    cmd.args(["-NoProfile", "-NonInteractive", "-Command", &ps_script]);
+    
+    // CRITICAL: Hide the PowerShell window on Windows so users don't see a black box
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    
+    let output = cmd.output()
         .map_err(|e| format!("PowerShell launch failed: {e}"))?;
 
     if !output.status.success() {
