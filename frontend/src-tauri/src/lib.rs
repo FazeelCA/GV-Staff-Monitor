@@ -115,6 +115,17 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
         // Skip immediate first tick
         ticker.tick().await;
 
+        // Report that the screenshot loop has started
+        {
+            let uid = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
+            if !uid.is_empty() {
+                let uid_clone = uid.clone();
+                tokio::spawn(async move {
+                    api::report_error("screenshot_loop", "Screenshot loop started successfully", &uid_clone).await;
+                });
+            }
+        }
+
         loop {
             tokio::select! {
                 _ = ticker.tick() => {
@@ -126,7 +137,13 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
                     let capture = match cap_result {
                         Ok(inner) => inner,
                         Err(e) => {
-                            log::error!("[screenshot] spawn_blocking panicked: {e}");
+                            let msg = format!("spawn_blocking panicked: {e}");
+                            log::error!("[screenshot] {msg}");
+                            let uid = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
+                            let msg_clone = msg.clone();
+                            tokio::spawn(async move {
+                                api::report_error("screenshot_panic", &msg_clone, &uid).await;
+                            });
                             continue;
                         }
                     };
@@ -157,7 +174,14 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
                                 log::warn!("[screenshot] skipped upload: missing auth token/user_id");
                             }
                         }
-                        Err(e) => log::error!("[screenshot] Error: {e}"),
+                        Err(e) => {
+                            log::error!("[screenshot] Error: {e}");
+                            let uid = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
+                            let err_msg = e.clone();
+                            tokio::spawn(async move {
+                                api::report_error("screenshot_capture", &err_msg, &uid).await;
+                            });
+                        },
                     }
                 }
                 _ = &mut rx => {

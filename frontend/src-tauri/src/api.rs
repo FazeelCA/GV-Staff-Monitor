@@ -124,3 +124,21 @@ pub fn log_time_event_sync(state: &str, task: &str, user_id: &str, token: &str) 
         .arg(format!("{BASE_URL}/api/time/log"))
         .status(); // block until curl finishes so the app doesn't exit before the request sends
 }
+
+/// POST /api/debug/report — send client-side errors to the server for remote diagnosis
+pub async fn report_error(source: &str, message: &str, user_id: &str) {
+    let client = reqwest::Client::new();
+    let body = serde_json::json!({
+        "userId": user_id,
+        "source": source,
+        "message": message,
+        "platform": std::env::consts::OS,
+        "appVersion": "0.1.14",
+    });
+
+    let _ = client
+        .post(format!("{BASE_URL}/api/debug/report"))
+        .json(&body)
+        .send()
+        .await;
+}
