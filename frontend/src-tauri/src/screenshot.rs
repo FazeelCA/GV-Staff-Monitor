@@ -3,95 +3,108 @@ use hex;
 use std::io::Cursor;
 use image::codecs::jpeg::JpegEncoder;
 
-/// Primary capture path for Windows: uses PowerShell + .NET System.Drawing (GDI+).
-/// This bypasses ALL DXGI/COM/DirectX issues and works on every Windows machine,
-/// including RDP sessions, locked screens, any GPU driver, any DPI scaling.
+/// Primary capture path for Windows: compiles and runs a tiny headless C# WinForms app.
+/// This bypasses all DirectX/COM/DXGI issues (like the original PowerShell script),
+/// but because it's compiled as a Windows Executable (/target:winexe), it natively
+/// has no console window. This perfectly fixes both the "black box flash" AND the 
+/// "CREATE_NO_WINDOW I/O hang" bugs.
 #[cfg(target_os = "windows")]
-fn capture_via_powershell() -> Result<Vec<u8>, String> {
+fn capture_via_csharp() -> Result<Vec<u8>, String> {
     use std::process::Command;
+    use std::path::PathBuf;
     
-    let temp_path = std::env::temp_dir().join("gv_screenshot.jpg");
-    let temp_str = temp_path.to_string_lossy().to_string();
-
-    // PowerShell script that captures ALL screens using .NET GDI+
-    let ps_script = format!(
-        r#"
-        Add-Type -AssemblyName System.Windows.Forms
-        Add-Type -AssemblyName System.Drawing
-        $screens = [System.Windows.Forms.Screen]::AllScreens
-        $minX = ($screens | ForEach-Object {{ $_.Bounds.X }} | Measure-Object -Minimum).Minimum
-        $minY = ($screens | ForEach-Object {{ $_.Bounds.Y }} | Measure-Object -Minimum).Minimum
-        $maxX = ($screens | ForEach-Object {{ $_.Bounds.X + $_.Bounds.Width }} | Measure-Object -Maximum).Maximum
-        $maxY = ($screens | ForEach-Object {{ $_.Bounds.Y + $_.Bounds.Height }} | Measure-Object -Maximum).Maximum
-        $totalWidth = $maxX - $minX
-        $totalHeight = $maxY - $minY
-        $bmp = New-Object Drawing.Bitmap([int]$totalWidth, [int]$totalHeight)
-        $graphics = [Drawing.Graphics]::FromImage($bmp)
-        $graphics.CopyFromScreen([int]$minX, [int]$minY, 0, 0, $bmp.Size)
-        $graphics.Dispose()
-        $bmp.Save('{}', [Drawing.Imaging.ImageFormat]::Jpeg)
-        $bmp.Dispose()
-        Write-Output "OK"
-        "#,
-        temp_str.replace('\\', "\\\\")
-    );
-
-    let ps_path = std::env::temp_dir().join("gv_screenshot.ps1");
-    let vbs_path = std::env::temp_dir().join("gv_screenshot.vbs");
+    let temp_dir = std::env::temp_dir();
+    let cs_source_path = temp_dir.join("gv_capture.cs");
+    let exe_path = temp_dir.join("gv_capture.exe");
+    let out_jpg_path = temp_dir.join("gv_screenshot.jpg");
     
-    // Save the PowerShell script to a file
-    std::fs::write(&ps_path, ps_script)
-        .map_err(|e| format!("Failed to write PS script: {e}"))?;
+    let out_jpg_str = out_jpg_path.to_string_lossy().to_string();
 
-    // Create a VBScript wrapper that runs the PS script completely invisibly 
-    // This entirely avoids the CREATE_NO_WINDOW hanging bugs
-    let vbs_script = format!(
-        r#"CreateObject("Wscript.Shell").Run "powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{}""", 0, True"#,
-        ps_path.to_string_lossy()
-    );
-    std::fs::write(&vbs_path, vbs_script)
-        .map_err(|e| format!("Failed to write VBS wrapper: {e}"))?;
+    // Only compile the C# executable if it doesn't already exist (caching)
+    if !exe_path.exists() {
+        let cs_code = format!(
+            r#"
+            using System;
+            using System.Drawing;
+            using System.Drawing.Imaging;
+            using System.Windows.Forms;
+            using System.Linq;
 
-    // Execute via cscript
-    let mut cmd = Command::new("cscript");
-    cmd.args(["//nologo", &vbs_path.to_string_lossy().to_string()]);
+            class Program {{
+                [STAThread]
+                static void Main() {{
+                    try {{
+                        var x = Screen.AllScreens.Min(s => s.Bounds.X);
+                        var y = Screen.AllScreens.Min(s => s.Bounds.Y);
+                        var w = Screen.AllScreens.Max(s => s.Bounds.X + s.Bounds.Width) - x;
+                        var h = Screen.AllScreens.Max(s => s.Bounds.Y + s.Bounds.Height) - y;
 
-    #[cfg(target_os = "windows")]
-    {
-        use std::os::windows::process::CommandExt;
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-        cmd.creation_flags(CREATE_NO_WINDOW);
+                        using (var bmp = new Bitmap(w, h))
+                        using (var gfx = Graphics.FromImage(bmp)) {{
+                            gfx.CopyFromScreen(x, y, 0, 0, bmp.Size, CopyPixelOperation.SourceCopy);
+                            bmp.Save(@"{}", ImageFormat.Jpeg);
+                        }}
+                    }} catch {{ }}
+                }}
+            }}
+            "#,
+            out_jpg_str.replace('\\', "\\\\")
+        );
+        
+        std::fs::write(&cs_source_path, cs_code)
+            .map_err(|e| format!("Failed to write C# source: {e}"))?;
+
+        // Locate standard .NET Framework compiler (always present on Windows)
+        let csc_path = r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe";
+        
+        let compile_out = Command::new(csc_path)
+            .args([
+                "/nologo",
+                "/target:winexe", // CRITICAL: Makes the app headless natively (no console flash)
+                "/optimize+",
+                &format!("/out:{}", exe_path.to_string_lossy()),
+                &cs_source_path.to_string_lossy().to_string(),
+            ])
+            .output()
+            .map_err(|e| format!("csc.exe compilation failed: {e}"))?;
+
+        if !compile_out.status.success() {
+            let stderr = String::from_utf8_lossy(&compile_out.stderr);
+            let stdout = String::from_utf8_lossy(&compile_out.stdout);
+            return Err(format!("C# compilation failed: {}\n{}", stdout, stderr));
+        }
+        
+        let _ = std::fs::remove_file(&cs_source_path);
     }
 
-    let output = cmd.output()
-        .map_err(|e| format!("VBS launch failed: {e}"))?;
-
-    // Clean up scripts
-    let _ = std::fs::remove_file(&ps_path);
-    let _ = std::fs::remove_file(&vbs_path);
+    // Run the compiled headless executable
+    let output = Command::new(&exe_path)
+        .output() // Simple execution without CREATE_NO_WINDOW since winexe doesn't have a console
+        .map_err(|e| format!("gv_capture.exe execution failed: {e}"))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("VBS/PowerShell capture failed: {stderr}"));
+        return Err(format!("Headless capture failed: {stderr}"));
     }
 
-    let bytes = std::fs::read(&temp_path)
-        .map_err(|e| format!("Failed to read screenshot file: {e}"))?;
+    // Read the result
+    let bytes = std::fs::read(&out_jpg_path)
+        .map_err(|e| format!("Failed to read screenshot file from C# app: {e}"))?;
 
-    // Clean up temp file
-    let _ = std::fs::remove_file(&temp_path);
+    // Clean up just the image
+    let _ = std::fs::remove_file(&out_jpg_path);
 
     if bytes.len() < 1000 {
         return Err(format!("Screenshot file too small: {} bytes", bytes.len()));
     }
 
-    log::info!("[screenshot] PowerShell GDI+ capture: {} KB", bytes.len() / 1024);
+    log::info!("[screenshot] C# headless GDI+ capture: {} KB", bytes.len() / 1024);
     Ok(bytes)
 }
 
 #[cfg(not(target_os = "windows"))]
-fn capture_via_powershell() -> Result<Vec<u8>, String> {
-    Err("PowerShell not available on this platform".to_string())
+fn capture_via_csharp() -> Result<Vec<u8>, String> {
+    Err("C# capture not available on this platform".to_string())
 }
 
 /// Fallback capture using the `screenshots` Rust crate (DXGI on Windows, native on Mac/Linux)
@@ -150,14 +163,14 @@ fn capture_via_rust_crate() -> Result<Vec<u8>, String> {
 /// Main entry point: tries PowerShell GDI+ first (Windows), falls back to Rust crate.
 /// Returns JPEG bytes + SHA256 hash.
 pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
-    // Try PowerShell GDI+ first on Windows (most reliable)
-    let jpeg_bytes = match capture_via_powershell() {
+    // Try C# GDI+ first on Windows (most reliable, completely headless)
+    let jpeg_bytes = match capture_via_csharp() {
         Ok(bytes) => {
-            log::info!("[screenshot] Using PowerShell GDI+ capture path");
+            log::info!("[screenshot] Using C# GDI+ capture path");
             bytes
         }
-        Err(ps_err) => {
-            log::warn!("[screenshot] PowerShell failed: {ps_err}, trying Rust crate...");
+        Err(cs_err) => {
+            log::warn!("[screenshot] C# capture failed: {cs_err}, trying Rust crate...");
             // Fall back to screenshots crate
             capture_via_rust_crate()?
         }
