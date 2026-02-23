@@ -1,4 +1,5 @@
 use sha2::{Digest, Sha256};
+#[cfg(not(target_os = "windows"))]
 use std::io::Cursor;
 use image::codecs::jpeg::JpegEncoder;
 
@@ -132,7 +133,7 @@ pub fn capture_screen() -> Result<Vec<u8>, String> {
                 &buffer,
                 width as u32,
                 height as u32,
-                image::ColorType::Rgba8,
+                image::ColorType::Rgba8.into(),
             )
             .map_err(|e| format!("JPEG encoding failed: {e}"))?;
 
