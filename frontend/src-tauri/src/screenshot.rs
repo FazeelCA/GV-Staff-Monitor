@@ -1,114 +1,148 @@
-use sha2::{Sha256, Digest};
-use hex;
+use sha2::{Digest, Sha256};
 use std::io::Cursor;
 use image::codecs::jpeg::JpegEncoder;
 
-/// Primary capture path for Windows: compiles and runs a tiny headless C# WinForms app.
-/// This bypasses all DirectX/COM/DXGI issues (like the original PowerShell script),
-/// but because it's compiled as a Windows Executable (/target:winexe), it natively
-/// has no console window. This perfectly fixes both the "black box flash" AND the 
-/// "CREATE_NO_WINDOW I/O hang" bugs.
+/// Primary capture path for Windows: Uses native Win32 GDI via `windows-rs`.
+/// This operates entirely in-memory within the Tauri process, avoiding all 
+/// flashing console windows, DXGI failures, and external executables.
 #[cfg(target_os = "windows")]
-fn capture_via_csharp() -> Result<Vec<u8>, String> {
-    use std::process::Command;
-    use std::path::PathBuf;
-    
-    let temp_dir = std::env::temp_dir();
-    let cs_source_path = temp_dir.join("gv_capture.cs");
-    let exe_path = temp_dir.join("gv_capture.exe");
-    let out_jpg_path = temp_dir.join("gv_screenshot.jpg");
-    
-    let out_jpg_str = out_jpg_path.to_string_lossy().to_string();
+pub fn capture_screen() -> Result<Vec<u8>, String> {
+    use windows::Win32::Graphics::Gdi::{
+        BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, DeleteObject, GetDC, GetDIBits,
+        ReleaseDC, SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, RGBQUAD, SRCCOPY,
+    };
+    use windows::Win32::UI::WindowsAndMessaging::{
+        GetDesktopWindow, GetSystemMetrics, SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN, SM_XVIRTUALSCREEN,
+        SM_YVIRTUALSCREEN,
+    };
 
-    // Only compile the C# executable if it doesn't already exist (caching)
-    if !exe_path.exists() {
-        let cs_code = format!(
-            r#"
-            using System;
-            using System.Drawing;
-            using System.Drawing.Imaging;
-            using System.Windows.Forms;
-            using System.Linq;
+    unsafe {
+        // 1. Get dimensions of the virtual screen (all monitors combined)
+        let x = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        let y = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        let width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        let height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-            class Program {{
-                [STAThread]
-                static void Main() {{
-                    try {{
-                        var x = Screen.AllScreens.Min(s => s.Bounds.X);
-                        var y = Screen.AllScreens.Min(s => s.Bounds.Y);
-                        var w = Screen.AllScreens.Max(s => s.Bounds.X + s.Bounds.Width) - x;
-                        var h = Screen.AllScreens.Max(s => s.Bounds.Y + s.Bounds.Height) - y;
-
-                        using (var bmp = new Bitmap(w, h))
-                        using (var gfx = Graphics.FromImage(bmp)) {{
-                            gfx.CopyFromScreen(x, y, 0, 0, bmp.Size, CopyPixelOperation.SourceCopy);
-                            bmp.Save(@"{}", ImageFormat.Jpeg);
-                        }}
-                    }} catch {{ }}
-                }}
-            }}
-            "#,
-            out_jpg_str.replace('\\', "\\\\")
-        );
-        
-        std::fs::write(&cs_source_path, cs_code)
-            .map_err(|e| format!("Failed to write C# source: {e}"))?;
-
-        // Locate standard .NET Framework compiler (always present on Windows)
-        let csc_path = r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe";
-        
-        let compile_out = Command::new(csc_path)
-            .args([
-                "/nologo",
-                "/target:winexe", // CRITICAL: Makes the app headless natively (no console flash)
-                "/optimize+",
-                &format!("/out:{}", exe_path.to_string_lossy()),
-                &cs_source_path.to_string_lossy().to_string(),
-            ])
-            .output()
-            .map_err(|e| format!("csc.exe compilation failed: {e}"))?;
-
-        if !compile_out.status.success() {
-            let stderr = String::from_utf8_lossy(&compile_out.stderr);
-            let stdout = String::from_utf8_lossy(&compile_out.stdout);
-            return Err(format!("C# compilation failed: {}\n{}", stdout, stderr));
+        if width == 0 || height == 0 {
+            return Err("Invalid virtual screen dimensions".to_string());
         }
-        
-        let _ = std::fs::remove_file(&cs_source_path);
+
+        // 2. Get Device Contexts (DC)
+        let hwnd_desktop = GetDesktopWindow();
+        let hdc_screen = GetDC(hwnd_desktop);
+        if hdc_screen.is_invalid() {
+            return Err("Failed to get desktop DC".to_string());
+        }
+
+        let hdc_mem = CreateCompatibleDC(hdc_screen);
+        if hdc_mem.is_invalid() {
+            ReleaseDC(hwnd_desktop, hdc_screen);
+            return Err("Failed to create compatible DC".to_string());
+        }
+
+        // 3. Create a bitmap to hold the captured pixels
+        let hbitmap = CreateCompatibleBitmap(hdc_screen, width, height);
+        if hbitmap.is_invalid() {
+            DeleteDC(hdc_mem);
+            ReleaseDC(hwnd_desktop, hdc_screen);
+            return Err("Failed to create compatible bitmap".to_string());
+        }
+
+        // 4. Select the bitmap into our memory DC
+        let hobj_old = SelectObject(hdc_mem, hbitmap.into());
+
+        // 5. Perform the fast BitBlt capture natively
+        let blt_res = BitBlt(
+            hdc_mem,
+            0,
+            0,
+            width,
+            height,
+            hdc_screen,
+            x,
+            y,
+            SRCCOPY,
+        );
+
+        if let Err(e) = blt_res {
+            SelectObject(hdc_mem, hobj_old);
+            DeleteObject(hbitmap.into());
+            DeleteDC(hdc_mem);
+            ReleaseDC(hwnd_desktop, hdc_screen);
+            return Err(format!("BitBlt failed: {e}"));
+        }
+
+        // 6. Setup the DIB info to extract the raw BGRA bytes
+        let mut bmi = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                biWidth: width,
+                biHeight: -height, // negative means top-down
+                biPlanes: 1,
+                biBitCount: 32, // BGRA
+                biCompression: BI_RGB.0,
+                biSizeImage: 0,
+                biXPelsPerMeter: 0,
+                biYPelsPerMeter: 0,
+                biClrUsed: 0,
+                biClrImportant: 0,
+            },
+            bmiColors: [RGBQUAD { rgbBlue: 0, rgbGreen: 0, rgbRed: 0, rgbReserved: 0 }; 1],
+        };
+
+        // Allocate buffer for 32-bit (4 bytes) per pixel
+        let mut buffer: Vec<u8> = vec![0; (width * height * 4) as usize];
+
+        // 7. Extract the pixels into our buffer
+        let get_di_res = GetDIBits(
+            hdc_screen,
+            hbitmap,
+            0,
+            height as u32,
+            Some(buffer.as_mut_ptr() as *mut _),
+            &mut bmi,
+            DIB_RGB_COLORS,
+        );
+
+        // 8. CRITICAL: Clean up GDI handles memory leaks!
+        SelectObject(hdc_mem, hobj_old);
+        DeleteObject(hbitmap.into());
+        DeleteDC(hdc_mem);
+        ReleaseDC(hwnd_desktop, hdc_screen);
+
+        if get_di_res == 0 {
+            return Err("GetDIBits failed".to_string());
+        }
+
+        // 9. Convert BGRA to RGBA in-place for the image encoder
+        for chunk in buffer.chunks_exact_mut(4) {
+            let b = chunk[0];
+            let r = chunk[2];
+            chunk[0] = r;      // R
+            chunk[2] = b;      // B
+            chunk[3] = 255;    // A
+        }
+
+        // 10. Encode as JPEG directly to memory
+        let mut jpeg_data = Vec::new();
+        let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 75);
+        encoder
+            .encode(
+                &buffer,
+                width as u32,
+                height as u32,
+                image::ColorType::Rgba8,
+            )
+            .map_err(|e| format!("JPEG encoding failed: {e}"))?;
+
+        log::info!("[screenshot] Windows GDI native capture success: {} KB", jpeg_data.len() / 1024);
+        Ok(jpeg_data)
     }
-
-    // Run the compiled headless executable
-    let output = Command::new(&exe_path)
-        .output() // Simple execution without CREATE_NO_WINDOW since winexe doesn't have a console
-        .map_err(|e| format!("gv_capture.exe execution failed: {e}"))?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("Headless capture failed: {stderr}"));
-    }
-
-    // Read the result
-    let bytes = std::fs::read(&out_jpg_path)
-        .map_err(|e| format!("Failed to read screenshot file from C# app: {e}"))?;
-
-    // Clean up just the image
-    let _ = std::fs::remove_file(&out_jpg_path);
-
-    if bytes.len() < 1000 {
-        return Err(format!("Screenshot file too small: {} bytes", bytes.len()));
-    }
-
-    log::info!("[screenshot] C# headless GDI+ capture: {} KB", bytes.len() / 1024);
-    Ok(bytes)
 }
 
+/// Fallback for macOS / Linux. Keeps `screenshots` crate only for non-Windows platforms.
 #[cfg(not(target_os = "windows"))]
-fn capture_via_csharp() -> Result<Vec<u8>, String> {
-    Err("C# capture not available on this platform".to_string())
-}
-
-/// Fallback capture using the `screenshots` Rust crate (DXGI on Windows, native on Mac/Linux)
-fn capture_via_rust_crate() -> Result<Vec<u8>, String> {
+pub fn capture_screen() -> Result<Vec<u8>, String> {
     use screenshots::Screen;
     use image::DynamicImage;
 
@@ -144,7 +178,7 @@ fn capture_via_rust_crate() -> Result<Vec<u8>, String> {
 
                 let bytes = buf.into_inner();
                 log::info!(
-                    "[screenshot] Rust crate capture: {}x{} @ {} KB",
+                    "[screenshot] macOS/Linux capture: {}x{} @ {} KB",
                     width, height, bytes.len() / 1024
                 );
                 return Ok(bytes);
@@ -160,21 +194,10 @@ fn capture_via_rust_crate() -> Result<Vec<u8>, String> {
     Err(last_err)
 }
 
-/// Main entry point: tries PowerShell GDI+ first (Windows), falls back to Rust crate.
+/// Main entry point: delegates to native GDI on Windows, or crate on Mac/Linux.
 /// Returns JPEG bytes + SHA256 hash.
 pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
-    // Try C# GDI+ first on Windows (most reliable, completely headless)
-    let jpeg_bytes = match capture_via_csharp() {
-        Ok(bytes) => {
-            log::info!("[screenshot] Using C# GDI+ capture path");
-            bytes
-        }
-        Err(cs_err) => {
-            log::warn!("[screenshot] C# capture failed: {cs_err}, trying Rust crate...");
-            // Fall back to screenshots crate
-            capture_via_rust_crate()?
-        }
-    };
+    let jpeg_bytes = capture_screen()?;
 
     // Hash the JPEG bytes
     let mut hasher = Sha256::new();
