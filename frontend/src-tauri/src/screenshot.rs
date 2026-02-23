@@ -37,8 +37,21 @@ fn capture_via_powershell() -> Result<Vec<u8>, String> {
     );
 
     let mut cmd = Command::new("powershell");
-    cmd.args(["-NoProfile", "-NonInteractive", "-Command", &ps_script]);
+    cmd.args([
+        "-WindowStyle", "Hidden",
+        "-ExecutionPolicy", "Bypass",
+        "-NoProfile", 
+        "-NonInteractive", 
+        "-Command", &ps_script
+    ]);
     
+    // CRITICAL: When spawning from a GUI app with CREATE_NO_WINDOW, standard handles 
+    // must be explicitly piped or nulled, otherwise powershell crashes or hangs.
+    use std::process::Stdio;
+    cmd.stdin(Stdio::null())
+       .stdout(Stdio::piped())
+       .stderr(Stdio::piped());
+
     // CRITICAL: Hide the PowerShell window on Windows so users don't see a black box
     #[cfg(target_os = "windows")]
     {
