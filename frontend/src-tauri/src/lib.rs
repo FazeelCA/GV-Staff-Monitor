@@ -118,8 +118,20 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
         loop {
             tokio::select! {
                 _ = ticker.tick() => {
-                    // 1. Capture screenshot (blocking/sync usually, but fast)
-                    match screenshot::capture_screenshot() {
+                    // 1. Capture screenshot on a BLOCKING thread (required for Windows COM/DXGI)
+                    let cap_result = tokio::task::spawn_blocking(|| {
+                        screenshot::capture_screenshot()
+                    }).await;
+                    
+                    let capture = match cap_result {
+                        Ok(inner) => inner,
+                        Err(e) => {
+                            log::error!("[screenshot] spawn_blocking panicked: {e}");
+                            continue;
+                        }
+                    };
+                    
+                    match capture {
                         Ok((bytes, hash)) => {
                             // 2. Read current context from state locks
                             let (task, token, user_id) = {
