@@ -1,25 +1,26 @@
 use sha2::{Sha256, Digest};
 use hex;
-use xcap::Monitor;
+use screenshots::Screen;
 use image::{DynamicImage, RgbaImage, imageops};
 use std::io::Cursor;
 use image::codecs::jpeg::JpegEncoder;
 
-/// Captures all monitors, stitches them horizontally, and returns JPEG bytes + SHA256 Hash.
+/// Captures all active screens sequentially, stitches them horizontally,
+/// and returns lightweight JPEG bytes + SHA256 Hash.
 pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
-    let monitors = Monitor::all().map_err(|e| format!("Monitor error: {e}"))?;
+    let screens = Screen::all().map_err(|e| format!("Capture init error: {e}"))?;
 
     let mut captures = Vec::new();
     let mut total_width = 0;
     let mut max_height = 0;
 
-    // Capture every monitor to catch dual-screen workers and ignore phantom displays
-    for monitor in monitors {
-        if let Ok(captured) = monitor.capture_image() {
+    // Capture every screen available to catch dual-screen setups
+    for screen in screens {
+        if let Ok(captured) = screen.capture() {
             let width = captured.width();
             let height = captured.height();
             
-            // Extract and cleanly rebuild RgbaImage to prevent any version mismatches
+            // Extract and perfectly align RGBA matrix across `image` crate versions
             let raw_rgba: Vec<u8> = captured.into_raw();
             if let Some(rgba_image) = RgbaImage::from_raw(width, height, raw_rgba) {
                 total_width += width;
@@ -32,7 +33,7 @@ pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
     }
 
     if captures.is_empty() {
-        return Err("No valid monitor frames captured. Display might be sleeping or locked.".to_string());
+        return Err("No active displays detected capable of rendering frames.".to_string());
     }
 
     // Horizontally stitch screens side-by-side
@@ -63,11 +64,12 @@ pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
 
     let bytes = buf.into_inner();
     log::info!(
-        "[screenshot] Stitched {} screens | {}x{} @ {} KB",
+        "[screenshot] Stitched {} displays {}x{} @ {} KB",
         captures.len(),
         total_width,
         max_height,
         bytes.len() / 1024
     );
+    
     Ok((bytes, hash))
 }
