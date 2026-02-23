@@ -1,24 +1,24 @@
 use sha2::{Sha256, Digest};
 use hex;
-use screenshots::Screen;
+use xcap::Monitor;
 use image::DynamicImage;
 use std::io::Cursor;
 use image::codecs::jpeg::JpegEncoder;
 
 /// Captures the primary monitor and returns JPEG bytes + SHA256 Hash.
-/// Uses the `screenshots` crate which uses native ScreenCaptureKit on macOS
-/// to reliably capture the full display (not just the frontmost window).
+/// Uses the `xcap` crate which efficiently captures displays across Windows/Mac/Linux
+/// with stable fallbacks for DXGI hybrid graphics on Windows.
 pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
-    // Get all screens; take the first (primary) one
-    let screens = Screen::all().map_err(|e| format!("Screen error: {e}"))?;
-    let screen = screens
+    // Get all monitors; take the first (primary) one
+    let monitors = Monitor::all().map_err(|e| format!("Monitor error: {e}"))?;
+    let monitor = monitors
         .into_iter()
         .next()
-        .ok_or_else(|| "No screen found".to_string())?;
+        .ok_or_else(|| "No monitor found".to_string())?;
 
-    // Capture the full screen — returns screenshots' own ImageBuffer (image 0.24)
-    let captured = screen
-        .capture()
+    // Capture the full screen — returns image buffer
+    let captured = monitor
+        .capture_image()
         .map_err(|e| format!("Capture error: {e}"))?;
 
     // Extract dimensions and raw RGBA pixel bytes
