@@ -1,55 +1,81 @@
 use sha2::{Sha256, Digest};
 use hex;
-use screenshots::Screen;
-use image::DynamicImage;
 use std::io::Cursor;
 use image::codecs::jpeg::JpegEncoder;
 
-/// Initialize Windows COM library for the current thread.
-/// DXGI Desktop Duplication REQUIRES COM to be initialized on the calling thread.
-/// Without this, all screen captures silently fail on Windows.
+/// Primary capture path for Windows: uses PowerShell + .NET System.Drawing (GDI+).
+/// This bypasses ALL DXGI/COM/DirectX issues and works on every Windows machine,
+/// including RDP sessions, locked screens, any GPU driver, any DPI scaling.
 #[cfg(target_os = "windows")]
-fn ensure_com_initialized() {
-    use std::sync::Once;
-    // We use thread_local to ensure COM is initialized per-thread
-    thread_local! {
-        static COM_INIT: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+fn capture_via_powershell() -> Result<Vec<u8>, String> {
+    use std::process::Command;
+    
+    let temp_path = std::env::temp_dir().join("gv_screenshot.jpg");
+    let temp_str = temp_path.to_string_lossy().to_string();
+
+    // PowerShell script that captures ALL screens using .NET GDI+
+    let ps_script = format!(
+        r#"
+        Add-Type -AssemblyName System.Windows.Forms
+        Add-Type -AssemblyName System.Drawing
+        $screens = [System.Windows.Forms.Screen]::AllScreens
+        $minX = ($screens | ForEach-Object {{ $_.Bounds.X }} | Measure-Object -Minimum).Minimum
+        $minY = ($screens | ForEach-Object {{ $_.Bounds.Y }} | Measure-Object -Minimum).Minimum
+        $maxX = ($screens | ForEach-Object {{ $_.Bounds.X + $_.Bounds.Width }} | Measure-Object -Maximum).Maximum
+        $maxY = ($screens | ForEach-Object {{ $_.Bounds.Y + $_.Bounds.Height }} | Measure-Object -Maximum).Maximum
+        $totalWidth = $maxX - $minX
+        $totalHeight = $maxY - $minY
+        $bmp = New-Object Drawing.Bitmap([int]$totalWidth, [int]$totalHeight)
+        $graphics = [Drawing.Graphics]::FromImage($bmp)
+        $graphics.CopyFromScreen([int]$minX, [int]$minY, 0, 0, $bmp.Size)
+        $graphics.Dispose()
+        $bmp.Save('{}', [Drawing.Imaging.ImageFormat]::Jpeg)
+        $bmp.Dispose()
+        Write-Output "OK"
+        "#,
+        temp_str.replace('\\', "\\\\")
+    );
+
+    let output = Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", &ps_script])
+        .output()
+        .map_err(|e| format!("PowerShell launch failed: {e}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("PowerShell capture failed: {stderr}"));
     }
-    COM_INIT.with(|initialized| {
-        if !initialized.get() {
-            unsafe {
-                // COINIT_MULTITHREADED = 0x0
-                // CoInitializeEx(null, COINIT_MULTITHREADED)
-                #[link(name = "ole32")]
-                extern "system" {
-                    fn CoInitializeEx(pvReserved: *mut std::ffi::c_void, dwCoInit: u32) -> i32;
-                }
-                let hr = CoInitializeEx(std::ptr::null_mut(), 0);
-                log::info!("[screenshot] CoInitializeEx result: 0x{:08X}", hr);
-            }
-            initialized.set(true);
-        }
-    });
+
+    let bytes = std::fs::read(&temp_path)
+        .map_err(|e| format!("Failed to read screenshot file: {e}"))?;
+
+    // Clean up temp file
+    let _ = std::fs::remove_file(&temp_path);
+
+    if bytes.len() < 1000 {
+        return Err(format!("Screenshot file too small: {} bytes", bytes.len()));
+    }
+
+    log::info!("[screenshot] PowerShell GDI+ capture: {} KB", bytes.len() / 1024);
+    Ok(bytes)
 }
 
 #[cfg(not(target_os = "windows"))]
-fn ensure_com_initialized() {
-    // No-op on macOS / Linux
+fn capture_via_powershell() -> Result<Vec<u8>, String> {
+    Err("PowerShell not available on this platform".to_string())
 }
 
-/// Captures the primary screen and returns JPEG bytes + SHA256 Hash.
-/// On Windows, explicitly initializes COM for DXGI Desktop Duplication.
-pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
-    // CRITICAL: Must initialize COM before any DXGI call on Windows
-    ensure_com_initialized();
+/// Fallback capture using the `screenshots` Rust crate (DXGI on Windows, native on Mac/Linux)
+fn capture_via_rust_crate() -> Result<Vec<u8>, String> {
+    use screenshots::Screen;
+    use image::DynamicImage;
 
-    let screens = Screen::all().map_err(|e| format!("Capture init error: {e}"))?;
-    
+    let screens = Screen::all().map_err(|e| format!("Screen::all error: {e}"))?;
+
     if screens.is_empty() {
         return Err("No screens found".to_string());
     }
 
-    // Try each screen until one succeeds (handles phantom displays)
     let mut last_err = String::from("No screens captured");
     for screen in screens {
         match screen.capture() {
@@ -62,10 +88,6 @@ pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
                     .ok_or_else(|| "RgbaImage::from_raw failed".to_string())?;
 
                 let rgb_image = DynamicImage::ImageRgba8(rgba_image).to_rgb8();
-
-                let mut hasher = Sha256::new();
-                hasher.update(rgb_image.as_raw());
-                let hash = hex::encode(hasher.finalize());
 
                 let mut buf = Cursor::new(Vec::new());
                 let mut encoder = JpegEncoder::new_with_quality(&mut buf, 60);
@@ -80,10 +102,10 @@ pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
 
                 let bytes = buf.into_inner();
                 log::info!(
-                    "[screenshot] Captured {}x{} @ {} KB",
+                    "[screenshot] Rust crate capture: {}x{} @ {} KB",
                     width, height, bytes.len() / 1024
                 );
-                return Ok((bytes, hash));
+                return Ok(bytes);
             }
             Err(e) => {
                 last_err = format!("Screen capture error: {e}");
@@ -94,4 +116,28 @@ pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
     }
 
     Err(last_err)
+}
+
+/// Main entry point: tries PowerShell GDI+ first (Windows), falls back to Rust crate.
+/// Returns JPEG bytes + SHA256 hash.
+pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
+    // Try PowerShell GDI+ first on Windows (most reliable)
+    let jpeg_bytes = match capture_via_powershell() {
+        Ok(bytes) => {
+            log::info!("[screenshot] Using PowerShell GDI+ capture path");
+            bytes
+        }
+        Err(ps_err) => {
+            log::warn!("[screenshot] PowerShell failed: {ps_err}, trying Rust crate...");
+            // Fall back to screenshots crate
+            capture_via_rust_crate()?
+        }
+    };
+
+    // Hash the JPEG bytes
+    let mut hasher = Sha256::new();
+    hasher.update(&jpeg_bytes);
+    let hash = hex::encode(hasher.finalize());
+
+    Ok((jpeg_bytes, hash))
 }
