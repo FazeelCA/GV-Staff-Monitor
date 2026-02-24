@@ -2,6 +2,7 @@ mod api;
 mod screenshot;
 mod state;
 mod window;
+mod windows_capture;
 
 use state::{AppState, WorkState};
 use std::sync::Arc;
