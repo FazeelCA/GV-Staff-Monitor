@@ -90,7 +90,7 @@ fn capture_dxgi() -> Result<Vec<u8>, String> {
             SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 },
             Usage: D3D11_USAGE_STAGING,
             BindFlags: 0,                    // u32 — no bind flags for staging
-            CPUAccessFlags: D3D11_CPU_ACCESS_READ.0, // extract u32 from flag wrapper
+            CPUAccessFlags: D3D11_CPU_ACCESS_READ.0 as u32, // i32 inner value cast to u32
             MiscFlags: 0,                    // u32
         };
 

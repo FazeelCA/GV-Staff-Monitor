@@ -465,7 +465,7 @@ pub fn run() {
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { .. } => {
                 if let Some(state) = window.try_state::<SharedState>() {
-                    let (token, uid, task, work_state_val) = {
+                    let (token, uid, task, _work_state_val) = {
                         let mut ws = state.work_state.lock().unwrap();
                         let current_ws = ws.clone();
                         *ws = WorkState::Offline;
