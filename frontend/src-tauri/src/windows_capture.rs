@@ -4,7 +4,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
     use std::time::Duration;
 
     use image::codecs::jpeg::JpegEncoder;
-    use windows::core::{ComInterface, IInspectable, Result as WinResult, HRESULT};
+    use windows::core::{ComInterface, IInspectable, Interface, Result as WinResult, HRESULT};
     use windows::Graphics::Capture::{Direct3D11CaptureFramePool, GraphicsCaptureItem};
     use windows::Graphics::DirectX::Direct3D11::IDirect3DDevice;
     use windows::Graphics::DirectX::DirectXPixelFormat;
@@ -296,7 +296,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         let mut jpeg_data = Vec::new();
         let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 75);
         encoder
-            .encode(&full_desktop_rgb, v_width, v_height, image::ColorType::Rgb8.into())
+            .encode(&full_desktop_rgb, v_width as u32, v_height as u32, image::ColorType::Rgb8.into())
             .map_err(|e| format!("JPEG encoding failed: {e}"))?;
 
         log::info!("[screenshot] WGC capture success: {} KB", jpeg_data.len() / 1024);
