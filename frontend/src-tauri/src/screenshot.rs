@@ -116,13 +116,16 @@ pub fn capture_screen() -> Result<Vec<u8>, String> {
             return Err("GetDIBits failed".to_string());
         }
 
-        // 9. Convert BGRA to RGBA in-place for the image encoder
-        for chunk in buffer.chunks_exact_mut(4) {
+        // 9. Convert BGRA to RGB (3-bytes per pixel) for the JPEG encoder
+        // JPEG encoder DOES NOT support Alpha channels (RGBA), so we must strip the 4th byte.
+        let mut rgb_buffer = Vec::with_capacity((width * height * 3) as usize);
+        for chunk in buffer.chunks_exact(4) {
             let b = chunk[0];
+            let g = chunk[1];
             let r = chunk[2];
-            chunk[0] = r;      // R
-            chunk[2] = b;      // B
-            chunk[3] = 255;    // A
+            rgb_buffer.push(r);
+            rgb_buffer.push(g);
+            rgb_buffer.push(b);
         }
 
         // 10. Encode as JPEG directly to memory
@@ -130,10 +133,10 @@ pub fn capture_screen() -> Result<Vec<u8>, String> {
         let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 75);
         encoder
             .encode(
-                &buffer,
+                &rgb_buffer,
                 width as u32,
                 height as u32,
-                image::ColorType::Rgba8.into(),
+                image::ColorType::Rgb8.into(),
             )
             .map_err(|e| format!("JPEG encoding failed: {e}"))?;
 
