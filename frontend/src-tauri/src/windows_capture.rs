@@ -135,13 +135,12 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             }
 
             // Create GraphicsCaptureItem for this Monitor
-            let mut item_opt: Option<GraphicsCaptureItem> = None;
-            let hr = interop.CreateForMonitor(hmonitor, &GraphicsCaptureItem::IID, &mut item_opt as *mut _ as *mut _);
-            if hr.is_err() || item_opt.is_none() {
+            let item_res = interop.CreateForMonitor::<GraphicsCaptureItem>(hmonitor);
+            if item_res.is_err() {
                 log::warn!("[wgc] CreateForMonitor failed for monitor {:?}", hmonitor);
                 continue;
             }
-            let item = item_opt.unwrap();
+            let item = item_res.unwrap();
 
             let item_size = item.Size().map_err(|e| format!("item.Size failed: {e}"))?;
             let width = item_size.Width as u32;
@@ -167,7 +166,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
 
             let handler = windows::Foundation::TypedEventHandler::<Direct3D11CaptureFramePool, IInspectable>::new(
                 move |sender_pool, _| {
-                    if let Some(pool) = sender_pool {
+                    if let Some(pool) = &*sender_pool {
                         if let Ok(frame) = pool.TryGetNextFrame() {
                             if let Ok(surface) = frame.Surface() {
                                 // Extract ID3D11Texture2D from surface
