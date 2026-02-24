@@ -1,37 +1,35 @@
 /**
  * clear-test-data.ts
- * 
+ *
  * Deletes all Screenshot and ActivityLog records from the database,
- * and removes the associated image files from local disk storage.
+ * and removes associated image files from local disk storage.
  *
  * Run on the server with:
- *   npx ts-node src/clear-test-data.ts
+ *   npx ts-node -r dotenv/config src/clear-test-data.ts
  */
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "./lib/prisma";
 import fs from "fs";
 import path from "path";
-
-const prisma = new PrismaClient();
 
 async function main() {
     console.log("=== GV Staff Monitor — Test Data Cleanup ===\n");
 
-    // ── 1. Delete screenshot files from disk ─────────────────────────────────
+    // ── 1. Read all screenshot URLs before deleting ───────────────────────────
     const screenshots = await prisma.screenshot.findMany({
         select: { id: true, imageUrl: true },
     });
 
     console.log(`Found ${screenshots.length} screenshot records.`);
 
-    let filesDeleted = 0;
+    // ── 2. Delete image files from local disk ────────────────────────────────
     const baseUploadsDir =
         process.env.STORAGE_PATH ||
         path.join(__dirname, "../../uploads/screenshots");
 
+    let filesDeleted = 0;
     for (const s of screenshots) {
         try {
-            // imageUrl is like https://track.gallerydigital.in/uploads/screenshots/uuid.webp
             const filename = path.basename(new URL(s.imageUrl).pathname);
             const localPath = path.join(baseUploadsDir, filename);
             if (fs.existsSync(localPath)) {
@@ -39,16 +37,16 @@ async function main() {
                 filesDeleted++;
             }
         } catch {
-            // URL parse may fail for old/malformed entries — safe to skip
+            // Malformed URL or missing file — safe to skip
         }
     }
     console.log(`Deleted ${filesDeleted} image files from disk.`);
 
-    // ── 2. Wipe Screenshot table ──────────────────────────────────────────────
+    // ── 3. Wipe Screenshot table ──────────────────────────────────────────────
     const { count: screenshotsDeleted } = await prisma.screenshot.deleteMany({});
     console.log(`Deleted ${screenshotsDeleted} Screenshot rows from database.`);
 
-    // ── 3. Wipe ActivityLog table ─────────────────────────────────────────────
+    // ── 4. Wipe ActivityLog table ─────────────────────────────────────────────
     const { count: activitiesDeleted } = await prisma.activityLog.deleteMany({});
     console.log(`Deleted ${activitiesDeleted} ActivityLog rows from database.`);
 
