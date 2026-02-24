@@ -4,11 +4,11 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
     use std::time::Duration;
 
     use image::codecs::jpeg::JpegEncoder;
-    use windows::core::{ComInterface, IInspectable, Interface, Result as WinResult, HRESULT};
+    use windows::core::{ComInterface, IInspectable, Interface};
     use windows::Graphics::Capture::{Direct3D11CaptureFramePool, GraphicsCaptureItem};
     use windows::Graphics::DirectX::Direct3D11::IDirect3DDevice;
     use windows::Graphics::DirectX::DirectXPixelFormat;
-    use windows::Win32::Foundation::{BOOL, HWND, LPARAM, RECT};
+    use windows::Win32::Foundation::{BOOL, LPARAM, RECT, HMODULE};
     use windows::Win32::Graphics::Direct3D::{
         D3D_DRIVER_TYPE_HARDWARE, D3D_DRIVER_TYPE_WARP,
     };
@@ -21,7 +21,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
     use windows::Win32::Graphics::Gdi::{
         EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITORINFO, MONITORINFOEXW,
     };
-    use windows::Win32::System::Com::{CoInitializeEx, CoUninitialize, COINIT_MULTITHREADED};
+    use windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
     use windows::Win32::System::WinRT::Direct3D11::CreateDirect3D11DeviceFromDXGIDevice;
     use windows::Win32::System::WinRT::Graphics::Capture::IGraphicsCaptureItemInterop;
     use windows::Win32::UI::WindowsAndMessaging::{
@@ -53,7 +53,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         let mut hr = D3D11CreateDevice(
             None,
             D3D_DRIVER_TYPE_HARDWARE,
-            None,
+            HMODULE::default(),
             D3D11_CREATE_DEVICE_BGRA_SUPPORT,
             None,
             D3D11_SDK_VERSION,
@@ -67,7 +67,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             hr = D3D11CreateDevice(
                 None,
                 D3D_DRIVER_TYPE_WARP,
-                None,
+                HMODULE::default(),
                 D3D11_CREATE_DEVICE_BGRA_SUPPORT,
                 None,
                 D3D11_SDK_VERSION,
@@ -166,12 +166,12 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             let d3d_context_clone = d3d_context.clone();
 
             let handler = windows::Foundation::TypedEventHandler::<Direct3D11CaptureFramePool, IInspectable>::new(
-                move |pool, _| {
-                    if let Some(pool) = pool {
+                move |sender_pool, _| {
+                    if let Some(pool) = sender_pool {
                         if let Ok(frame) = pool.TryGetNextFrame() {
                             if let Ok(surface) = frame.Surface() {
                                 // Extract ID3D11Texture2D from surface
-                                let access: windows::Win32::System::WinRT::Direct3D11::IDirect3DDxgiInterfaceAccess = surface.cast().unwrap();
+                                let access = surface.cast::<windows::Win32::System::WinRT::Direct3D11::IDirect3DDxgiInterfaceAccess>().unwrap();
                                 let mut raw_texture: Option<ID3D11Texture2D> = None;
                                 unsafe {
                                     let _ = access.GetInterface(&ID3D11Texture2D::IID, &mut raw_texture as *mut _ as *mut _);
@@ -242,8 +242,8 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             // Wait up to 1500ms for a frame to arrive
             if let Ok((rgb_data, fw, fh)) = rx.recv_timeout(Duration::from_millis(1500)) {
                 // Stitch local frame into global desktop canvas
-                let start_x = mx - x;
-                let start_y = my - y;
+                let start_x = mx - vx;
+                let start_y = my - vy;
                 
                 for r in 0..fh as usize {
                     let dest_y = start_y as usize + r;
