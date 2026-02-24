@@ -38,124 +38,157 @@ fn capture_dxgi() -> Result<Vec<u8>, String> {
     use image::codecs::jpeg::JpegEncoder;
 
     unsafe {
-        // 1. DXGI factory → first adapter
         let factory: IDXGIFactory1 =
             CreateDXGIFactory1().map_err(|e| format!("CreateDXGIFactory1: {e}"))?;
-        let adapter: IDXGIAdapter1 =
-            factory.EnumAdapters1(0).map_err(|e| format!("EnumAdapters1: {e}"))?;
 
-        // 2. Create D3D11 device on that adapter
-        let mut d3d_device: Option<ID3D11Device> = None;
-        let mut d3d_context: Option<ID3D11DeviceContext> = None;
-        D3D11CreateDevice(
-            &adapter,
-            D3D_DRIVER_TYPE_UNKNOWN,
-            HMODULE::default(), // no external software rasterizer module
-            D3D11_CREATE_DEVICE_FLAG(0),
-            None,               // use default feature levels
-            D3D11_SDK_VERSION,
-            Some(&mut d3d_device),
-            None,
-            Some(&mut d3d_context),
-        )
-        .map_err(|e| format!("D3D11CreateDevice: {e}"))?;
+        // Iterate through all GPU adapters
+        let mut adapter_idx = 0;
+        while let Ok(adapter) = factory.EnumAdapters1(adapter_idx) {
+            adapter_idx += 1;
 
-        let device = d3d_device.ok_or("D3D device is None")?;
-        let context = d3d_context.ok_or("D3D context is None")?;
+            // Iterate through all outputs (monitors) on this adapter
+            let mut output_idx = 0;
+            while let Ok(output) = adapter.EnumOutputs(output_idx) {
+                output_idx += 1;
 
-        // 3. Get first monitor as IDXGIOutput1
-        let output1: IDXGIOutput1 = adapter
-            .EnumOutputs(0)
-            .map_err(|e| format!("EnumOutputs: {e}"))?
-            .cast::<IDXGIOutput1>()
-            .map_err(|e| format!("IDXGIOutput1 cast: {e}"))?;
+                let output1: IDXGIOutput1 = match output.cast::<IDXGIOutput1>() {
+                    Ok(o) => o,
+                    Err(_) => continue, // Skip if not supported
+                };
 
-        // In windows-rs 0.61 GetDesc() takes no args and returns Result<DXGI_OUTPUT_DESC>
-        let desc = output1.GetDesc().map_err(|e| format!("GetDesc: {e}"))?;
-        let width = (desc.DesktopCoordinates.right - desc.DesktopCoordinates.left) as u32;
-        let height = (desc.DesktopCoordinates.bottom - desc.DesktopCoordinates.top) as u32;
+                let desc = match output1.GetDesc() {
+                    Ok(d) => d,
+                    Err(_) => continue,
+                };
 
-        if width == 0 || height == 0 {
-            return Err(format!("Invalid output dimensions: {width}x{height}"));
-        }
+                let width = (desc.DesktopCoordinates.right - desc.DesktopCoordinates.left) as u32;
+                let height = (desc.DesktopCoordinates.bottom - desc.DesktopCoordinates.top) as u32;
 
-        // 4. Create a CPU-readable staging texture
-        // Note: BindFlags / CPUAccessFlags / MiscFlags are plain u32 in windows-rs 0.61
-        let staging_desc = D3D11_TEXTURE2D_DESC {
-            Width: width,
-            Height: height,
-            MipLevels: 1,
-            ArraySize: 1,
-            Format: DXGI_FORMAT_B8G8R8A8_UNORM,
-            SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 },
-            Usage: D3D11_USAGE_STAGING,
-            BindFlags: 0,                    // u32 — no bind flags for staging
-            CPUAccessFlags: D3D11_CPU_ACCESS_READ.0 as u32, // i32 inner value cast to u32
-            MiscFlags: 0,                    // u32
-        };
+                if width == 0 || height == 0 {
+                    continue;
+                }
 
-        let mut staging_tex: Option<ID3D11Texture2D> = None;
-        device
-            .CreateTexture2D(&staging_desc, None, Some(&mut staging_tex))
-            .map_err(|e| format!("CreateTexture2D: {e}"))?;
-        let staging = staging_tex.ok_or("staging texture is None")?;
+                // Create D3D11 device
+                let mut d3d_device: Option<ID3D11Device> = None;
+                let mut d3d_context: Option<ID3D11DeviceContext> = None;
+                if D3D11CreateDevice(
+                    &adapter,
+                    D3D_DRIVER_TYPE_UNKNOWN,
+                    HMODULE::default(),
+                    D3D11_CREATE_DEVICE_FLAG(0),
+                    None,
+                    D3D11_SDK_VERSION,
+                    Some(&mut d3d_device),
+                    None,
+                    Some(&mut d3d_context),
+                )
+                .is_err()
+                {
+                    continue;
+                }
 
-        // 5. Duplicate the output and acquire one frame (wait up to 500 ms)
-        let duplication = output1
-            .DuplicateOutput(&device)
-            .map_err(|e| format!("DuplicateOutput: {e}"))?;
+                let device = if let Some(d) = d3d_device { d } else { continue };
+                let context = if let Some(c) = d3d_context { c } else { continue };
 
-        let mut frame_info = DXGI_OUTDUPL_FRAME_INFO::default();
-        let mut desktop_resource = None;
-        duplication
-            .AcquireNextFrame(500, &mut frame_info, &mut desktop_resource)
-            .map_err(|e| format!("AcquireNextFrame: {e}"))?;
+                let staging_desc = D3D11_TEXTURE2D_DESC {
+                    Width: width,
+                    Height: height,
+                    MipLevels: 1,
+                    ArraySize: 1,
+                    Format: DXGI_FORMAT_B8G8R8A8_UNORM,
+                    SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 },
+                    Usage: D3D11_USAGE_STAGING,
+                    BindFlags: 0,
+                    CPUAccessFlags: D3D11_CPU_ACCESS_READ.0 as u32,
+                    MiscFlags: 0,
+                };
 
-        let resource = desktop_resource.ok_or("desktop resource is None")?;
-        let frame_tex: ID3D11Texture2D = resource
-            .cast::<ID3D11Texture2D>()
-            .map_err(|e| format!("frame texture cast: {e}"))?;
+                let mut staging_tex: Option<ID3D11Texture2D> = None;
+                if device.CreateTexture2D(&staging_desc, None, Some(&mut staging_tex)).is_err() {
+                    continue;
+                }
+                let staging = staging_tex.unwrap();
 
-        // 6. Copy GPU frame → CPU-readable staging texture
-        context.CopyResource(&staging, &frame_tex);
-        let _ = duplication.ReleaseFrame();
+                let duplication = match output1.DuplicateOutput(&device) {
+                    Ok(d) => d,
+                    Err(_) => continue,
+                };
 
-        // 7. Map staging surface to read raw pixel bytes
-        let surface: IDXGISurface = staging
-            .cast::<IDXGISurface>()
-            .map_err(|e| format!("IDXGISurface cast: {e}"))?;
+                // Retry loop for AcquireNextFrame (up to 10 attempts, 200ms each = 2s total block)
+                let mut frame_tex_opt: Option<ID3D11Texture2D> = None;
+                for _retry in 0..10 {
+                    let mut frame_info = DXGI_OUTDUPL_FRAME_INFO::default();
+                    let mut desktop_resource = None;
 
-        let mut mapped = DXGI_MAPPED_RECT::default();
-        surface
-            .Map(&mut mapped, DXGI_MAP_READ)
-            .map_err(|e| format!("Map: {e}"))?;
+                    match duplication.AcquireNextFrame(200, &mut frame_info, &mut desktop_resource) {
+                        Ok(_) => {
+                            if let Some(resource) = desktop_resource {
+                                if let Ok(tex) = resource.cast::<ID3D11Texture2D>() {
+                                    frame_tex_opt = Some(tex);
+                                    break;
+                                }
+                            }
+                            let _ = duplication.ReleaseFrame();
+                        }
+                        Err(e) => {
+                            // DXGI_ERROR_WAIT_TIMEOUT == 0x887A0027
+                            if e.code().0 == -2005270489 { // WAIT_TIMEOUT
+                                continue;
+                            }
+                            break; // other hardware error
+                        }
+                    }
+                }
 
-        // 8. Convert BGRA → RGB (strip alpha for JPEG)
-        let pitch = mapped.Pitch as usize;
-        let data_ptr = mapped.pBits;
-        let mut rgb_buffer = Vec::with_capacity((width * height * 3) as usize);
-        for row in 0..height as usize {
-            let row_start = data_ptr.add(row * pitch);
-            for col in 0..width as usize {
-                let px = row_start.add(col * 4);
-                let b = *px;
-                let g = *px.add(1);
-                let r = *px.add(2);
-                rgb_buffer.push(r);
-                rgb_buffer.push(g);
-                rgb_buffer.push(b);
+                let frame_tex = match frame_tex_opt {
+                    Some(tex) => tex,
+                    None => continue, // Failed to acquire a frame after retries, try next display
+                };
+
+                // Copy GPU frame → CPU-readable staging texture
+                context.CopyResource(&staging, &frame_tex);
+                let _ = duplication.ReleaseFrame();
+
+                // Map staging surface
+                let surface: IDXGISurface = match staging.cast::<IDXGISurface>() {
+                    Ok(s) => s,
+                    Err(_) => continue,
+                };
+
+                let mut mapped = DXGI_MAPPED_RECT::default();
+                if surface.Map(&mut mapped, DXGI_MAP_READ).is_err() {
+                    continue;
+                }
+
+                let pitch = mapped.Pitch as usize;
+                let data_ptr = mapped.pBits;
+                let mut rgb_buffer = Vec::with_capacity((width * height * 3) as usize);
+
+                for row in 0..height as usize {
+                    let row_start = data_ptr.add(row * pitch);
+                    for col in 0..width as usize {
+                        let px = row_start.add(col * 4);
+                        let b = *px;
+                        let g = *px.add(1);
+                        let r = *px.add(2);
+                        rgb_buffer.push(r);
+                        rgb_buffer.push(g);
+                        rgb_buffer.push(b);
+                    }
+                }
+                let _ = surface.Unmap();
+
+                // Encode block
+                let mut jpeg_data = Vec::new();
+                let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 75);
+                if encoder.encode(&rgb_buffer, width, height, image::ColorType::Rgb8.into()).is_ok() {
+                    // Success! We return the first valid monitor capture.
+                    return Ok(jpeg_data);
+                }
             }
         }
-        let _ = surface.Unmap();
-
-        // 9. Encode as JPEG
-        let mut jpeg_data = Vec::new();
-        let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 75);
-        encoder
-            .encode(&rgb_buffer, width, height, image::ColorType::Rgb8.into())
-            .map_err(|e| format!("JPEG encode: {e}"))?;
-
-        Ok(jpeg_data)
+        
+        Err("No valid outputs captured via DXGI".to_string())
     }
 }
 
