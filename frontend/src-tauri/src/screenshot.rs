@@ -178,6 +178,25 @@ fn capture_dxgi() -> Result<Vec<u8>, String> {
                 }
                 let _ = surface.Unmap();
 
+                // Check if the image is completely blank/black (a common issue with sleeping displays/hybrid GPUs)
+                let mut is_blank = true;
+                // Check a few pixels to see if there's any variation or non-black content
+                let first_r = rgb_buffer[0];
+                let first_g = rgb_buffer[1];
+                let first_b = rgb_buffer[2];
+                
+                for i in (0..rgb_buffer.len()).step_by(3) {
+                    if rgb_buffer[i] != first_r || rgb_buffer[i+1] != first_g || rgb_buffer[i+2] != first_b {
+                        is_blank = false;
+                        break;
+                    }
+                }
+
+                if is_blank {
+                    log::warn!("[screenshot] DXGI captured a completely blank/solid frame on adapter {}, output {}. Skipping.", adapter_idx - 1, output_idx - 1);
+                    continue;
+                }
+
                 // Encode block
                 let mut jpeg_data = Vec::new();
                 let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 75);
@@ -188,7 +207,7 @@ fn capture_dxgi() -> Result<Vec<u8>, String> {
             }
         }
         
-        Err("No valid outputs captured via DXGI".to_string())
+        Err("No valid, non-blank outputs captured via DXGI".to_string())
     }
 }
 
@@ -283,6 +302,20 @@ fn capture_gdi_bitblt() -> Result<Vec<u8>, String> {
             rgb_buffer.push(chunk[2]); // R
             rgb_buffer.push(chunk[1]); // G
             rgb_buffer.push(chunk[0]); // B
+        }
+
+        let mut is_blank = true;
+        let first_r = rgb_buffer[0];
+        let first_g = rgb_buffer[1];
+        let first_b = rgb_buffer[2];
+        for i in (0..rgb_buffer.len()).step_by(3) {
+            if rgb_buffer[i] != first_r || rgb_buffer[i+1] != first_g || rgb_buffer[i+2] != first_b {
+                is_blank = false;
+                break;
+            }
+        }
+        if is_blank {
+            return Err("GDI BitBlt captured a completely blank/solid frame".to_string());
         }
 
         let mut jpeg_data = Vec::new();
