@@ -96,8 +96,11 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         }
 
         // 8. Read directly from the linear RAM pointer
+        // CRITICAL: We MUST copy the data to an owned Vec before calling DeleteObject,
+        // because DeleteObject will free the memory pointed to by bits_ptr.
         let buffer_size = (width * height * 4) as usize;
-        let bgra_buffer = std::slice::from_raw_parts(bits_ptr as *const u8, buffer_size);
+        let bgra_slice = std::slice::from_raw_parts(bits_ptr as *const u8, buffer_size);
+        let bgra_buffer: Vec<u8> = bgra_slice.to_vec();
 
         // Cleanup GDI
         SelectObject(mem_dc, old_bitmap);
