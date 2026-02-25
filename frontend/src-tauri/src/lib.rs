@@ -140,6 +140,10 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
                         Err(e) => {
                             let msg = format!("spawn_blocking panicked: {e}");
                             log::error!("[screenshot] {msg}");
+                            
+                            // Send to frontend for user visible debugging
+                            let _ = app_state.app_handle.emit("app-error", format!("WGC PANIC: {msg}"));
+                            
                             let uid = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
                             let msg_clone = msg.clone();
                             tokio::spawn(async move {

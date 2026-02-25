@@ -246,11 +246,14 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             let token = frame_pool.FrameArrived(&handler).map_err(|e| format!("FrameArrived event hook failed: {e}"))?;
             session.StartCapture().map_err(|e| format!("StartCapture failed: {e}"))?;
 
-            // Manual message pump for 1500ms since COM/WinRT events require an active thread queue
+            // Manual message pump for 3000ms since COM/WinRT events require an active thread queue
             let start = std::time::Instant::now();
             let mut captured_frame = None;
             
-            while start.elapsed() < Duration::from_millis(1500) {
+            // Short grace period for D3D to settle
+            std::thread::sleep(Duration::from_millis(200));
+
+            while start.elapsed() < Duration::from_millis(3000) {
                 // Pump messages
                 unsafe {
                     let mut msg = windows::Win32::UI::WindowsAndMessaging::MSG::default();
@@ -272,7 +275,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                     break;
                 }
                 
-                std::thread::sleep(Duration::from_millis(5));
+                std::thread::sleep(Duration::from_millis(10));
             }
 
             if let Some((rgb_data, fw, fh)) = captured_frame {
@@ -327,18 +330,15 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             return Err("WGC captured a completely blank solid frame (possible DRM)".to_string());
         }
 
-        // Encode to JPEG
+        // Encode to JPEG - LOW QUALITY FOR UNSTABLE HOTSPOT
         let mut jpeg_data = Vec::new();
-        let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 75);
+        let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 40);
         encoder
             .encode(&full_desktop_rgb, v_width as u32, v_height as u32, image::ColorType::Rgb8.into())
             .map_err(|e| format!("JPEG encoding failed: {e}"))?;
 
-        log::info!("[screenshot] WGC capture success: {} KB", jpeg_data.len() / 1024);
+        log::info!("[screenshot] WGC capture success: {} KB (Quality: 40%)", jpeg_data.len() / 1024);
         
-        // CoUninitialize is generally handled by process death or thread bounds, but good practice
-        // CoUninitialize(); 
-
         Ok(jpeg_data)
     }
 }

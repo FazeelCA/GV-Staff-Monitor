@@ -54,34 +54,48 @@ pub async fn upload_screenshot(jpeg_bytes: Vec<u8>, hash: String, task: String, 
         report_error("screenshot_upload_init", &format!("Starting upload: {} KB", size_kb), &user_id_clone).await;
     });
 
-    let part = multipart::Part::bytes(jpeg_bytes)
-        .file_name("screenshot.jpg")
-        .mime_str("image/jpeg")
-        .expect("valid mime");
+    let mut attempts = 0;
+    let max_attempts = 3;
 
-    let form = multipart::Form::new()
-        .text("hash", hash)
-        .text("activityCount", activity_count.to_string())
-        .text("taskAtTheTime", task)
-        .text("userId", user_id)
-        .part("image", part);
+    while attempts < max_attempts {
+        attempts += 1;
+        
+        let part = multipart::Part::bytes(jpeg_bytes.clone())
+            .file_name("screenshot.jpg")
+            .mime_str("image/jpeg")
+            .expect("valid mime");
 
-    match client
-        .post(format!("{BASE_URL}/api/screenshots/upload"))
-        .header("Authorization", format!("Bearer {}", token))
-        .multipart(form)
-        .send()
-        .await
-    {
-        Ok(resp) => {
-            log::info!("[api] upload_screenshot -> {}", resp.status());
-            if !resp.status().is_success() {
-                if let Ok(text) = resp.text().await {
-                   log::warn!("[api] upload failed with body: {}", text);
+        let form = multipart::Form::new()
+            .text("hash", hash.clone())
+            .text("activityCount", activity_count.to_string())
+            .text("taskAtTheTime", task.clone())
+            .text("userId", user_id.clone())
+            .part("image", part);
+
+        match client
+            .post(format!("{BASE_URL}/api/screenshots/upload"))
+            .header("Authorization", format!("Bearer {}", token))
+            .multipart(form)
+            .send()
+            .await
+        {
+            Ok(resp) => {
+                log::info!("[api] upload_screenshot (attempt {attempts}) -> {}", resp.status());
+                if resp.status().is_success() {
+                    return; // Success!
+                } else {
+                    if let Ok(text) = resp.text().await {
+                       log::warn!("[api] upload failed with body: {}", text);
+                    }
                 }
-            }
-        },
-        Err(e) => log::warn!("[api] upload_screenshot failed: {e}"),
+            },
+            Err(e) => log::warn!("[api] upload_screenshot (attempt {attempts}) failed: {e}"),
+        }
+
+        if attempts < max_attempts {
+            // Wait before retry
+            tokio::time::sleep(std::time::Duration::from_secs(5 * attempts as u64)).await;
+        }
     }
 }
 
@@ -152,7 +166,7 @@ pub async fn report_error(source: &str, message: &str, user_id: &str) {
         "source": source,
         "message": message,
         "platform": std::env::consts::OS,
-        "appVersion": "0.1.35",
+        "appVersion": "0.1.36",
     });
 
     let _ = client
