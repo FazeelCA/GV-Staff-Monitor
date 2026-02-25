@@ -310,13 +310,8 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                                 let content_size = frame.ContentSize().unwrap();
 
                                 let mut desc = D3D11_TEXTURE2D_DESC::default();
-                                desc.Width = content_size.Width as u32;
-                                desc.Height = content_size.Height as u32;
-                                desc.MipLevels = 1;
-                                desc.ArraySize = 1;
-                                desc.Format = windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_B8G8R8A8_UNORM;
-                                desc.SampleDesc.Count = 1;
-                                desc.SampleDesc.Quality = 0;
+                                unsafe { gpu_texture.GetDesc(&mut desc) };
+
                                 desc.Usage = D3D11_USAGE_STAGING;
                                 desc.BindFlags = 0;
                                 desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ.0 as u32;
