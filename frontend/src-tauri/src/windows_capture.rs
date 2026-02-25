@@ -344,7 +344,8 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                                                     // B
                                                 }
 
-                                                let _ = tx.send((rgb_buf, desc.Width, desc.Height));
+                                                let _ =
+                                                    tx.send((rgb_buf, width as u32, height as u32));
                                             }
                                         }
                                     }
