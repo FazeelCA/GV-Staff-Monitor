@@ -95,12 +95,28 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             return Err("BitBlt failed".to_string());
         }
 
-        // 8. Read directly from the linear RAM pointer
+        // 8. Read directly from the linear RAM pointer with correct 4-byte boundary stride alignment
         // CRITICAL: We MUST copy the data to an owned Vec before calling DeleteObject,
         // because DeleteObject will free the memory pointed to by bits_ptr.
-        let buffer_size = (width * height * 4) as usize;
-        let bgra_slice = std::slice::from_raw_parts(bits_ptr as *const u8, buffer_size);
-        let bgra_buffer: Vec<u8> = bgra_slice.to_vec();
+        let stride = ((width * 32 + 31) / 32) * 4;
+        let src_size = (stride * height) as usize;
+
+        let src_slice = std::slice::from_raw_parts(
+            bits_ptr as *const u8,
+            src_size,
+        );
+
+        let mut bgra_buffer = vec![0u8; (width * height * 4) as usize];
+
+        for y in 0..height as usize {
+            let src_offset = y * stride as usize;
+            let dst_offset = y * width as usize * 4;
+
+            let src_row = &src_slice[src_offset .. src_offset + width as usize * 4];
+
+            bgra_buffer[dst_offset .. dst_offset + width as usize * 4]
+                .copy_from_slice(src_row);
+        }
 
         // Cleanup GDI
         SelectObject(mem_dc, old_bitmap);
