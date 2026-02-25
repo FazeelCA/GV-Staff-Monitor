@@ -195,30 +195,6 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         let inspectable: IInspectable = CreateDirect3D11DeviceFromDXGIDevice(&dxgi_device).map_err(|e| format!("CreateDirect3D11DeviceFromDXGIDevice: {e}"))?;
         let winrt_d3d_device: IDirect3DDevice = inspectable.cast().map_err(|e| format!("Cast to IDirect3DDevice: {e}"))?;
 
-        // 3. Enumerate Monitors
-        let mut monitors: Vec<HMONITOR> = Vec::new();
-        unsafe extern "system" fn monitor_enum_proc(
-            hmonitor: HMONITOR,
-            _hdc: HDC,
-            _rect: *mut RECT,
-            lparam: LPARAM,
-        ) -> BOOL {
-            let monitors = &mut *(lparam.0 as *mut Vec<HMONITOR>);
-            monitors.push(hmonitor);
-            BOOL::from(true)
-        }
-
-        EnumDisplayMonitors(
-            None,
-            None,
-            Some(monitor_enum_proc),
-            LPARAM(&mut monitors as *mut _ as isize),
-        );
-
-        if monitors.is_empty() {
-            return Err("No monitors found".to_string());
-        }
-
         // 4. Capture each monitor using WGC
         let mut any_success = false;
         for info in &capture_infos {
@@ -236,7 +212,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                 item_size,
             ).map_err(|e| format!("CreateFreeThreaded failed: {e}"))?;
 
-            let session = frame_pool.CreateCaptureSession(&item).map_err(|e| format!("CreateCaptureSession failed: {e}"))?;
+            let session = frame_pool.CreateCaptureSession(item).map_err(|e| format!("CreateCaptureSession failed: {e}"))?;
             session.SetIsCursorCaptureEnabled(false).ok();
 
             // Set up an event handler for FrameArrived
