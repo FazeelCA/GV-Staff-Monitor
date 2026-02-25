@@ -253,135 +253,17 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             session.SetIsCursorCaptureEnabled(false).ok();
 
             // Set up an event handler for FrameArrived
-            let (tx, rx) = mpsc::channel::<(Vec<u8>, u32, u32)>();
-
-            // To safely pass D3D device components, we must clone handles
-            let d3d_device_clone = d3d_device.clone();
-            let d3d_context_clone = d3d_context.clone();
+            let (tx, rx) = mpsc::channel::<()>();
 
             let frame_counter = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
 
             let handler = windows::Foundation::TypedEventHandler::<
                 Direct3D11CaptureFramePool,
                 IInspectable,
-            >::new(move |sender_pool, _| {
-                if let Some(pool) = &*sender_pool {
-                    if let Ok(frame) = pool.TryGetNextFrame() {
-                        let count =
-                            frame_counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
-
-                        // Skip first two frames completely
-                        if count < 3 {
-                            return Ok(());
-                        }
-
-                        if let Ok(surface) = frame.Surface() {
-                            // Extract ID3D11Texture2D from surface
-                            let access = surface.cast::<windows::Win32::System::WinRT::Direct3D11::IDirect3DDxgiInterfaceAccess>().unwrap();
-
-                            if let Ok(gpu_texture) = access.GetInterface::<ID3D11Texture2D>() {
-                                {
-                                    // We need to copy this GPU texture to a CPU-readable staging texture
-                                    let content_size = frame.ContentSize().unwrap();
-
-                                    let mut desc = D3D11_TEXTURE2D_DESC::default();
-                                    desc.Width = content_size.Width as u32;
-                                    desc.Height = content_size.Height as u32;
-                                    desc.MipLevels = 1;
-                                    desc.ArraySize = 1;
-                                    desc.Format = windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_B8G8R8A8_UNORM;
-                                    desc.SampleDesc.Count = 1;
-                                    desc.SampleDesc.Quality = 0;
-                                    desc.Usage = D3D11_USAGE_STAGING;
-                                    desc.BindFlags = 0;
-                                    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ.0 as u32;
-                                    desc.MiscFlags = 0;
-
-                                    let mut staging_opt: Option<ID3D11Texture2D> = None;
-                                    let hr = d3d_device_clone.CreateTexture2D(
-                                        &desc,
-                                        None,
-                                        Some(&mut staging_opt),
-                                    );
-
-                                    if hr.is_ok() {
-                                        if let Some(staging) = staging_opt {
-                                            use windows::Win32::Graphics::Direct3D11::D3D11_BOX;
-
-                                            let src_box = D3D11_BOX {
-                                                left: 0,
-                                                top: 0,
-                                                front: 0,
-                                                right: content_size.Width as u32,
-                                                bottom: content_size.Height as u32,
-                                                back: 1,
-                                            };
-
-                                            d3d_context_clone.CopySubresourceRegion(
-                                                &staging,
-                                                0,
-                                                0,
-                                                0,
-                                                0,
-                                                &gpu_texture,
-                                                0,
-                                                Some(&src_box),
-                                            );
-
-                                            d3d_context_clone.Flush();
-
-                                            let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
-                                            let map_hr = d3d_context_clone.Map(
-                                                &staging,
-                                                0,
-                                                D3D11_MAP_READ,
-                                                0,
-                                                Some(&mut mapped),
-                                            );
-
-                                            if map_hr.is_ok() {
-                                                let row_pitch = mapped.RowPitch as usize;
-                                                let content_size = frame.ContentSize().unwrap();
-                                                let width = content_size.Width as usize;
-                                                let height = content_size.Height as usize;
-
-                                                let src = mapped.pData as *const u8;
-                                                let mut bgra = vec![0u8; width * height * 4];
-
-                                                // CRITICAL: row-by-row copy using RowPitch
-                                                for y in 0..height {
-                                                    let src_row = src.add(y * row_pitch);
-                                                    let dst_row =
-                                                        bgra.as_mut_ptr().add(y * width * 4);
-                                                    std::ptr::copy_nonoverlapping(
-                                                        src_row,
-                                                        dst_row,
-                                                        width * 4,
-                                                    );
-                                                }
-
-                                                let _ = d3d_context_clone.Unmap(&staging, 0);
-
-                                                // Convert dense contiguous BGRA to RGB
-                                                let mut rgb_buf =
-                                                    Vec::with_capacity(width * height * 3);
-                                                for i in 0..(width * height) {
-                                                    let base = i * 4;
-                                                    rgb_buf.push(bgra[base + 2]); // R
-                                                    rgb_buf.push(bgra[base + 1]); // G
-                                                    rgb_buf.push(bgra[base + 0]);
-                                                    // B
-                                                }
-
-                                                let _ =
-                                                    tx.send((rgb_buf, width as u32, height as u32));
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+            >::new(move |_, _| {
+                let count = frame_counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+                if count >= 3 {
+                    let _ = tx.send(());
                 }
                 Ok(())
             });
@@ -398,7 +280,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             let mut captured_frame = None;
 
             // Short grace period for D3D to settle
-            std::thread::sleep(Duration::from_millis(200));
+            std::thread::sleep(Duration::from_millis(150));
 
             while start.elapsed() < Duration::from_millis(3000) {
                 // Pump messages
@@ -418,13 +300,117 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                     }
                 }
 
-                // Check if frame arrived
-                if let Ok((rgb_data, fw, fh)) = rx.try_recv() {
-                    captured_frame = Some((rgb_data, fw, fh));
-                    break;
+                // Check if our third frame signaled
+                if rx.try_recv().is_ok() {
+                    // Extract frame ON THE MAIN THREAD, outside async CPU callback boundaries
+                    if let Ok(frame) = frame_pool.TryGetNextFrame() {
+                        if let Ok(surface) = frame.Surface() {
+                            let access = surface.cast::<windows::Win32::System::WinRT::Direct3D11::IDirect3DDxgiInterfaceAccess>().unwrap();
+                            if let Ok(gpu_texture) = access.GetInterface::<ID3D11Texture2D>() {
+                                let content_size = frame.ContentSize().unwrap();
+
+                                let mut desc = D3D11_TEXTURE2D_DESC::default();
+                                desc.Width = content_size.Width as u32;
+                                desc.Height = content_size.Height as u32;
+                                desc.MipLevels = 1;
+                                desc.ArraySize = 1;
+                                desc.Format = windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_B8G8R8A8_UNORM;
+                                desc.SampleDesc.Count = 1;
+                                desc.SampleDesc.Quality = 0;
+                                desc.Usage = D3D11_USAGE_STAGING;
+                                desc.BindFlags = 0;
+                                desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ.0 as u32;
+                                desc.MiscFlags = 0;
+
+                                let mut staging_opt: Option<ID3D11Texture2D> = None;
+                                let hr = unsafe {
+                                    d3d_device.CreateTexture2D(&desc, None, Some(&mut staging_opt))
+                                };
+
+                                if hr.is_ok() {
+                                    if let Some(staging) = staging_opt {
+                                        use windows::Win32::Graphics::Direct3D11::D3D11_BOX;
+
+                                        let src_box = D3D11_BOX {
+                                            left: 0,
+                                            top: 0,
+                                            front: 0,
+                                            right: content_size.Width as u32,
+                                            bottom: content_size.Height as u32,
+                                            back: 1,
+                                        };
+
+                                        unsafe {
+                                            d3d_context.CopySubresourceRegion(
+                                                &staging,
+                                                0,
+                                                0,
+                                                0,
+                                                0,
+                                                &gpu_texture,
+                                                0,
+                                                Some(&src_box),
+                                            );
+                                            d3d_context.Flush();
+                                        }
+
+                                        let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
+                                        let map_hr = unsafe {
+                                            d3d_context.Map(
+                                                &staging,
+                                                0,
+                                                D3D11_MAP_READ,
+                                                0,
+                                                Some(&mut mapped),
+                                            )
+                                        };
+
+                                        if map_hr.is_ok() {
+                                            let row_pitch = mapped.RowPitch as usize;
+                                            let width = content_size.Width as usize;
+                                            let height = content_size.Height as usize;
+
+                                            let src = mapped.pData as *const u8;
+                                            let mut bgra = vec![0u8; width * height * 4];
+
+                                            for y in 0..height {
+                                                unsafe {
+                                                    let src_row = src.add(y * row_pitch);
+                                                    let dst_row =
+                                                        bgra.as_mut_ptr().add(y * width * 4);
+                                                    std::ptr::copy_nonoverlapping(
+                                                        src_row,
+                                                        dst_row,
+                                                        width * 4,
+                                                    );
+                                                }
+                                            }
+
+                                            unsafe {
+                                                let _ = d3d_context.Unmap(&staging, 0);
+                                            }
+
+                                            let mut rgb_buf =
+                                                Vec::with_capacity(width * height * 3);
+                                            for i in 0..(width * height) {
+                                                let base = i * 4;
+                                                rgb_buf.push(bgra[base + 2]); // R
+                                                rgb_buf.push(bgra[base + 1]); // G
+                                                rgb_buf.push(bgra[base + 0]); // B
+                                            }
+
+                                            captured_frame =
+                                                Some((rgb_buf, width as u32, height as u32));
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                std::thread::sleep(Duration::from_millis(10));
+                std::thread::sleep(Duration::from_millis(5));
             }
 
             if let Some((rgb_data, fw, fh)) = captured_frame {
