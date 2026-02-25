@@ -234,8 +234,36 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             let token = frame_pool.FrameArrived(&handler).map_err(|e| format!("FrameArrived event hook failed: {e}"))?;
             session.StartCapture().map_err(|e| format!("StartCapture failed: {e}"))?;
 
-            // Wait up to 1500ms for a frame to arrive
-            if let Ok((rgb_data, fw, fh)) = rx.recv_timeout(Duration::from_millis(1500)) {
+            // Manual message pump for 1500ms since COM/WinRT events require an active thread queue
+            let start = std::time::Instant::now();
+            let mut captured_frame = None;
+            
+            while start.elapsed() < Duration::from_millis(1500) {
+                // Pump messages
+                unsafe {
+                    let mut msg = windows::Win32::UI::WindowsAndMessaging::MSG::default();
+                    while windows::Win32::UI::WindowsAndMessaging::PeekMessageW(
+                        &mut msg,
+                        None,
+                        0,
+                        0,
+                        windows::Win32::UI::WindowsAndMessaging::PM_REMOVE,
+                    ).as_bool() {
+                        windows::Win32::UI::WindowsAndMessaging::TranslateMessage(&msg);
+                        windows::Win32::UI::WindowsAndMessaging::DispatchMessageW(&msg);
+                    }
+                }
+                
+                // Check if frame arrived
+                if let Ok((rgb_data, fw, fh)) = rx.try_recv() {
+                    captured_frame = Some((rgb_data, fw, fh));
+                    break;
+                }
+                
+                std::thread::sleep(Duration::from_millis(5));
+            }
+
+            if let Some((rgb_data, fw, fh)) = captured_frame {
                 // Stitch local frame into global desktop canvas
                 let start_x = mx - vx;
                 let start_y = my - vy;
