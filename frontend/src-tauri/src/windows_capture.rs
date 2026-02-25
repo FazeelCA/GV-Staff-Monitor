@@ -185,17 +185,26 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         let mut d3d_device: Option<ID3D11Device> = None;
         let mut d3d_context: Option<ID3D11DeviceContext> = None;
 
-        let mut hr = D3D11CreateDevice(
-            None,
-            D3D_DRIVER_TYPE_HARDWARE,
-            HMODULE::default(),
-            D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-            None,
-            D3D11_SDK_VERSION,
-            Some(&mut d3d_device),
-            None,
-            Some(&mut d3d_context),
-        );
+        use windows::Win32::Graphics::Dxgi::{CreateDXGIFactory1, IDXGIAdapter1, IDXGIFactory1};
+
+        let factory: IDXGIFactory1 = unsafe { CreateDXGIFactory1().unwrap() };
+        let mut adapter: Option<IDXGIAdapter1> = None;
+        unsafe { factory.EnumAdapters1(0, &mut adapter).unwrap() };
+        let adapter = adapter.unwrap();
+
+        let mut hr = unsafe {
+            D3D11CreateDevice(
+                Some(&adapter),
+                D3D_DRIVER_TYPE_HARDWARE,
+                HMODULE::default(),
+                D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+                None,
+                D3D11_SDK_VERSION,
+                Some(&mut d3d_device),
+                None,
+                Some(&mut d3d_context),
+            )
+        };
 
         if hr.is_err() {
             // Fallback to WARP (software rasterizer) if HW fails
@@ -250,202 +259,196 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             let session = frame_pool
                 .CreateCaptureSession(item)
                 .map_err(|e| format!("CreateCaptureSession failed: {e}"))?;
-            session.SetIsCursorCaptureEnabled(false).ok();
+            session.SetIsBorderRequired(false).ok();
+            session.SetIsCursorCaptureEnabled(true).ok();
 
-            // Set up an event handler for FrameArrived
-            let (tx, rx) = mpsc::channel::<()>();
-
-            let frame_counter = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-
-            let handler = windows::Foundation::TypedEventHandler::<
-                Direct3D11CaptureFramePool,
-                IInspectable,
-            >::new(move |_, _| {
-                let count = frame_counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
-                if count >= 3 {
-                    let _ = tx.send(());
-                }
-                Ok(())
-            });
-
-            let token = frame_pool
-                .FrameArrived(&handler)
-                .map_err(|e| format!("FrameArrived event hook failed: {e}"))?;
             session
                 .StartCapture()
                 .map_err(|e| format!("StartCapture failed: {e}"))?;
 
-            // Manual message pump for 3000ms since COM/WinRT events require an active thread queue
-            let start = std::time::Instant::now();
+            frame_pool
+                .Recreate(
+                    &winrt_d3d_device,
+                    DirectXPixelFormat::B8G8R8A8UIntNormalized,
+                    3,
+                    item_size,
+                )
+                .map_err(|e| format!("Recreate FramePool failed: {e}"))?;
+
             let mut captured_frame = None;
+            let mut frame_opt = None;
 
-            // Short grace period for D3D to settle
-            std::thread::sleep(Duration::from_millis(150));
-
-            while start.elapsed() < Duration::from_millis(3000) {
-                // Pump messages
+            for _ in 0..10 {
+                // Keep the manual message pump just in case COM needs it
                 {
                     let mut msg = windows::Win32::UI::WindowsAndMessaging::MSG::default();
-                    while windows::Win32::UI::WindowsAndMessaging::PeekMessageW(
-                        &mut msg,
-                        None,
-                        0,
-                        0,
-                        windows::Win32::UI::WindowsAndMessaging::PM_REMOVE,
-                    )
-                    .as_bool()
-                    {
-                        windows::Win32::UI::WindowsAndMessaging::TranslateMessage(&msg);
-                        windows::Win32::UI::WindowsAndMessaging::DispatchMessageW(&msg);
+                    while unsafe {
+                        windows::Win32::UI::WindowsAndMessaging::PeekMessageW(
+                            &mut msg,
+                            None,
+                            0,
+                            0,
+                            windows::Win32::UI::WindowsAndMessaging::PM_REMOVE,
+                        )
+                        .as_bool()
+                    } {
+                        unsafe { windows::Win32::UI::WindowsAndMessaging::TranslateMessage(&msg) };
+                        unsafe { windows::Win32::UI::WindowsAndMessaging::DispatchMessageW(&msg) };
                     }
                 }
 
-                // Check if our third frame signaled
-                if rx.try_recv().is_ok() {
-                    // Extract frame ON THE MAIN THREAD, outside async CPU callback boundaries
-                    if let Ok(frame) = frame_pool.TryGetNextFrame() {
-                        if let Ok(surface) = frame.Surface() {
-                            let access = surface.cast::<windows::Win32::System::WinRT::Direct3D11::IDirect3DDxgiInterfaceAccess>().unwrap();
-                            if let Ok(gpu_texture) = access.GetInterface::<ID3D11Texture2D>() {
-                                let content_size = frame.ContentSize().unwrap();
+                if let Ok(f) = frame_pool.TryGetNextFrame() {
+                    frame_opt = Some(f);
+                }
 
-                                let mut desc = D3D11_TEXTURE2D_DESC::default();
-                                unsafe { gpu_texture.GetDesc(&mut desc) };
+                std::thread::sleep(Duration::from_millis(100));
+            }
 
-                                desc.Usage = D3D11_USAGE_STAGING;
-                                desc.BindFlags = 0;
-                                desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ.0 as u32;
-                                desc.MiscFlags = 0;
+            if let Some(frame) = frame_opt {
+                if let Ok(surface) = frame.Surface() {
+                    let access = surface.cast::<windows::Win32::System::WinRT::Direct3D11::IDirect3DDxgiInterfaceAccess>().unwrap();
+                    if let Ok(gpu_texture) = access.GetInterface::<ID3D11Texture2D>() {
+                        let content_size = frame.ContentSize().unwrap();
 
-                                let mut staging_opt: Option<ID3D11Texture2D> = None;
-                                let hr = unsafe {
-                                    d3d_device.CreateTexture2D(&desc, None, Some(&mut staging_opt))
+                        let mut desc = D3D11_TEXTURE2D_DESC::default();
+                        unsafe { gpu_texture.GetDesc(&mut desc) };
+
+                        assert_eq!(
+                            desc.Format,
+                            windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_B8G8R8A8_UNORM
+                        );
+
+                        desc.Usage = D3D11_USAGE_STAGING;
+                        desc.BindFlags = 0;
+                        desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ.0 as u32;
+                        desc.MiscFlags = 0;
+
+                        let mut staging_opt: Option<ID3D11Texture2D> = None;
+                        let hr = unsafe {
+                            d3d_device.CreateTexture2D(&desc, None, Some(&mut staging_opt))
+                        };
+
+                        if hr.is_ok() {
+                            if let Some(staging) = staging_opt {
+                                use windows::Win32::Graphics::Direct3D11::D3D11_BOX;
+
+                                let src_box = D3D11_BOX {
+                                    left: 0,
+                                    top: 0,
+                                    front: 0,
+                                    right: content_size.Width as u32,
+                                    bottom: content_size.Height as u32,
+                                    back: 1,
                                 };
 
-                                if hr.is_ok() {
-                                    if let Some(staging) = staging_opt {
-                                        use windows::Win32::Graphics::Direct3D11::D3D11_BOX;
+                                unsafe {
+                                    d3d_context.CopySubresourceRegion(
+                                        &staging,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        &gpu_texture,
+                                        0,
+                                        Some(&src_box),
+                                    );
+                                    std::thread::sleep(Duration::from_millis(2));
+                                    d3d_context.Flush();
+                                    std::thread::sleep(Duration::from_millis(5));
 
-                                        let src_box = D3D11_BOX {
-                                            left: 0,
-                                            top: 0,
-                                            front: 0,
-                                            right: content_size.Width as u32,
-                                            bottom: content_size.Height as u32,
-                                            back: 1,
-                                        };
+                                    use windows::Win32::Graphics::Direct3D11::{
+                                        ID3D11Query, D3D11_QUERY_DESC, D3D11_QUERY_EVENT,
+                                    };
 
-                                        unsafe {
-                                            d3d_context.CopySubresourceRegion(
-                                                &staging,
-                                                0,
-                                                0,
-                                                0,
-                                                0,
-                                                &gpu_texture,
-                                                0,
-                                                Some(&src_box),
-                                            );
-                                            d3d_context.Flush();
+                                    let mut query: Option<ID3D11Query> = None;
+                                    let query_desc = D3D11_QUERY_DESC {
+                                        Query: D3D11_QUERY_EVENT,
+                                        MiscFlags: 0,
+                                    };
 
-                                            use windows::Win32::Graphics::Direct3D11::{
-                                                ID3D11Query, D3D11_QUERY_DESC, D3D11_QUERY_EVENT,
-                                            };
+                                    if d3d_device
+                                        .CreateQuery(&query_desc, Some(&mut query))
+                                        .is_ok()
+                                    {
+                                        if let Some(q) = query {
+                                            d3d_context.End(&q);
 
-                                            let mut query: Option<ID3D11Query> = None;
-                                            let query_desc = D3D11_QUERY_DESC {
-                                                Query: D3D11_QUERY_EVENT,
-                                                MiscFlags: 0,
-                                            };
+                                            loop {
+                                                let mut done: u32 = 0;
+                                                let hr = d3d_context.GetData(
+                                                    &q,
+                                                    Some(
+                                                        &mut done as *mut _
+                                                            as *mut core::ffi::c_void,
+                                                    ),
+                                                    std::mem::size_of::<u32>() as u32,
+                                                    0,
+                                                );
 
-                                            if d3d_device
-                                                .CreateQuery(&query_desc, Some(&mut query))
-                                                .is_ok()
-                                            {
-                                                if let Some(q) = query {
-                                                    d3d_context.End(&q);
-
-                                                    loop {
-                                                        let mut done: u32 = 0;
-                                                        let hr = d3d_context.GetData(
-                                                            &q,
-                                                            Some(
-                                                                &mut done as *mut _
-                                                                    as *mut core::ffi::c_void,
-                                                            ),
-                                                            std::mem::size_of::<u32>() as u32,
-                                                            0,
-                                                        );
-
-                                                        if hr.is_ok() && done != 0 {
-                                                            break;
-                                                        }
-
-                                                        std::thread::sleep(Duration::from_micros(
-                                                            50,
-                                                        ));
-                                                    }
+                                                if hr.is_ok() && done != 0 {
+                                                    break;
                                                 }
+
+                                                std::thread::sleep(Duration::from_micros(50));
                                             }
-                                        }
-
-                                        let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
-                                        let map_hr = unsafe {
-                                            d3d_context.Map(
-                                                &staging,
-                                                0,
-                                                D3D11_MAP_READ,
-                                                0,
-                                                Some(&mut mapped),
-                                            )
-                                        };
-
-                                        if map_hr.is_ok() {
-                                            let row_pitch = mapped.RowPitch as usize;
-                                            let width = content_size.Width as usize;
-                                            let height = content_size.Height as usize;
-
-                                            let src = mapped.pData as *const u8;
-                                            let mut bgra = vec![0u8; width * height * 4];
-
-                                            for y in 0..height {
-                                                unsafe {
-                                                    let src_row = src.add(y * row_pitch);
-                                                    let dst_row =
-                                                        bgra.as_mut_ptr().add(y * width * 4);
-                                                    std::ptr::copy_nonoverlapping(
-                                                        src_row,
-                                                        dst_row,
-                                                        width * 4,
-                                                    );
-                                                }
-                                            }
-
-                                            unsafe {
-                                                let _ = d3d_context.Unmap(&staging, 0);
-                                            }
-
-                                            let mut rgb_buf =
-                                                Vec::with_capacity(width * height * 3);
-                                            for i in 0..(width * height) {
-                                                let base = i * 4;
-                                                rgb_buf.push(bgra[base + 2]); // R
-                                                rgb_buf.push(bgra[base + 1]); // G
-                                                rgb_buf.push(bgra[base + 0]); // B
-                                            }
-
-                                            captured_frame =
-                                                Some((rgb_buf, width as u32, height as u32));
-                                            break;
                                         }
                                     }
+                                }
+
+                                let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
+                                let map_hr = unsafe {
+                                    d3d_context.Map(
+                                        &staging,
+                                        0,
+                                        D3D11_MAP_READ,
+                                        0,
+                                        Some(&mut mapped),
+                                    )
+                                };
+
+                                if map_hr.is_ok() {
+                                    let row_pitch = mapped.RowPitch as usize;
+                                    let width = content_size.Width as usize;
+                                    let height = content_size.Height as usize;
+
+                                    let src = mapped.pData as *const u8;
+                                    let mut bgra = vec![0u8; width * height * 4];
+
+                                    for y in 0..height {
+                                        unsafe {
+                                            let src_row = src.add(y * row_pitch);
+                                            let dst_row = bgra.as_mut_ptr().add(y * width * 4);
+                                            std::ptr::copy_nonoverlapping(
+                                                src_row,
+                                                dst_row,
+                                                width * 4,
+                                            );
+                                        }
+                                    }
+
+                                    unsafe {
+                                        let _ = d3d_context.Unmap(&staging, 0);
+                                    }
+
+                                    let mut rgb_buf = Vec::with_capacity(width * height * 3);
+                                    for i in 0..(width * height) {
+                                        let base = i * 4;
+                                        rgb_buf.push(bgra[base + 2]); // R
+                                        rgb_buf.push(bgra[base + 1]); // G
+                                        rgb_buf.push(bgra[base + 0]); // B
+                                    }
+
+                                    let non_zero = rgb_buf.iter().any(|&v| v != 0);
+                                    if !non_zero {
+                                        return Err("GPU returned blank buffer — Intel driver protection path".to_string());
+                                    }
+
+                                    captured_frame = Some((rgb_buf, width as u32, height as u32));
                                 }
                             }
                         }
                     }
                 }
-
-                std::thread::sleep(Duration::from_millis(5));
             }
 
             if let Some((rgb_data, fw, fh)) = captured_frame {
