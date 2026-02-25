@@ -45,6 +45,15 @@ pub async fn upload_screenshot(jpeg_bytes: Vec<u8>, hash: String, task: String, 
         .build()
         .unwrap_or_else(|_| reqwest::Client::new());
 
+    let size_kb = jpeg_bytes.len() / 1024;
+    log::info!("[api] Starting upload of {} KB screenshot", size_kb);
+    
+    // Fire and forget a report so we can see the size on the server logs even if upload fails
+    let user_id_clone = user_id.clone();
+    tokio::spawn(async move {
+        report_error("screenshot_upload_init", &format!("Starting upload: {} KB", size_kb), &user_id_clone).await;
+    });
+
     let part = multipart::Part::bytes(jpeg_bytes)
         .file_name("screenshot.jpg")
         .mime_str("image/jpeg")
@@ -64,7 +73,14 @@ pub async fn upload_screenshot(jpeg_bytes: Vec<u8>, hash: String, task: String, 
         .send()
         .await
     {
-        Ok(resp) => log::info!("[api] upload_screenshot -> {}", resp.status()),
+        Ok(resp) => {
+            log::info!("[api] upload_screenshot -> {}", resp.status());
+            if !resp.status().is_success() {
+                if let Ok(text) = resp.text().await {
+                   log::warn!("[api] upload failed with body: {}", text);
+                }
+            }
+        },
         Err(e) => log::warn!("[api] upload_screenshot failed: {e}"),
     }
 }
@@ -136,7 +152,7 @@ pub async fn report_error(source: &str, message: &str, user_id: &str) {
         "source": source,
         "message": message,
         "platform": std::env::consts::OS,
-        "appVersion": "0.1.33",
+        "appVersion": "0.1.34",
     });
 
     let _ = client
