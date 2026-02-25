@@ -312,8 +312,9 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
 
                                             if map_hr.is_ok() {
                                                 let row_pitch = mapped.RowPitch as usize;
-                                                let width = desc.Width as usize;
-                                                let height = desc.Height as usize;
+                                                let content_size = frame.ContentSize().unwrap();
+                                                let width = content_size.Width as usize;
+                                                let height = content_size.Height as usize;
 
                                                 let src = mapped.pData as *const u8;
                                                 let mut bgra = vec![0u8; width * height * 4];
