@@ -45,8 +45,6 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         let _dq_controller = CreateDispatcherQueueController(dq_options).ok();
 
         // Initial pass: Gather monitors and their physical sizes to calculate a global physical canvas
-        let vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
-        let vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
 
         struct MonitorCaptureInfo {
             hmonitor: HMONITOR,
@@ -86,7 +84,21 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             return Err("No monitors found".to_string());
         }
 
-        // 2. Pre-pass: Calculate global physical bounding box
+        // 2. Determine Logial Origin (vx, vy) directly from monitors to avoid system metric mismatches
+        let mut min_lx = i32::MAX;
+        let mut min_ly = i32::MAX;
+        for &hmonitor in &monitors {
+            let mut mi = MONITORINFOEXW::default();
+            mi.monitorInfo.cbSize = std::mem::size_of::<MONITORINFOEXW>() as u32;
+            if GetMonitorInfoW(hmonitor, &mut mi as *mut _ as *mut MONITORINFO).as_bool() {
+                min_lx = min_lx.min(mi.monitorInfo.rcMonitor.left);
+                min_ly = min_ly.min(mi.monitorInfo.rcMonitor.top);
+            }
+        }
+        let vx = if min_lx == i32::MAX { 0 } else { min_lx };
+        let vy = if min_ly == i32::MAX { 0 } else { min_ly };
+
+        // 3. Pre-pass: Calculate global physical bounding box
         let mut min_px = 0i32;
         let mut min_py = 0i32;
         let mut max_px = 0i32;
@@ -107,25 +119,27 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                     let lw = (mi.monitorInfo.rcMonitor.right - mi.monitorInfo.rcMonitor.left).abs() as u32;
                     let lh = (mi.monitorInfo.rcMonitor.bottom - mi.monitorInfo.rcMonitor.top).abs() as u32;
                     
-                    // Ratio to scale logical relative offsets to physical canvas space
                     let sx = if lw > 0 { pw as f64 / lw as f64 } else { 1.0 };
                     let sy = if lh > 0 { ph as f64 / lh as f64 } else { 1.0 };
 
-                    // Calculate physical bounds relative to the virtual screen origin (vx, vy)
-                    // Use floor/ceil to ensure we don't truncate a pixel edge
-                    let physical_left = ((mi.monitorInfo.rcMonitor.left - vx) as f64 * sx).floor() as i32;
-                    let physical_top = ((mi.monitorInfo.rcMonitor.top - vy) as f64 * sy).floor() as i32;
-                    let physical_right = physical_left + pw as i32;
-                    let physical_bottom = physical_top + ph as i32;
+                    // Use round() for more stable coordinate mapping
+                    let physical_left = ((mi.monitorInfo.rcMonitor.left - vx) as f64 * sx).round() as i32;
+                    let physical_top = ((mi.monitorInfo.rcMonitor.top - vy) as f64 * sy).round() as i32;
+                    
+                    // Single monitor fast-path: Force 0,0 origin to prevent any 1-pixel rounding drift
+                    let (p_left, p_top) = if monitors.len() == 1 { (0, 0) } else { (physical_left, physical_top) };
+                    
+                    let physical_right = p_left + pw as i32;
+                    let physical_bottom = p_top + ph as i32;
 
                     if capture_infos.is_empty() {
-                        min_px = physical_left;
-                        min_py = physical_top;
+                        min_px = p_left;
+                        min_py = p_top;
                         max_px = physical_right;
                         max_py = physical_bottom;
                     } else {
-                        min_px = min_px.min(physical_left);
-                        min_py = min_py.min(physical_top);
+                        min_px = min_px.min(p_left);
+                        min_py = min_py.min(p_top);
                         max_px = max_px.max(physical_right);
                         max_py = max_py.max(physical_bottom);
                     }
@@ -338,9 +352,13 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                 let sx = if lw > 0 { fw as f64 / lw as f64 } else { 1.0 };
                 let sy = if lh > 0 { fh as f64 / lh as f64 } else { 1.0 };
 
-                // Re-calculate the exact start position in the physical buffer
-                let start_px = (((info.logical_x - vx) as f64 * sx).floor() as i32 - min_px) as usize;
-                let start_py = (((info.logical_y - vy) as f64 * sy).floor() as i32 - min_py) as usize;
+                // Re-calculate the exact start position in the physical buffer using round()
+                // to match the bounding box calculation exactly.
+                let start_px = ((info.logical_x - vx) as f64 * sx).round() as i32 - min_px;
+                let start_py = ((info.logical_y - vy) as f64 * sy).round() as i32 - min_py;
+                
+                let start_px = start_px.max(0) as usize;
+                let start_py = start_py.max(0) as usize;
                 
                 let canvas_stride = total_pw as usize;
                 let monitor_stride = fw as usize;
