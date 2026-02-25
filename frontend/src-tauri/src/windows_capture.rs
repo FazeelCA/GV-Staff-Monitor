@@ -105,24 +105,31 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                 if let Ok(item_size) = item.Size() {
                     let pw = item_size.Width as u32;
                     let ph = item_size.Height as u32;
-                    let lw = (mi.monitorInfo.rcMonitor.right - mi.monitorInfo.rcMonitor.left) as u32;
-                    let lh = (mi.monitorInfo.rcMonitor.bottom - mi.monitorInfo.rcMonitor.top) as u32;
+                    let lw = (mi.monitorInfo.rcMonitor.right - mi.monitorInfo.rcMonitor.left).abs() as u32;
+                    let lh = (mi.monitorInfo.rcMonitor.bottom - mi.monitorInfo.rcMonitor.top).abs() as u32;
                     
                     // Ratio to scale logical relative offsets to physical canvas space
-                    let sx = if lw > 0 { pw as f32 / lw as f32 } else { 1.0 };
-                    let sy = if lh > 0 { ph as f32 / lh as f32 } else { 1.0 };
+                    let sx = if lw > 0 { pw as f64 / lw as f64 } else { 1.0 };
+                    let sy = if lh > 0 { ph as f64 / lh as f64 } else { 1.0 };
 
-                    // We assume vx/vy relative to logical 0,0. 
-                    // To build a physical map, we calculate physical rects.
-                    let pl = (mi.monitorInfo.rcMonitor.left - vx) as f32 * sx;
-                    let pt = (mi.monitorInfo.rcMonitor.top - vy) as f32 * sy;
-                    let pr = pl + pw as f32;
-                    let pb = pt + ph as f32;
+                    // Calculate physical bounds relative to the virtual screen origin (vx, vy)
+                    // Use floor/ceil to ensure we don't truncate a pixel edge
+                    let physical_left = ((mi.monitorInfo.rcMonitor.left - vx) as f64 * sx).floor() as i32;
+                    let physical_top = ((mi.monitorInfo.rcMonitor.top - vy) as f64 * sy).floor() as i32;
+                    let physical_right = physical_left + pw as i32;
+                    let physical_bottom = physical_top + ph as i32;
 
-                    min_px = min_px.min(pl as i32);
-                    min_py = min_py.min(pt as i32);
-                    max_px = max_px.max(pr as i32);
-                    max_py = max_py.max(pb as i32);
+                    if capture_infos.is_empty() {
+                        min_px = physical_left;
+                        min_py = physical_top;
+                        max_px = physical_right;
+                        max_py = physical_bottom;
+                    } else {
+                        min_px = min_px.min(physical_left);
+                        min_py = min_py.min(physical_top);
+                        max_px = max_px.max(physical_right);
+                        max_py = max_py.max(physical_bottom);
+                    }
 
                     capture_infos.push(MonitorCaptureInfo {
                         hmonitor,
@@ -212,7 +219,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                 item_size,
             ).map_err(|e| format!("CreateFreeThreaded failed: {e}"))?;
 
-            let session = frame_pool.CreateCaptureSession(item).map_err(|e| format!("CreateCaptureSession failed: {e}"))?;
+            let session = frame_pool.CreateCaptureSession(item.clone()).map_err(|e| format!("CreateCaptureSession failed: {e}"))?;
             session.SetIsCursorCaptureEnabled(false).ok();
 
             // Set up an event handler for FrameArrived
@@ -329,26 +336,33 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                 let lw = info.logical_width;
                 let lh = info.logical_height;
                 
-                let sx = if lw > 0 { fw as f32 / lw as f32 } else { 1.0 };
-                let sy = if lh > 0 { fh as f32 / lh as f32 } else { 1.0 };
+                let sx = if lw > 0 { fw as f64 / lw as f64 } else { 1.0 };
+                let sy = if lh > 0 { fh as f64 / lh as f64 } else { 1.0 };
 
-                let start_px = ((info.logical_x - vx) as f32 * sx) as i32 - min_px;
-                let start_py = ((info.logical_y - vy) as f32 * sy) as i32 - min_py;
+                // Re-calculate the exact start position in the physical buffer
+                let start_px = (((info.logical_x - vx) as f64 * sx).floor() as i32 - min_px) as usize;
+                let start_py = (((info.logical_y - vy) as f64 * sy).floor() as i32 - min_py) as usize;
                 
+                let canvas_stride = total_pw as usize;
+                let monitor_stride = fw as usize;
+
                 for r in 0..fh as usize {
-                    let dest_y = start_py as usize + r;
+                    let dest_y = start_py + r;
                     if dest_y >= total_ph as usize { continue; }
                     
+                    let dest_row_start = dest_y * canvas_stride * 3;
+                    let src_row_start = r * monitor_stride * 3;
+                    
                     for c in 0..fw as usize {
-                        let dest_x = start_px as usize + c;
-                        if dest_x >= total_pw as usize { continue; }
+                        let dest_x = start_px + c;
+                        if dest_x >= canvas_stride { continue; }
                         
-                        let src_idx = (r * fw as usize + c) * 3;
-                        let dest_idx = (dest_y * total_pw as usize + dest_x) * 3;
+                        let s_idx = src_row_start + (c * 3);
+                        let d_idx = dest_row_start + (dest_x * 3);
                         
-                        full_desktop_rgb[dest_idx] = rgb_data[src_idx];
-                        full_desktop_rgb[dest_idx + 1] = rgb_data[src_idx + 1];
-                        full_desktop_rgb[dest_idx + 2] = rgb_data[src_idx + 2];
+                        full_desktop_rgb[d_idx] = rgb_data[s_idx];
+                        full_desktop_rgb[d_idx + 1] = rgb_data[s_idx + 1];
+                        full_desktop_rgb[d_idx + 2] = rgb_data[s_idx + 2];
                     }
                 }
                 any_success = true;
