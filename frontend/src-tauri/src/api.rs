@@ -60,11 +60,11 @@ pub async fn upload_screenshot(jpeg_bytes: Vec<u8>, hash: String, task: String, 
         .expect("valid mime");
 
     let form = multipart::Form::new()
-        .part("image", part)
         .text("hash", hash)
         .text("activityCount", activity_count.to_string())
         .text("taskAtTheTime", task)
-        .text("userId", user_id);
+        .text("userId", user_id)
+        .part("image", part);
 
     match client
         .post(format!("{BASE_URL}/api/screenshots/upload"))
@@ -152,7 +152,7 @@ pub async fn report_error(source: &str, message: &str, user_id: &str) {
         "source": source,
         "message": message,
         "platform": std::env::consts::OS,
-        "appVersion": "0.1.34",
+        "appVersion": "0.1.35",
     });
 
     let _ = client
