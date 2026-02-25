@@ -142,7 +142,9 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
                             log::error!("[screenshot] {msg}");
                             
                             // Send to frontend for user visible debugging
-                            let _ = app_state.app_handle.emit("app-error", format!("WGC PANIC: {msg}"));
+                            if let Some(handle) = app_state.app_handle.lock().unwrap().as_ref() {
+                                let _ = handle.emit("app-error", format!("WGC PANIC: {msg}"));
+                            }
                             
                             let uid = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
                             let msg_clone = msg.clone();
@@ -454,6 +456,13 @@ pub fn run() {
 
     tauri::Builder::default()
         .setup(|app| {
+            // Store app_handle for cross-thread emission (e.g. from screenshot loop)
+            {
+                let state = app.state::<SharedState>();
+                let mut handle_guard = state.app_handle.lock().unwrap();
+                *handle_guard = Some(app.handle().clone());
+            }
+
             // Spawn the input tracker thread globally when the app starts
             start_rdev_listener();
 

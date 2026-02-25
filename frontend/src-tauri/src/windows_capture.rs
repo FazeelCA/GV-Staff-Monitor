@@ -155,8 +155,8 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             let item = item_res.unwrap();
 
             let item_size = item.Size().map_err(|e| format!("item.Size failed: {e}"))?;
-            let width = item_size.Width as u32;
-            let height = item_size.Height as u32;
+            let _width = item_size.Width as u32;
+            let _height = item_size.Height as u32;
 
             // Create Frame Pool
             let frame_pool = Direct3D11CaptureFramePool::CreateFreeThreaded(
@@ -184,8 +184,8 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                                 // Extract ID3D11Texture2D from surface
                                 let access = surface.cast::<windows::Win32::System::WinRT::Direct3D11::IDirect3DDxgiInterfaceAccess>().unwrap();
                                 
-                                if let Ok(gpu_texture) = unsafe { access.GetInterface::<ID3D11Texture2D>() } {
-                                    unsafe {
+                                if let Ok(gpu_texture) = access.GetInterface::<ID3D11Texture2D>() {
+                                    {
                                         // We need to copy this GPU texture to a CPU-readable staging texture
                                         let mut desc = D3D11_TEXTURE2D_DESC::default();
                                         gpu_texture.GetDesc(&mut desc);
@@ -255,7 +255,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
 
             while start.elapsed() < Duration::from_millis(3000) {
                 // Pump messages
-                unsafe {
+                {
                     let mut msg = windows::Win32::UI::WindowsAndMessaging::MSG::default();
                     while windows::Win32::UI::WindowsAndMessaging::PeekMessageW(
                         &mut msg,

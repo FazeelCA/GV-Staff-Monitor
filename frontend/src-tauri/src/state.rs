@@ -23,6 +23,7 @@ pub struct AppState {
     pub current_task: Mutex<String>,
     pub auth_token: Mutex<Option<String>>,
     pub user_id: Mutex<Option<String>>,
+    pub app_handle: Mutex<Option<tauri::AppHandle>>,
     /// When Some, the screenshot loop is active. Dropping / sending cancels it.
     pub screenshot_stop_tx: Mutex<Option<oneshot::Sender<()>>>,
     /// When Some, activity loop is active.
@@ -36,6 +37,7 @@ impl AppState {
             current_task: Mutex::new(String::new()),
             auth_token: Mutex::new(None),
             user_id: Mutex::new(None),
+            app_handle: Mutex::new(None),
             screenshot_stop_tx: Mutex::new(None),
             activity_stop_tx: Mutex::new(None),
         }
