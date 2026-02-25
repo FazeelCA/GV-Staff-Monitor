@@ -278,24 +278,35 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                                                 );
                                                 
                                                 if map_hr.is_ok() {
-                                                    let pitch = mapped.RowPitch as usize;
-                                                    let mut rgb_buf = Vec::with_capacity((desc.Width * desc.Height * 3) as usize);
-                                                    let data_ptr = mapped.pData as *const u8;
+                                                    let row_pitch = mapped.RowPitch as usize;
+                                                    let width = desc.Width as usize;
+                                                    let height = desc.Height as usize;
                                                     
-                                                    for r in 0..desc.Height as usize {
-                                                        let row_start = data_ptr.add(r * pitch);
-                                                        for c in 0..desc.Width as usize {
-                                                            let px = row_start.add(c * 4);
-                                                            let b = *px;
-                                                            let g = *px.add(1);
-                                                            let r_val = *px.add(2);
-                                                            rgb_buf.push(r_val);
-                                                            rgb_buf.push(g);
-                                                            rgb_buf.push(b);
-                                                        }
+                                                    let src = mapped.pData as *const u8;
+                                                    let mut bgra = vec![0u8; width * height * 4];
+                                                    
+                                                    // CRITICAL: row-by-row copy using RowPitch
+                                                    for y in 0..height {
+                                                        let src_row = src.add(y * row_pitch);
+                                                        let dst_row = bgra.as_mut_ptr().add(y * width * 4);
+                                                        std::ptr::copy_nonoverlapping(
+                                                            src_row,
+                                                            dst_row,
+                                                            width * 4,
+                                                        );
                                                     }
                                                     
                                                     let _ = d3d_context_clone.Unmap(&staging, 0);
+                                                    
+                                                    // Convert dense contiguous BGRA to RGB
+                                                    let mut rgb_buf = Vec::with_capacity(width * height * 3);
+                                                    for i in 0..(width * height) {
+                                                        let base = i * 4;
+                                                        rgb_buf.push(bgra[base + 2]); // R
+                                                        rgb_buf.push(bgra[base + 1]); // G
+                                                        rgb_buf.push(bgra[base + 0]); // B
+                                                    }
+                                                    
                                                     let _ = tx.send((rgb_buf, desc.Width, desc.Height));
                                                 }
                                             }
