@@ -1,14 +1,14 @@
 #[cfg(target_os = "windows")]
 pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
-    use std::sync::{mpsc, Arc, Mutex};
+    use std::sync::mpsc;
     use std::time::Duration;
 
     use image::codecs::jpeg::JpegEncoder;
-    use windows::core::{ComInterface, IInspectable, Interface};
+    use windows::core::{IInspectable, Interface, BOOL};
     use windows::Graphics::Capture::{Direct3D11CaptureFramePool, GraphicsCaptureItem};
     use windows::Graphics::DirectX::Direct3D11::IDirect3DDevice;
     use windows::Graphics::DirectX::DirectXPixelFormat;
-    use windows::Win32::Foundation::{BOOL, LPARAM, RECT, HMODULE};
+    use windows::Win32::Foundation::{HMODULE, LPARAM, RECT};
     use windows::Win32::Graphics::Direct3D::{
         D3D_DRIVER_TYPE_HARDWARE, D3D_DRIVER_TYPE_WARP,
     };
@@ -171,12 +171,8 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                             if let Ok(surface) = frame.Surface() {
                                 // Extract ID3D11Texture2D from surface
                                 let access = surface.cast::<windows::Win32::System::WinRT::Direct3D11::IDirect3DDxgiInterfaceAccess>().unwrap();
-                                let mut raw_texture: Option<ID3D11Texture2D> = None;
-                                unsafe {
-                                    let _ = access.GetInterface(&ID3D11Texture2D::IID, &mut raw_texture as *mut _ as *mut _);
-                                }
                                 
-                                if let Some(gpu_texture) = raw_texture {
+                                if let Ok(gpu_texture) = unsafe { access.GetInterface::<ID3D11Texture2D>() } {
                                     unsafe {
                                         // We need to copy this GPU texture to a CPU-readable staging texture
                                         let mut desc = D3D11_TEXTURE2D_DESC::default();
