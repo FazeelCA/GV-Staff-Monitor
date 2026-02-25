@@ -328,6 +328,8 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                                                 Some(&src_box),
                                             );
 
+                                            d3d_context_clone.Flush();
+
                                             let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
                                             let map_hr = d3d_context_clone.Map(
                                                 &staging,
