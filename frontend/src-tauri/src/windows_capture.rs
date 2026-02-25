@@ -43,8 +43,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             threadType: DQTYPE_THREAD_CURRENT,
             apartmentType: DQTAT_COM_NONE,
         };
-        let mut dq_controller = None;
-        let _ = CreateDispatcherQueueController(dq_options, &mut dq_controller);
+        let _dq_controller = CreateDispatcherQueueController(dq_options).ok();
 
         // Calculate virtual screen dimensions for stitching if multi-monitor
         let vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
