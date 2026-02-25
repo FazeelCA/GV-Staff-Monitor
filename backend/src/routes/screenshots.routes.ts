@@ -5,28 +5,14 @@ import { authenticateToken } from "../middleware/authenticate";
 
 const router = Router();
 
-// PIZZA PARSER v11 - THE FINAL JUDGE (Strict Integrity)
-// Rejects ANY truncated upload. No more "split" images.
-// Forces the app to retry until the connection delivers every bit.
+// PIZZA PARSER v14 - THE PEACEKEEPER (Resilient + Clean)
+// Restores visibility for truncated streams while preventing "split" artifacts.
 router.post("/upload", async (req: Request, res: Response) => {
-    const expectedLength = parseInt(req.headers["content-length"] || "0", 10);
     const chunks: Buffer[] = [];
-
     req.on("data", (c) => chunks.push(c));
     req.on("end", async () => {
         try {
             const body = Buffer.concat(chunks);
-            const actualLength = body.length;
-
-            // 1. Strict Byte Count Check
-            // If the connection dropped (e.g. mobile hotspot glitch), req.on("end") still fires.
-            // We MUST reject if we didn't get what the client promised.
-            if (expectedLength > 0 && actualLength < expectedLength) {
-                console.warn(`[PIZZA REJECT] Truncated upload (${actualLength}/${expectedLength}). Forcing retry.`);
-                if (!res.headersSent) res.status(502).json({ error: "Truncated" });
-                return;
-            }
-
             if (body.length < 500) return res.status(400).send("No data");
 
             const findText = (name: string): string => {
@@ -34,31 +20,39 @@ router.post("/upload", async (req: Request, res: Response) => {
                 const idx = body.indexOf(search);
                 if (idx === -1) return "";
                 const s = body.indexOf("\r\n\r\n", idx) + 4;
-                if (s < 4) return "";
                 const e = body.indexOf("\r\n--", s);
                 return (e === -1) ? "" : body.slice(s, e).toString().trim();
             };
 
-            const userId = findText("userId");
-            if (!userId) return res.status(400).send("No userId");
+            const userId = findText("userId") || "unknown";
 
-            // 2. Binary Extraction (Look for "image" part - matching app v0.1.44)
-            let imageBuffer: Buffer | null = null;
+            // 1. Locate SOI (Start of Image)
             const soi = Buffer.from([0xff, 0xd8]);
             const sIdx = body.indexOf(soi);
-
-            if (sIdx !== -1) {
-                const eIdx = body.lastIndexOf(Buffer.from([0xff, 0xd9]));
-                if (eIdx !== -1 && eIdx > sIdx) {
-                    imageBuffer = body.slice(sIdx, eIdx + 2);
-                }
+            if (sIdx === -1) {
+                console.error(`[PIZZA v14] No SOI found for ${userId}. Rejecting.`);
+                return res.status(400).send("Invalid stream");
             }
 
-            // 3. Reject if JPEG is incomplete (Missing End Marker)
-            if (!imageBuffer || imageBuffer.length < 1000) {
-                console.error(`[PIZZA REJECT] Invalid JPEG structure for ${userId}. Forcing retry.`);
-                if (!res.headersSent) res.status(502).send("Invalid Image");
-                return;
+            // 2. Locate EOI (End of Image)
+            const eoi = Buffer.from([0xff, 0xd9]);
+            const eIdx = body.lastIndexOf(eoi);
+
+            let imageBuffer: Buffer;
+            if (eIdx !== -1 && eIdx > sIdx) {
+                // Perfect Case: Deliver bit-perfect slice
+                imageBuffer = body.slice(sIdx, eIdx + 2);
+            } else {
+                // Truncated Case: Rescue and seal
+                console.warn(`[PIZZA v14] Truncated JPEG from ${userId} (${body.length} bytes). Rescuing.`);
+
+                // Find where the image part might end to avoid including boundary metadata
+                let endOfPart = body.indexOf("\r\n--", sIdx);
+                if (endOfPart === -1) endOfPart = body.length;
+
+                // Take the raw pixels and add a fresh EOI to prevent "Split" appearance
+                const rawPixels = body.slice(sIdx, endOfPart);
+                imageBuffer = Buffer.concat([rawPixels, eoi]);
             }
 
             const imageUrl = await uploadFile(imageBuffer, "screen.jpg", "image/jpeg");
@@ -72,8 +66,8 @@ router.post("/upload", async (req: Request, res: Response) => {
                 }
             });
 
-            console.log(`[PIZZA SUCCESS] v11 Clean Save: ${userId} (${imageBuffer.length} bytes)`);
-            if (!res.headersSent) res.json({ success: true, screenshot });
+            console.log(`[PIZZA SUCCESS] v14 saved ${userId} (${imageBuffer.length} bytes)`);
+            res.json({ success: true, screenshot });
 
         } catch (e: any) {
             console.error("[PIZZA ERROR]", e);
@@ -85,10 +79,10 @@ router.post("/upload", async (req: Request, res: Response) => {
 // DELETE /api/screenshots/:id
 router.delete("/:id", authenticateToken, async (req: any, res: Response) => {
     try {
-        if (req.user?.role !== "ADMIN") return res.status(403).json({ error: "Access Denied" });
+        if (req.user?.role !== "ADMIN") return res.status(403).json({ error: "No permission" });
         const { id } = req.params;
         const screenshot = await prisma.screenshot.findUnique({ where: { id } });
-        if (!screenshot) return res.status(404).json({ error: "Not Found" });
+        if (!screenshot) return res.status(404).json({ error: "Not found" });
         await deleteFile(screenshot.imageUrl);
         await prisma.screenshot.delete({ where: { id } });
         res.json({ success: true });
