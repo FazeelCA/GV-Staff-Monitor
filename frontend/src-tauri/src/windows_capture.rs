@@ -22,7 +22,10 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITORINFO, MONITORINFOEXW,
     };
     use windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
-    use windows::Win32::System::WinRT::Direct3D11::CreateDirect3D11DeviceFromDXGIDevice;
+    use windows::Win32::System::WinRT::{
+        CreateDirect3D11DeviceFromDXGIDevice, CreateDispatcherQueueController,
+        DispatcherQueueOptions, DQTAT_COM_NONE, DQTYPE_THREAD_CURRENT,
+    };
     use windows::Win32::System::WinRT::Graphics::Capture::IGraphicsCaptureItemInterop;
     use windows::Win32::UI::WindowsAndMessaging::{
         GetSystemMetrics, SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN, SM_XVIRTUALSCREEN,
@@ -32,6 +35,16 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
     unsafe {
         // Init COM
         let _ = CoInitializeEx(None, COINIT_MULTITHREADED);
+        
+        // Initialize DispatcherQueue for the current thread
+        // WinRT async events (like FrameArrived) require this on non-UI threads
+        let dq_options = DispatcherQueueOptions {
+            dwSize: std::mem::size_of::<DispatcherQueueOptions>() as u32,
+            threadType: DQTYPE_THREAD_CURRENT,
+            apartmentType: DQTAT_COM_NONE,
+        };
+        let mut dq_controller = None;
+        let _ = CreateDispatcherQueueController(dq_options, &mut dq_controller);
 
         // Calculate virtual screen dimensions for stitching if multi-monitor
         let vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
