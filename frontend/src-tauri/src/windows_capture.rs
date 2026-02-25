@@ -72,18 +72,22 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         let mut bits_ptr = std::ptr::null_mut();
 
         let bitmap = CreateDIBSection(
-            screen_dc,
+            Some(screen_dc),
             &bmi,
             DIB_RGB_COLORS,
             &mut bits_ptr,
-            HANDLE::default(),
+            None,
             0,
-        );
+        ).map_err(|e| {
+            DeleteDC(mem_dc);
+            DeleteDC(screen_dc);
+            format!("CreateDIBSection failed: {e}")
+        })?;
 
         if bitmap.is_invalid() {
             DeleteDC(mem_dc);
             DeleteDC(screen_dc);
-            return Err("CreateDIBSection failed".into());
+            return Err("CreateDIBSection returned invalid handle".into());
         }
 
         let old = SelectObject(mem_dc, bitmap.into());
