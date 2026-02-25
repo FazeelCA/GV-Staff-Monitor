@@ -242,10 +242,19 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             let d3d_device_clone = d3d_device.clone();
             let d3d_context_clone = d3d_context.clone();
 
+            let mut frame_counter = 0;
+
             let handler = windows::Foundation::TypedEventHandler::<Direct3D11CaptureFramePool, IInspectable>::new(
                 move |sender_pool, _| {
                     if let Some(pool) = &*sender_pool {
                         if let Ok(frame) = pool.TryGetNextFrame() {
+                            frame_counter += 1;
+
+                            // Skip first two frames completely
+                            if frame_counter < 3 {
+                                return Ok(());
+                            }
+
                             if let Ok(surface) = frame.Surface() {
                                 // Extract ID3D11Texture2D from surface
                                 let access = surface.cast::<windows::Win32::System::WinRT::Direct3D11::IDirect3DDxgiInterfaceAccess>().unwrap();
