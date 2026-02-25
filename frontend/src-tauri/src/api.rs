@@ -40,7 +40,10 @@ pub async fn log_time_event(state: &str, task: &str, user_id: &str, token: &str)
 
 /// POST /api/screenshots/upload
 pub async fn upload_screenshot(jpeg_bytes: Vec<u8>, hash: String, task: String, user_id: String, token: String, activity_count: usize) {
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(300))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
 
     let part = multipart::Part::bytes(jpeg_bytes)
         .file_name("screenshot.jpg")
@@ -133,7 +136,7 @@ pub async fn report_error(source: &str, message: &str, user_id: &str) {
         "source": source,
         "message": message,
         "platform": std::env::consts::OS,
-        "appVersion": "0.1.28",
+        "appVersion": "0.1.29",
     });
 
     let _ = client
