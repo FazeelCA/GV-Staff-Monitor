@@ -35,18 +35,46 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             return Err("CreateCompatibleDC failed".to_string());
         }
 
-        // 4. Create Compatible Bitmap
-        let bitmap = CreateCompatibleBitmap(screen_dc, width, height);
-        if bitmap.is_invalid() {
+        // 4. Configure BITMAPINFO for CreateDIBSection
+        // CRITICAL: biHeight must be negative for top-down DIB
+        let mut bitmap_info = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                biWidth: width,
+                biHeight: -height, // Negative = top-down
+                biPlanes: 1,
+                biBitCount: 32,
+                biCompression: BI_RGB.0,
+                biSizeImage: 0,
+                biXPelsPerMeter: 0,
+                biYPelsPerMeter: 0,
+                biClrUsed: 0,
+                biClrImportant: 0,
+            },
+            bmiColors: [Default::default()],
+        };
+
+        // 5. CreateDIBSection (Guarantees linear RAM, no GPU stride padding)
+        let mut bits_ptr: *mut core::ffi::c_void = std::ptr::null_mut();
+        let bitmap = windows::Win32::Graphics::Gdi::CreateDIBSection(
+            screen_dc,
+            &bitmap_info as *const _,
+            DIB_RGB_COLORS,
+            &mut bits_ptr as *mut _,
+            windows::Win32::Foundation::HANDLE::default(),
+            0,
+        );
+
+        if bitmap.is_invalid() || bits_ptr.is_null() {
             DeleteDC(mem_dc);
             DeleteDC(screen_dc);
-            return Err("CreateCompatibleBitmap failed".to_string());
+            return Err("CreateDIBSection failed".to_string());
         }
 
-        // 5. Select Object
+        // 6. Select Object
         let old_bitmap = SelectObject(mem_dc, bitmap.into());
 
-        // 6. BitBlt (SRCCOPY | CAPTUREBLT to get layered windows)
+        // 7. BitBlt (SRCCOPY | CAPTUREBLT to get layered windows)
         let ok = BitBlt(
             mem_dc,
             0,
@@ -67,39 +95,9 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             return Err("BitBlt failed".to_string());
         }
 
-        // 7. Configure BITMAPINFO for GetDIBits
-        // CRITICAL: biHeight must be negative for top-down DIB
-        let mut bitmap_info = BITMAPINFO {
-            bmiHeader: BITMAPINFOHEADER {
-                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
-                biWidth: width,
-                biHeight: -height, // Negative = top-down
-                biPlanes: 1,
-                biBitCount: 32,
-                biCompression: BI_RGB.0,
-                biSizeImage: 0,
-                biXPelsPerMeter: 0,
-                biYPelsPerMeter: 0,
-                biClrUsed: 0,
-                biClrImportant: 0,
-            },
-            bmiColors: [Default::default()],
-        };
-
-        // 8. Allocate exact buffer
+        // 8. Read directly from the linear RAM pointer
         let buffer_size = (width * height * 4) as usize;
-        let mut bgra_buffer: Vec<u8> = vec![0; buffer_size];
-
-        // 9. GetDIBits
-        let lines = GetDIBits(
-            mem_dc,
-            bitmap,
-            0,
-            height as u32,
-            Some(bgra_buffer.as_mut_ptr() as *mut _),
-            &mut bitmap_info as *mut _,
-            DIB_RGB_COLORS,
-        );
+        let bgra_buffer = std::slice::from_raw_parts(bits_ptr as *const u8, buffer_size);
 
         // Cleanup GDI
         SelectObject(mem_dc, old_bitmap);
@@ -107,26 +105,13 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         DeleteDC(mem_dc);
         DeleteDC(screen_dc);
 
-        if lines == 0 {
-            return Err("GetDIBits failed".to_string());
-        }
-
         // CRITICAL DEBUG LOG
         log::info!(
-            "[screenshot] GDI Captured: width={}, height={}, buffer.len()={} (expected {})",
+            "[screenshot] GDI Captured (DIBSection): width={}, height={}, buffer.len()={}",
             width,
             height,
-            bgra_buffer.len(),
-            buffer_size
+            bgra_buffer.len()
         );
-
-        if bgra_buffer.len() != buffer_size {
-            return Err(format!(
-                "Buffer size mismatch: got {}, expected {}",
-                bgra_buffer.len(),
-                buffer_size
-            ));
-        }
 
         // 10. Convert BGRA to RGB
         let pixel_count = (width * height) as usize;
