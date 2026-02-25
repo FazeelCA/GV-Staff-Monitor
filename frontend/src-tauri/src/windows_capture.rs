@@ -306,7 +306,27 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
 
                                     if hr.is_ok() {
                                         if let Some(staging) = staging_opt {
-                                            d3d_context_clone.CopyResource(&staging, &gpu_texture);
+                                            use windows::Win32::Graphics::Direct3D11::D3D11_BOX;
+
+                                            let src_box = D3D11_BOX {
+                                                left: 0,
+                                                top: 0,
+                                                front: 0,
+                                                right: content_size.Width as u32,
+                                                bottom: content_size.Height as u32,
+                                                back: 1,
+                                            };
+
+                                            d3d_context_clone.CopySubresourceRegion(
+                                                &staging,
+                                                0,
+                                                0,
+                                                0,
+                                                0,
+                                                &gpu_texture,
+                                                0,
+                                                Some(&src_box),
+                                            );
 
                                             let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
                                             let map_hr = d3d_context_clone.Map(
