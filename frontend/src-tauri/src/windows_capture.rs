@@ -5,7 +5,6 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
     // GDI BitBlt gives us complete control over the buffer: no GPU texture padding,
     // no logical vs physical pixel confusion — zero stride ambiguity.
     use image::codecs::jpeg::JpegEncoder;
-    use windows::Win32::Foundation::RECT;
     use windows::Win32::Graphics::Gdi::{
         BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, CreateDCA, DeleteDC, DeleteObject,
         GetDIBits, SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, SRCCOPY,
@@ -38,7 +37,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             return Err("CreateDCA(DISPLAY) failed".to_string());
         }
 
-        let mem_dc = CreateCompatibleDC(screen_dc);
+        let mem_dc = CreateCompatibleDC(Some(screen_dc));
         if mem_dc.is_invalid() {
             DeleteDC(screen_dc);
             return Err("CreateCompatibleDC failed".to_string());
@@ -52,13 +51,13 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             return Err("CreateCompatibleBitmap failed".to_string());
         }
 
-        let old_bitmap = SelectObject(mem_dc, bitmap);
+        let old_bitmap = SelectObject(mem_dc, bitmap.into());
 
         // 4. BitBlt the entire virtual screen into our bitmap
-        let ok = BitBlt(mem_dc, 0, 0, vw, vh, screen_dc, vx, vy, SRCCOPY);
+        let ok = BitBlt(mem_dc, 0, 0, vw, vh, Some(screen_dc), vx, vy, SRCCOPY);
         if ok.is_err() {
             SelectObject(mem_dc, old_bitmap);
-            DeleteObject(bitmap);
+            DeleteObject(bitmap.into());
             DeleteDC(mem_dc);
             DeleteDC(screen_dc);
             return Err("BitBlt failed".to_string());
@@ -66,7 +65,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
 
         // 5. Extract raw pixel data using GetDIBits
         // We request 32-bit BGRA (BITMAPINFOHEADER with BI_RGB and biBitCount=32)
-        // Row pitch = width * 4, rows stored bottom-up by default → we request top-down
+        // biHeight is NEGATIVE → top-down scan order → no row-reversal needed
         let bmi = BITMAPINFO {
             bmiHeader: BITMAPINFOHEADER {
                 biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
@@ -99,7 +98,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
 
         // Clean up GDI resources
         SelectObject(mem_dc, old_bitmap);
-        DeleteObject(bitmap);
+        DeleteObject(bitmap.into());
         DeleteDC(mem_dc);
         DeleteDC(screen_dc);
 
@@ -133,7 +132,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             return Err("Captured blank/solid frame (DRM or display off)".to_string());
         }
 
-        // 8. Encode to JPEG - medium quality (good enough for monitoring, small size)
+        // 8. Encode to JPEG
         let mut jpeg_data = Vec::new();
         let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 40);
         encoder
