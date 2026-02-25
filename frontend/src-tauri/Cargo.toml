@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.1.0"
+version = "0.1.32"
 description = "GV Staff Monitor"
 authors = ["GV Team"]
 license = ""
@@ -64,4 +64,5 @@ windows = { version = "0.61.3", features = [
     "Win32_System_WinRT_Graphics_Capture",
     "Win32_System_WinRT_Direct3D11",
     "Foundation",
+    "System",
 ] }
