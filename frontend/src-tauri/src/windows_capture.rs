@@ -352,6 +352,46 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                                                 Some(&src_box),
                                             );
                                             d3d_context.Flush();
+
+                                            use windows::Win32::Graphics::Direct3D11::{
+                                                ID3D11Query, D3D11_QUERY_DESC, D3D11_QUERY_EVENT,
+                                            };
+
+                                            let mut query: Option<ID3D11Query> = None;
+                                            let query_desc = D3D11_QUERY_DESC {
+                                                Query: D3D11_QUERY_EVENT,
+                                                MiscFlags: 0,
+                                            };
+
+                                            if d3d_device
+                                                .CreateQuery(&query_desc, Some(&mut query))
+                                                .is_ok()
+                                            {
+                                                if let Some(q) = query {
+                                                    d3d_context.End(&q);
+
+                                                    loop {
+                                                        let mut done: u32 = 0;
+                                                        let hr = d3d_context.GetData(
+                                                            &q,
+                                                            Some(
+                                                                &mut done as *mut _
+                                                                    as *mut core::ffi::c_void,
+                                                            ),
+                                                            std::mem::size_of::<u32>() as u32,
+                                                            0,
+                                                        );
+
+                                                        if hr.is_ok() && done != 0 {
+                                                            break;
+                                                        }
+
+                                                        std::thread::sleep(Duration::from_micros(
+                                                            50,
+                                                        ));
+                                                    }
+                                                }
+                                            }
                                         }
 
                                         let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
