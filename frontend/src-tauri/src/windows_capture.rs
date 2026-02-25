@@ -28,8 +28,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
     };
     use windows::Win32::System::WinRT::Graphics::Capture::IGraphicsCaptureItemInterop;
     use windows::Win32::UI::WindowsAndMessaging::{
-        GetSystemMetrics, SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN, SM_XVIRTUALSCREEN,
-        SM_YVIRTUALSCREEN,
+        GetSystemMetrics, SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN,
     };
 
     unsafe {
@@ -219,7 +218,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                 item_size,
             ).map_err(|e| format!("CreateFreeThreaded failed: {e}"))?;
 
-            let session = frame_pool.CreateCaptureSession(item.clone()).map_err(|e| format!("CreateCaptureSession failed: {e}"))?;
+            let session = frame_pool.CreateCaptureSession(item).map_err(|e| format!("CreateCaptureSession failed: {e}"))?;
             session.SetIsCursorCaptureEnabled(false).ok();
 
             // Set up an event handler for FrameArrived
