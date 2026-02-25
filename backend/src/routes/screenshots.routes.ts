@@ -5,56 +5,59 @@ import { authenticateToken } from "../middleware/authenticate";
 
 const router = Router();
 
-// PIZZA RESCUER - Manual binary harvester bypassing all multipart parsers.
-// This handles truncated/corrupted streams from unstable mobile hotspot connections.
+// PIZZA PARSER v11 - THE FINAL JUDGE (Strict Integrity)
+// Rejects ANY truncated upload. No more "split" images.
+// Forces the app to retry until the connection delivers every bit.
 router.post("/upload", async (req: Request, res: Response) => {
+    const expectedLength = parseInt(req.headers["content-length"] || "0", 10);
     const chunks: Buffer[] = [];
+
     req.on("data", (c) => chunks.push(c));
     req.on("end", async () => {
         try {
             const body = Buffer.concat(chunks);
-            console.log(`[PIZZA] Harvested ${body.length} bytes.`);
+            const actualLength = body.length;
 
-            const findText = (key: string): string => {
-                const search = `name="${key}"`;
-                const idx = body.indexOf(search);
-                if (idx === -1) return "";
-                const valStart = body.indexOf("\r\n\r\n", idx) + 4;
-                if (valStart < 4) return "";
-                const valEnd = body.indexOf("\r\n--", valStart);
-                return (valEnd === -1)
-                    ? body.slice(valStart, valStart + 200).toString().split("\r\n")[0].trim()
-                    : body.slice(valStart, valEnd).toString().trim();
-            };
-
-            const userId = findText("userId");
-            if (!userId) {
-                console.error("[PIZZA FAILED] No userId found in harvest");
-                if (!res.headersSent) res.status(400).send("No userId");
+            // 1. Strict Byte Count Check
+            // If the connection dropped (e.g. mobile hotspot glitch), req.on("end") still fires.
+            // We MUST reject if we didn't get what the client promised.
+            if (expectedLength > 0 && actualLength < expectedLength) {
+                console.warn(`[PIZZA REJECT] Truncated upload (${actualLength}/${expectedLength}). Forcing retry.`);
+                if (!res.headersSent) res.status(502).json({ error: "Truncated" });
                 return;
             }
 
-            // Binary JPEG Harvest with Tail Repair
+            if (body.length < 500) return res.status(400).send("No data");
+
+            const findText = (name: string): string => {
+                const search = `name="${name}"`;
+                const idx = body.indexOf(search);
+                if (idx === -1) return "";
+                const s = body.indexOf("\r\n\r\n", idx) + 4;
+                if (s < 4) return "";
+                const e = body.indexOf("\r\n--", s);
+                return (e === -1) ? "" : body.slice(s, e).toString().trim();
+            };
+
+            const userId = findText("userId");
+            if (!userId) return res.status(400).send("No userId");
+
+            // 2. Binary Extraction (Look for "image" part - matching app v0.1.44)
             let imageBuffer: Buffer | null = null;
-            const jpegStart = body.indexOf(Buffer.from([0xff, 0xd8, 0xff]));
-            if (jpegStart !== -1) {
-                const jpegEnd = body.lastIndexOf(Buffer.from([0xff, 0xd9]));
-                if (jpegEnd !== -1 && jpegEnd > jpegStart) {
-                    imageBuffer = body.slice(jpegStart, jpegEnd + 2);
-                    console.log(`[PIZZA] Valid JPEG (${imageBuffer.length} bytes) for ${userId}`);
-                } else {
-                    // Truncated stream - seal with valid JPEG end marker FFD9
-                    console.warn(`[PIZZA] Truncated JPEG for ${userId} - sealing with FFD9`);
-                    let cut = body.indexOf("\r\n--", jpegStart);
-                    if (cut === -1) cut = body.length;
-                    imageBuffer = Buffer.concat([body.slice(jpegStart, cut), Buffer.from([0xff, 0xd9])]);
-                    console.log(`[PIZZA] Rescued ${imageBuffer.length} bytes for ${userId}`);
+            const soi = Buffer.from([0xff, 0xd8]);
+            const sIdx = body.indexOf(soi);
+
+            if (sIdx !== -1) {
+                const eIdx = body.lastIndexOf(Buffer.from([0xff, 0xd9]));
+                if (eIdx !== -1 && eIdx > sIdx) {
+                    imageBuffer = body.slice(sIdx, eIdx + 2);
                 }
             }
 
+            // 3. Reject if JPEG is incomplete (Missing End Marker)
             if (!imageBuffer || imageBuffer.length < 1000) {
-                console.error("[PIZZA FAILED] No valid image extracted from body");
-                if (!res.headersSent) res.status(400).send("No image");
+                console.error(`[PIZZA REJECT] Invalid JPEG structure for ${userId}. Forcing retry.`);
+                if (!res.headersSent) res.status(502).send("Invalid Image");
                 return;
             }
 
@@ -69,34 +72,27 @@ router.post("/upload", async (req: Request, res: Response) => {
                 }
             });
 
-            console.log(`[PIZZA SUCCESS] Saved screenshot for ${userId} (${imageBuffer.length} bytes)`);
+            console.log(`[PIZZA SUCCESS] v11 Clean Save: ${userId} (${imageBuffer.length} bytes)`);
             if (!res.headersSent) res.json({ success: true, screenshot });
+
         } catch (e: any) {
             console.error("[PIZZA ERROR]", e);
             if (!res.headersSent) res.status(500).send("Server error");
         }
     });
-    req.on("error", (e) => console.error("[PIZZA NETWORK ERROR]", e));
 });
 
 // DELETE /api/screenshots/:id
 router.delete("/:id", authenticateToken, async (req: any, res: Response) => {
     try {
-        if (req.user?.role !== "ADMIN") {
-            res.status(403).json({ error: "Only admins can delete screenshots" });
-            return;
-        }
+        if (req.user?.role !== "ADMIN") return res.status(403).json({ error: "Access Denied" });
         const { id } = req.params;
         const screenshot = await prisma.screenshot.findUnique({ where: { id } });
-        if (!screenshot) {
-            res.status(404).json({ error: "Screenshot not found" });
-            return;
-        }
+        if (!screenshot) return res.status(404).json({ error: "Not Found" });
         await deleteFile(screenshot.imageUrl);
         await prisma.screenshot.delete({ where: { id } });
-        res.json({ success: true, message: "Screenshot deleted" });
+        res.json({ success: true });
     } catch (err: any) {
-        console.error("screenshots/delete error:", err);
         res.status(500).json({ error: err.message });
     }
 });
