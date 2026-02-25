@@ -45,18 +45,112 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         };
         let _dq_controller = CreateDispatcherQueueController(dq_options).ok();
 
-        // Calculate virtual screen dimensions for stitching if multi-monitor
+        // Initial pass: Gather monitors and their physical sizes to calculate a global physical canvas
         let vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
         let vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
-        let v_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        let v_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-        if v_width == 0 || v_height == 0 {
-            return Err("Invalid virtual screen dimensions".to_string());
+        struct MonitorCaptureInfo {
+            hmonitor: HMONITOR,
+            item: GraphicsCaptureItem,
+            logical_x: i32,
+            logical_y: i32,
+            logical_width: u32,
+            logical_height: u32,
+            physical_width: u32,
+            physical_height: u32,
         }
 
-        // Output buffer for the final stitched image
-        let mut full_desktop_rgb = vec![0u8; (v_width * v_height * 3) as usize];
+        let mut capture_infos: Vec<MonitorCaptureInfo> = Vec::new();
+        let interop: IGraphicsCaptureItemInterop = windows::core::factory::<GraphicsCaptureItem, IGraphicsCaptureItemInterop>().map_err(|e| format!("Failed to get IGraphicsCaptureItemInterop: {e}"))?;
+
+        // 1. Enumerate Monitors
+        let mut monitors: Vec<HMONITOR> = Vec::new();
+        unsafe extern "system" fn monitor_enum_proc(
+            hmonitor: HMONITOR,
+            _hdc: HDC,
+            _rect: *mut RECT,
+            lparam: LPARAM,
+        ) -> BOOL {
+            let monitors = &mut *(lparam.0 as *mut Vec<HMONITOR>);
+            monitors.push(hmonitor);
+            BOOL::from(true)
+        }
+
+        EnumDisplayMonitors(
+            None,
+            None,
+            Some(monitor_enum_proc),
+            LPARAM(&mut monitors as *mut _ as isize),
+        );
+
+        if monitors.is_empty() {
+            return Err("No monitors found".to_string());
+        }
+
+        // 2. Pre-pass: Calculate global physical bounding box
+        let mut min_px = 0i32;
+        let mut min_py = 0i32;
+        let mut max_px = 0i32;
+        let mut max_py = 0i32;
+
+        for &hmonitor in &monitors {
+            let mut mi = MONITORINFOEXW::default();
+            mi.monitorInfo.cbSize = std::mem::size_of::<MONITORINFOEXW>() as u32;
+            if !GetMonitorInfoW(hmonitor, &mut mi as *mut _ as *mut MONITORINFO).as_bool() {
+                continue;
+            }
+
+            let item_res = interop.CreateForMonitor::<GraphicsCaptureItem>(hmonitor);
+            if let Ok(item) = item_res {
+                if let Ok(item_size) = item.Size() {
+                    let pw = item_size.Width as u32;
+                    let ph = item_size.Height as u32;
+                    let lw = (mi.monitorInfo.rcMonitor.right - mi.monitorInfo.rcMonitor.left) as u32;
+                    let lh = (mi.monitorInfo.rcMonitor.bottom - mi.monitorInfo.rcMonitor.top) as u32;
+                    
+                    // Ratio to scale logical relative offsets to physical canvas space
+                    let sx = if lw > 0 { pw as f32 / lw as f32 } else { 1.0 };
+                    let sy = if lh > 0 { ph as f32 / lh as f32 } else { 1.0 };
+
+                    // We assume vx/vy relative to logical 0,0. 
+                    // To build a physical map, we calculate physical rects.
+                    let pl = (mi.monitorInfo.rcMonitor.left - vx) as f32 * sx;
+                    let pt = (mi.monitorInfo.rcMonitor.top - vy) as f32 * sy;
+                    let pr = pl + pw as f32;
+                    let pb = pt + ph as f32;
+
+                    min_px = min_px.min(pl as i32);
+                    min_py = min_py.min(pt as i32);
+                    max_px = max_px.max(pr as i32);
+                    max_py = max_py.max(pb as i32);
+
+                    capture_infos.push(MonitorCaptureInfo {
+                        hmonitor,
+                        item,
+                        logical_x: mi.monitorInfo.rcMonitor.left,
+                        logical_y: mi.monitorInfo.rcMonitor.top,
+                        logical_width: lw,
+                        logical_height: lh,
+                        physical_width: pw,
+                        physical_height: ph,
+                    });
+                }
+            }
+        }
+
+        if capture_infos.is_empty() {
+            return Err("Failed to initialize capture items for any monitor".to_string());
+        }
+
+        let total_pw = (max_px - min_px) as u32;
+        let total_ph = (max_py - min_py) as u32;
+        
+        if total_pw == 0 || total_ph == 0 {
+            return Err("Calculated physical dimensions are zero".to_string());
+        }
+
+        // Final physical canvas - allocated at native resolution to prevent row-wrap alignment issues
+        let mut full_desktop_rgb = vec![0u8; (total_pw * total_ph * 3) as usize];
 
         // 1. Create D3D11 Device
         let mut d3d_device: Option<ID3D11Device> = None;
@@ -127,36 +221,12 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
 
         // 4. Capture each monitor using WGC
         let mut any_success = false;
-        let interop: IGraphicsCaptureItemInterop = windows::core::factory::<GraphicsCaptureItem, IGraphicsCaptureItemInterop>().map_err(|e| format!("Failed to get IGraphicsCaptureItemInterop: {e}"))?;
-
-        for &hmonitor in &monitors {
-            // Get Monitor Info (for coordinates)
-            let mut mi = MONITORINFOEXW::default();
-            mi.monitorInfo.cbSize = std::mem::size_of::<MONITORINFOEXW>() as u32;
-            if !GetMonitorInfoW(hmonitor, &mut mi as *mut _ as *mut MONITORINFO).as_bool() {
-                continue;
-            }
-
-            let mx = mi.monitorInfo.rcMonitor.left;
-            let my = mi.monitorInfo.rcMonitor.top;
-            let mwidth = (mi.monitorInfo.rcMonitor.right - mi.monitorInfo.rcMonitor.left) as u32;
-            let mheight = (mi.monitorInfo.rcMonitor.bottom - mi.monitorInfo.rcMonitor.top) as u32;
-
-            if mwidth == 0 || mheight == 0 {
-                continue;
-            }
-
-            // Create GraphicsCaptureItem for this Monitor
-            let item_res = interop.CreateForMonitor::<GraphicsCaptureItem>(hmonitor);
-            if item_res.is_err() {
-                log::warn!("[wgc] CreateForMonitor failed for monitor {:?}", hmonitor);
-                continue;
-            }
-            let item = item_res.unwrap();
-
+        for info in &capture_infos {
+            let item = &info.item;
             let item_size = item.Size().map_err(|e| format!("item.Size failed: {e}"))?;
-            let _width = item_size.Width as u32;
-            let _height = item_size.Height as u32;
+            let fw = item_size.Width as u32;
+            let fh = item_size.Height as u32;
+            let hmonitor = info.hmonitor;
 
             // Create Frame Pool
             let frame_pool = Direct3D11CaptureFramePool::CreateFreeThreaded(
@@ -279,20 +349,26 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             }
 
             if let Some((rgb_data, fw, fh)) = captured_frame {
-                // Stitch local frame into global desktop canvas
-                let start_x = mx - vx;
-                let start_y = my - vy;
+                // Stitch local frame into global physical desktop canvas
+                let lw = info.logical_width;
+                let lh = info.logical_height;
+                
+                let sx = if lw > 0 { fw as f32 / lw as f32 } else { 1.0 };
+                let sy = if lh > 0 { fh as f32 / lh as f32 } else { 1.0 };
+
+                let start_px = ((info.logical_x - vx) as f32 * sx) as i32 - min_px;
+                let start_py = ((info.logical_y - vy) as f32 * sy) as i32 - min_py;
                 
                 for r in 0..fh as usize {
-                    let dest_y = start_y as usize + r;
-                    if dest_y >= v_height as usize { continue; }
+                    let dest_y = start_py as usize + r;
+                    if dest_y >= total_ph as usize { continue; }
                     
                     for c in 0..fw as usize {
-                        let dest_x = start_x as usize + c;
-                        if dest_x >= v_width as usize { continue; }
+                        let dest_x = start_px as usize + c;
+                        if dest_x >= total_pw as usize { continue; }
                         
                         let src_idx = (r * fw as usize + c) * 3;
-                        let dest_idx = (dest_y * v_width as usize + dest_x) * 3;
+                        let dest_idx = (dest_y * total_pw as usize + dest_x) * 3;
                         
                         full_desktop_rgb[dest_idx] = rgb_data[src_idx];
                         full_desktop_rgb[dest_idx + 1] = rgb_data[src_idx + 1];
@@ -334,7 +410,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
         let mut jpeg_data = Vec::new();
         let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 40);
         encoder
-            .encode(&full_desktop_rgb, v_width as u32, v_height as u32, image::ColorType::Rgb8.into())
+            .encode(&full_desktop_rgb, total_pw, total_ph, image::ColorType::Rgb8.into())
             .map_err(|e| format!("JPEG encoding failed: {e}"))?;
 
         log::info!("[screenshot] WGC capture success: {} KB (Quality: 40%)", jpeg_data.len() / 1024);
