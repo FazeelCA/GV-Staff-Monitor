@@ -242,7 +242,7 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             let frame_pool = Direct3D11CaptureFramePool::CreateFreeThreaded(
                 &winrt_d3d_device,
                 DirectXPixelFormat::B8G8R8A8UIntNormalized,
-                1,
+                3,
                 item_size,
             )
             .map_err(|e| format!("CreateFreeThreaded failed: {e}"))?;
