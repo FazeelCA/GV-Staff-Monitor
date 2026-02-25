@@ -166,7 +166,7 @@ pub async fn report_error(source: &str, message: &str, user_id: &str) {
         "source": source,
         "message": message,
         "platform": std::env::consts::OS,
-        "appVersion": "0.1.43",
+        "appVersion": "0.1.44",
     });
 
     let _ = client

@@ -345,15 +345,46 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
             }
 
             if let Some((rgb_data, fw, fh)) = captured_frame {
-                // Stitch local frame into global physical desktop canvas
+                // --- SINGLE MONITOR DIRECT PATH ---
+                // If we only have one monitor, bypass all stitching logic to prevent rounding/stride errors.
+                if capture_infos.len() == 1 {
+                    log::info!("[screenshot] Single monitor direct path: {}x{}", fw, fh);
+                    
+                    // Direct sanity check for blank frame
+                    let mut is_blank = true;
+                    if rgb_data.len() >= 3 {
+                        let first_r = rgb_data[0];
+                        let first_g = rgb_data[1];
+                        let first_b = rgb_data[2];
+                        for i in (0..rgb_data.len()).step_by(3) {
+                            if rgb_data[i] != first_r || rgb_data[i+1] != first_g || rgb_data[i+2] != first_b {
+                                is_blank = false;
+                                break;
+                            }
+                        }
+                    }
+                    if is_blank {
+                        return Err("Captured a completely blank solid frame (Direct Path)".to_string());
+                    }
+
+                    let mut jpeg_data = Vec::new();
+                    let mut encoder = JpegEncoder::new_with_quality(&mut jpeg_data, 40);
+                    encoder
+                        .encode(&rgb_data, fw, fh, image::ColorType::Rgb8.into())
+                        .map_err(|e| format!("JPEG encoding failed: {e}"))?;
+                    
+                    log::info!("[screenshot] Direct path success: {} KB", jpeg_data.len() / 1024);
+                    return Ok(jpeg_data);
+                }
+
+                // --- MULTI-MONITOR STITCHING PATH ---
                 let lw = info.logical_width;
                 let lh = info.logical_height;
                 
                 let sx = if lw > 0 { fw as f64 / lw as f64 } else { 1.0 };
                 let sy = if lh > 0 { fh as f64 / lh as f64 } else { 1.0 };
 
-                // Re-calculate the exact start position in the physical buffer using round()
-                // to match the bounding box calculation exactly.
+                // Re-calculate mapping
                 let start_px = ((info.logical_x - vx) as f64 * sx).round() as i32 - min_px;
                 let start_py = ((info.logical_y - vy) as f64 * sy).round() as i32 - min_py;
                 
@@ -377,13 +408,16 @@ pub fn capture_desktop_wgc() -> Result<Vec<u8>, String> {
                         let s_idx = src_row_start + (c * 3);
                         let d_idx = dest_row_start + (dest_x * 3);
                         
-                        full_desktop_rgb[d_idx] = rgb_data[s_idx];
-                        full_desktop_rgb[d_idx + 1] = rgb_data[s_idx + 1];
-                        full_desktop_rgb[d_idx + 2] = rgb_data[s_idx + 2];
+                        if d_idx + 2 < full_desktop_rgb.len() && s_idx + 2 < rgb_data.len() {
+                            full_desktop_rgb[d_idx] = rgb_data[s_idx];
+                            full_desktop_rgb[d_idx + 1] = rgb_data[s_idx + 1];
+                            full_desktop_rgb[d_idx + 2] = rgb_data[s_idx + 2];
+                        }
                     }
                 }
                 any_success = true;
-            } else {
+            }
+ else {
                 log::warn!("[wgc] FrameArrived timed out for monitor {:?}", hmonitor);
             }
 
