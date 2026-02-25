@@ -448,7 +448,7 @@ async fn update_task(task: String, state: State<'_, SharedState>) -> Result<(), 
 // Tauri App Entry
 // ─────────────────────────────────────────────
 
-use tauri::Manager;
+use tauri::{Manager, Emitter};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
