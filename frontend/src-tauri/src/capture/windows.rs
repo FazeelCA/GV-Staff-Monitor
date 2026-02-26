@@ -5,7 +5,7 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
 
     log::info!("[screenshot] Starting capture via `screenshots` crate...");
 
-    let screens = Screen::all().map_err(|e| format!("Failed to fetch screens: {e}"))?;
+    let mut screens = Screen::all().map_err(|e| format!("Failed to fetch screens: {e}"))?;
 
     if screens.is_empty() {
         return Err("No transparent screens found attached to desktop".to_string());
