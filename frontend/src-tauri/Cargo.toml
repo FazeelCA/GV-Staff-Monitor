@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.6.19"
+version = "0.6.20"
 description = "GV Staff Monitor"
 authors = ["GV Team"]
 license = ""
@@ -47,4 +47,5 @@ lazy_static = "1.5.0"
 device_query = "4.0.1"
 tauri-plugin-shell = "2.3.5"
 xcap = "0.8.2"
+scrap = "0.5.0"
 
