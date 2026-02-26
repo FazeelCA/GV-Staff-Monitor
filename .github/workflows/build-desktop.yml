@@ -48,28 +48,11 @@ jobs:
         with:
           workspaces: frontend/src-tauri
 
-      - name: Compile C# Capture Sidecar (Windows)
-        if: matrix.platform == 'windows-latest'
-        working-directory: frontend/src-tauri
-        run: |
-          C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe -out:bin\gv_capture-x86_64-pc-windows-msvc.exe -target:winexe src\capture\gv_capture.cs
-
       - name: Install dependencies (Ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-
-      - name: Create dummy sidecars for macOS/Linux bundler
-        if: matrix.platform != 'windows-latest'
-        working-directory: frontend/src-tauri
-        run: |
-          mkdir -p bin
-          touch bin/gv_capture-aarch64-apple-darwin
-          touch bin/gv_capture-universal-apple-darwin
-          touch bin/gv_capture-x86_64-apple-darwin
-          touch bin/gv_capture-x86_64-unknown-linux-gnu
-          chmod +x bin/gv_capture-*
 
       - name: Build Desktop App
         working-directory: frontend

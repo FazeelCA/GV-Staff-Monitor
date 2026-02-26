@@ -1,5 +1,4 @@
 mod api;
-mod capture;
 mod screenshot;
 mod state;
 mod window;
