@@ -51,86 +51,41 @@ fn capture_screen_xcap() -> Result<Vec<u8>, String> {
 
 #[cfg(target_os = "windows")]
 pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String> {
-    use image::{Rgba, RgbaImage};
-    use scrap::{Capturer, Display};
+    use std::env;
+    use std::fs;
+    use std::os::windows::process::CommandExt;
+    use std::process::Command;
 
-    let display = match Display::primary() {
-        Ok(d) => d,
-        Err(e) => {
-            log::warn!("Scrap DXGI failed to find primary display: {e}, falling back to xcap");
-            return capture_screen_xcap();
-        }
-    };
+    let temp_dir = env::temp_dir();
+    let bat_path = temp_dir.join("gv_capture_v3.bat");
+    let out_path = temp_dir.join("gv_capture_out.jpg");
 
-    let mut capturer = match Capturer::new(display) {
-        Ok(c) => c,
-        Err(e) => {
-            log::warn!("Scrap DXGI failed to initialize capturer: {e}, falling back to xcap");
-            return capture_screen_xcap();
-        }
-    };
+    // Always write the embedded BAT file to disk to ensure it is up to date
+    let bat_content = include_bytes!("gv_capture.bat");
+    fs::write(&bat_path, bat_content).map_err(|e| format!("Failed to write batch file: {}", e))?;
 
-    let width = capturer.width();
-    let height = capturer.height();
+    // Execute the batch script quietly
+    let status = Command::new("cmd.exe")
+        .args(&["/C", bat_path.to_str().unwrap(), out_path.to_str().unwrap()])
+        .creation_flags(0x08000000) // CREATE_NO_WINDOW
+        .status()
+        .map_err(|e| format!("Failed to execute C# batch script: {}", e))?;
 
-    // Windows Desktop Duplication API requires polling until a frame is ready
-    let mut frame_data = None;
-    for _ in 0..20 {
-        // Retry loop (Wait up to ~1 sec)
-        match capturer.frame() {
-            Ok(buffer) => {
-                frame_data = Some(buffer.to_vec());
-                break;
-            }
-            Err(error) => {
-                if error.kind() == std::io::ErrorKind::WouldBlock {
-                    thread::sleep(Duration::from_millis(50));
-                    continue;
-                } else {
-                    log::warn!("Scrap DXGI capture error: {error}, falling back to xcap");
-                    return capture_screen_xcap();
-                }
-            }
-        }
+    if !status.success() {
+        return Err(format!(
+            "C# Batch script compiler failed with exit status: {}",
+            status
+        ));
     }
 
-    let frame_bytes = match frame_data {
-        Some(bytes) => bytes,
-        None => {
-            log::warn!("Scrap DXGI timed out waiting for frame, falling back to xcap");
-            return capture_screen_xcap();
-        }
-    };
+    // Read the resulting JPEG bytes
+    let jpeg_bytes =
+        fs::read(&out_path).map_err(|e| format!("Failed to read captured image buffer: {}", e))?;
 
-    // Scrap returns BGRA. Convert to RGBA for the JPEG encoder.
-    let mut rgba_image = RgbaImage::new(width as u32, height as u32);
-    let stride = frame_bytes.len() / height;
+    // Cleanup the frame
+    let _ = fs::remove_file(&out_path);
 
-    for y in 0..height {
-        for x in 0..width {
-            let offset = y * stride + x * 4;
-            // BGRA layout mapping
-            let b = frame_bytes[offset];
-            let g = frame_bytes[offset + 1];
-            let r = frame_bytes[offset + 2];
-            let a = frame_bytes[offset + 3];
-            rgba_image.put_pixel(x as u32, y as u32, Rgba([r, g, b, a]));
-        }
-    }
-
-    let mut buffer = Cursor::new(Vec::new());
-
-    let mut encoder = JpegEncoder::new_with_quality(&mut buffer, 40);
-    encoder
-        .encode(
-            rgba_image.as_raw(),
-            width as u32,
-            height as u32,
-            image::ExtendedColorType::Rgba8,
-        )
-        .map_err(|e| format!("JPEG encode failed: {e}"))?;
-
-    Ok(buffer.into_inner())
+    Ok(jpeg_bytes)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -3,7 +3,6 @@ mod screenshot;
 mod state;
 mod window;
 
-use base64::{engine::general_purpose, Engine as _};
 use device_query::{DeviceQuery, DeviceState};
 use sha2::Digest;
 use state::{AppState, WorkState};
@@ -198,12 +197,12 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
                             }
                         }
                         Err(e) => {
-                            log::warn!("[screenshot_loop] Native grab failed: {e}. Requesting Chromium WebRTC Fallback frame instead...");
-
-                            // Native Rust failed (e.g., DXGI optimus block). Send IPC to frontend TrackerCapture!
-                            if let Some(handle) = app_state.app_handle.lock().unwrap().as_ref() {
-                                let _ = handle.emit("request_webrtc_screenshot", ());
-                            }
+                            log::error!("[screenshot] Error: {e}");
+                            let uid = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
+                            let err_msg = e.clone();
+                            tokio::spawn(async move {
+                                api::report_error("screenshot_capture", &err_msg, &uid).await;
+                            });
                         },
                     }
                 }
@@ -272,44 +271,6 @@ fn stop_loop(state: &AppState) {
 // ─────────────────────────────────────────────
 // Tauri Commands
 // ─────────────────────────────────────────────
-
-#[tauri::command]
-async fn submit_webrtc_screenshot(
-    base64_data: String,
-    state: State<'_, SharedState>,
-) -> Result<(), String> {
-    log::info!("[webrtc] Received fallback frame from Chromium WebView");
-
-    let bytes = general_purpose::STANDARD
-        .decode(&base64_data)
-        .map_err(|e| format!("Base64 decode failed: {}", e))?;
-
-    let mut hasher = sha2::Sha256::new();
-    sha2::Digest::update(&mut hasher, &bytes);
-    let hash = hex::encode(hasher.finalize());
-
-    let app_state = state.inner();
-    let (task, token, user_id) = {
-        let t_guard = app_state.current_task.lock().unwrap();
-        let tok_guard = app_state.auth_token.lock().unwrap();
-        let uid_guard = app_state.user_id.lock().unwrap();
-        (
-            t_guard.clone(),
-            tok_guard.clone().unwrap_or_default(),
-            uid_guard.clone().unwrap_or_default(),
-        )
-    };
-
-    if !token.is_empty() && !user_id.is_empty() {
-        // Assume webRTC screenshots also consume activity.
-        let current_activity = ACTIVITY_COUNT.swap(0, Ordering::Relaxed);
-        tokio::spawn(async move {
-            api::upload_screenshot(bytes, hash, task, user_id, token, current_activity).await;
-        });
-    }
-
-    Ok(())
-}
 
 #[tauri::command]
 async fn set_auth(
@@ -560,13 +521,6 @@ use tauri::{Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    #[cfg(target_os = "windows")]
-    {
-        // Force the underlying Edge WebView2 to automatically bypass the WebRTC "Choose what to share"
-        // permission prompt and silently capture the entire primary monitor for the hidden Tracker window.
-        std::env::set_var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--auto-select-desktop-capture-source=\"Entire screen\" --enable-usermedia-screen-capturing");
-    }
-
     let shared_state: SharedState = Arc::new(AppState::new());
 
     tauri::Builder::default()
@@ -614,7 +568,6 @@ pub fn run() {
             _ => {}
         })
         .invoke_handler(tauri::generate_handler![
-            submit_webrtc_screenshot,
             set_auth,
             start_work,
             take_break,
