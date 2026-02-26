@@ -34,7 +34,7 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
     let height = capture_buffer.height();
 
     // We get absolutely pristine, stride-corrected RGBA bytes.
-    let rgba = capture_buffer.rgba();
+    let rgba = capture_buffer.as_raw();
 
     // Convert to RGB for JPEG encoding natively without striding drift
     let mut rgb = Vec::with_capacity((width * height * 3) as usize);
