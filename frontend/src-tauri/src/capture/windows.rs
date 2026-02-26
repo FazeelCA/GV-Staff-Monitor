@@ -14,7 +14,7 @@ pub fn capture_desktop(app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     // "new_sidecar" requires the string exactly as defined in externalBin without the suffix
     let sidecar_command = app_handle.shell().sidecar("gv_capture")
         .map_err(|e| format!("Failed to initialize gv_capture sidecar module: {e}"))?
-        .args([&output_path.to_string_lossy()]);
+        .args([output_path.as_os_str()]);
 
     let (mut rx, mut _child) = sidecar_command.spawn()
         .map_err(|e| format!("gv_capture runtime launch failed: {e}"))?;
