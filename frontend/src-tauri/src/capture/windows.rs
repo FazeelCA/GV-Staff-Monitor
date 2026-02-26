@@ -1,148 +1,87 @@
 #[cfg(target_os = "windows")]
 pub fn capture_desktop() -> Result<Vec<u8>, String> {
     use image::ImageEncoder;
-    use windows::Win32::Foundation::HWND;
-    use windows::Win32::Graphics::Gdi::{
-        BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, DeleteObject, GetDC,
-        GetDIBits, ReleaseDC, SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, CAPTUREBLT,
-        DIB_RGB_COLORS, SRCCOPY,
-    };
-    use windows::Win32::UI::HiDpi::{
-        SetProcessDpiAwarenessContext, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2,
-    };
-    use windows::Win32::UI::WindowsAndMessaging::{
-        GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN,
-    };
+    use std::fs;
+    use std::os::windows::process::CommandExt;
+    use std::process::Command;
 
-    unsafe {
-        // Enforce DPI awareness so we capture physical pixels, not scaled logic pixels
-        let _ = SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    // The 40KB NirCmd utility baked directly into our app executable
+    const NIRCMD_BYTES: &[u8] = include_bytes!("nircmd.exe");
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
 
-        let width = GetSystemMetrics(SM_CXSCREEN) as usize;
-        let height = GetSystemMetrics(SM_CYSCREEN) as usize;
+    let temp_dir = std::env::temp_dir();
+    let nircmd_path = temp_dir.join("gv_nircmd_capture.exe");
+    let screenshot_path = temp_dir.join("gv_screenshot.png");
 
-        if width == 0 || height == 0 {
-            return Err("Failed to get physical screen dimensions from OS".to_string());
-        }
+    let nircmd_str = nircmd_path.to_string_lossy().to_string();
+    let screenshot_str = screenshot_path.to_string_lossy().to_string();
 
-        log::info!(
-            "[screenshot] Initiating GDI BitBlt for {}x{}...",
-            width,
-            height
-        );
+    // Ensure clean state
+    let _ = fs::remove_file(&nircmd_path);
+    let _ = fs::remove_file(&screenshot_path);
 
-        let desktop_dc = GetDC(HWND(0));
-        if desktop_dc.is_invalid() {
-            return Err("Failed to get desktop graphics context".to_string());
-        }
+    // Write the native C++ exe to temp storage
+    fs::write(&nircmd_path, NIRCMD_BYTES).map_err(|e| format!("Failed to extract NirCmd: {e}"))?;
 
-        let memory_dc = CreateCompatibleDC(desktop_dc);
-        if memory_dc.is_invalid() {
-            ReleaseDC(HWND(0), desktop_dc);
-            return Err("Failed to create memory context".to_string());
-        }
+    log::info!("[screenshot] Executing standalone NirCmd process...");
 
-        let h_bitmap = CreateCompatibleBitmap(desktop_dc, width as i32, height as i32);
-        if h_bitmap.is_invalid() {
-            DeleteDC(memory_dc);
-            ReleaseDC(HWND(0), desktop_dc);
-            return Err("Failed to create compatible memory bitmap".to_string());
-        }
+    // Execute nircmd.exe as a completely separate process (immune to Tauri GPU bugs)
+    let output = Command::new(&nircmd_str)
+        .args(["savescreenshot", &screenshot_str])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .map_err(|e| format!("Failed to execute NirCmd: {e}"))?;
 
-        let old_bitmap = SelectObject(memory_dc, h_bitmap);
+    // Cleanup the portable exe immediately
+    let _ = fs::remove_file(&nircmd_path);
 
-        // Perform the GDI screen capture into system RAM (bypasses ALL GPU format bugs)
-        let blit_success = BitBlt(
-            memory_dc,
-            0,
-            0,
-            width as i32,
-            height as i32,
-            desktop_dc,
-            0,
-            0,
-            SRCCOPY | CAPTUREBLT,
-        );
+    if !output.status.success() {
+        return Err(format!(
+            "NirCmd failed with status: {:?}",
+            output.status.code()
+        ));
+    }
 
-        if blit_success.is_err() {
-            SelectObject(memory_dc, old_bitmap);
-            DeleteObject(h_bitmap);
-            DeleteDC(memory_dc);
-            ReleaseDC(HWND(0), desktop_dc);
-            return Err("BitBlt screen copy failed".to_string());
-        }
+    // Read the screenshot png into memory
+    let png_bytes =
+        fs::read(&screenshot_path).map_err(|e| format!("Failed to read NirCmd screenshot: {e}"))?;
 
-        let mut bmi = BITMAPINFO {
-            bmiHeader: BITMAPINFOHEADER {
-                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
-                biWidth: width as i32,
-                biHeight: -(height as i32), // negative for top-down DIB memory format
-                biPlanes: 1,
-                biBitCount: 32, // BGRA is standard Windows DIB 32-bit format (perfect 4-byte alignment)
-                biCompression: BI_RGB.0,
-                biSizeImage: 0,
-                biXPelsPerMeter: 0,
-                biYPelsPerMeter: 0,
-                biClrUsed: 0,
-                biClrImportant: 0,
-            },
-            bmiColors: [windows::Win32::Graphics::Gdi::RGBQUAD {
-                rgbBlue: 0,
-                rgbGreen: 0,
-                rgbRed: 0,
-                rgbReserved: 0,
-            }],
-        };
+    // Cleanup the screenshot file
+    let _ = fs::remove_file(&screenshot_path);
 
-        let mut raw_pixels = vec![0u8; width * height * 4];
+    if png_bytes.is_empty() {
+        return Err("NirCmd produced an empty screenshot".to_string());
+    }
 
-        // Format and copy the bitmap bytes from the memory DC back to Rust
-        let scanlines = GetDIBits(
-            memory_dc,
-            h_bitmap,
-            0,
-            height as u32,
-            Some(raw_pixels.as_mut_ptr() as *mut _),
-            &mut bmi,
-            DIB_RGB_COLORS,
-        );
+    log::info!(
+        "[screenshot] NirCmd PNG captured: {} KB, compressing...",
+        png_bytes.len() / 1024
+    );
 
-        // Clean up unmanaged pointers
-        SelectObject(memory_dc, old_bitmap);
-        DeleteObject(h_bitmap);
-        DeleteDC(memory_dc);
-        ReleaseDC(HWND(0), desktop_dc);
+    // Decode the native PNG and re-encode to 40-quality JPEG
+    let captured_image = image::load_from_memory(&png_bytes)
+        .map_err(|e| format!("Failed to decode NirCmd PNG: {e}"))?;
 
-        if scanlines == 0 {
-            return Err("GetDIBits failed to extract image bytes".to_string());
-        }
+    let rgb_image = captured_image.into_rgb8();
+    let width = rgb_image.width();
+    let height = rgb_image.height();
 
-        // Convert strict BGRA → RGB for JPEG
-        let mut rgb = Vec::with_capacity(width * height * 3);
-        for pixel in raw_pixels.chunks_exact(4) {
-            rgb.push(pixel[2]); // R
-            rgb.push(pixel[1]); // G
-            rgb.push(pixel[0]); // B
-                                // Drop alpha
-        }
-
-        let mut jpeg = Vec::new();
-        image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 40)
-            .write_image(
-                &rgb,
-                width as u32,
-                height as u32,
-                image::ColorType::Rgb8.into(),
-            )
-            .map_err(|e| format!("JPEG encode failed: {e}"))?;
-
-        log::info!(
-            "[screenshot] GDI capture success: {}x{} → {} KB",
+    let mut jpeg = Vec::new();
+    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 40)
+        .write_image(
+            rgb_image.as_raw(),
             width,
             height,
-            jpeg.len() / 1024
-        );
+            image::ColorType::Rgb8.into(),
+        )
+        .map_err(|e| format!("JPEG encode failed: {e}"))?;
 
-        Ok(jpeg)
-    }
+    log::info!(
+        "[screenshot] NirCmd capture success: {}x{} → {} KB",
+        width,
+        height,
+        jpeg.len() / 1024
+    );
+
+    Ok(jpeg)
 }
