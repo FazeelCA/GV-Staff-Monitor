@@ -16,6 +16,7 @@ use std::sync::mpsc::{channel, Sender};
 pub fn capture_desktop() -> Result<Vec<u8>, String> {
     struct CaptureHandler {
         sender: Sender<Vec<u8>>,
+        frame_count: u32,
     }
 
     impl GraphicsCaptureApiHandler for CaptureHandler {
@@ -23,7 +24,10 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
         type Error = Box<dyn std::error::Error + Send + Sync>;
 
         fn new(ctx: Context<Self::Flags>) -> Result<Self, Self::Error> {
-            Ok(Self { sender: ctx.flags })
+            Ok(Self {
+                sender: ctx.flags,
+                frame_count: 0,
+            })
         }
 
         fn on_frame_arrived(
@@ -31,13 +35,20 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
             frame: &mut Frame,
             control: InternalCaptureControl,
         ) -> Result<(), Self::Error> {
+            // WARMUP: Skip first 5 frames to let GPU fully compose the buffer.
+            // Early frames contain uninitialized VRAM (red/pink garbage data).
+            self.frame_count += 1;
+            if self.frame_count <= 5 {
+                return Ok(());
+            }
+
             let width = frame.width() as usize;
             let height = frame.height() as usize;
 
             let mut gpu_buffer = frame.buffer()?;
 
-            // CRITICAL FIX: USE ROW PITCH
-            let row_pitch = gpu_buffer.row_pitch() as usize; // Notice: gpu_buffer not frame
+            // CRITICAL FIX: USE ROW PITCH to handle GPU memory padding
+            let row_pitch = gpu_buffer.row_pitch() as usize;
 
             let mut rgb = Vec::with_capacity(width * height * 3);
 
@@ -45,10 +56,10 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
 
             for y in 0..height {
                 let row_start = y * row_pitch;
-
                 let row = &raw[row_start..row_start + width * 4];
 
                 for pixel in row.chunks_exact(4) {
+                    // BGRA → RGB
                     rgb.push(pixel[2]);
                     rgb.push(pixel[1]);
                     rgb.push(pixel[0]);
@@ -66,6 +77,7 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
 
             let _ = self.sender.send(jpeg);
 
+            // STOP CAPTURE after grabbing the stabilized frame
             control.stop();
 
             Ok(())
