@@ -1,15 +1,17 @@
 #[cfg(target_os = "windows")]
 pub fn capture_desktop() -> Result<Vec<u8>, String> {
-    use std::ptr;
+    use image::ImageEncoder;
     use windows::Win32::Foundation::HWND;
     use windows::Win32::Graphics::Gdi::{
         BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, DeleteObject, GetDC,
         GetDIBits, ReleaseDC, SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, CAPTUREBLT,
         DIB_RGB_COLORS, SRCCOPY,
     };
+    use windows::Win32::UI::HiDpi::{
+        SetProcessDpiAwarenessContext, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2,
+    };
     use windows::Win32::UI::WindowsAndMessaging::{
-        GetSystemMetrics, SetProcessDpiAwarenessContext,
-        DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, SM_CXSCREEN, SM_CYSCREEN,
+        GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN,
     };
 
     unsafe {
@@ -30,18 +32,18 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
         );
 
         let desktop_dc = GetDC(HWND(0));
-        if desktop_dc.0 == ptr::null_mut() {
+        if desktop_dc.is_invalid() {
             return Err("Failed to get desktop graphics context".to_string());
         }
 
         let memory_dc = CreateCompatibleDC(desktop_dc);
-        if memory_dc.0 == ptr::null_mut() {
+        if memory_dc.is_invalid() {
             ReleaseDC(HWND(0), desktop_dc);
             return Err("Failed to create memory context".to_string());
         }
 
         let h_bitmap = CreateCompatibleBitmap(desktop_dc, width as i32, height as i32);
-        if h_bitmap.0 == ptr::null_mut() {
+        if h_bitmap.is_invalid() {
             DeleteDC(memory_dc);
             ReleaseDC(HWND(0), desktop_dc);
             return Err("Failed to create compatible memory bitmap".to_string());
