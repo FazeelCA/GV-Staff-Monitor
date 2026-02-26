@@ -12,10 +12,14 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
     }
 
     // Get the primary screen logically mapping to the main display hook
-    let primary = screens
-        .into_iter()
-        .find(|s| s.display_info.is_primary)
-        .unwrap_or_else(|| screens[0]);
+    let mut primary_idx = 0;
+    for (i, s) in screens.iter().enumerate() {
+        if s.display_info.is_primary {
+            primary_idx = i;
+            break;
+        }
+    }
+    let primary = screens.remove(primary_idx);
 
     log::info!(
         "[screenshot] Capturing screen ID: {} ({}x{})",
