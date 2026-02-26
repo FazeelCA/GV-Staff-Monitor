@@ -7,12 +7,12 @@ use windows_capture::{
     settings::{CaptureSettings, CursorCaptureSettings, DrawBorderSettings},
 };
 
-use image::{ImageBuffer, Rgb};
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{channel, Sender};
 
+#[cfg(target_os = "windows")]
 pub fn capture_desktop() -> Result<Vec<u8>, String> {
     struct CaptureHandler {
-        sender: std::sync::mpsc::Sender<Vec<u8>>,
+        sender: Sender<Vec<u8>>,
     }
 
     impl GraphicsCaptureApiHandler for CaptureHandler {
@@ -21,7 +21,7 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
         type Error = Box<dyn std::error::Error + Send + Sync>;
 
         fn new(
-            sender: std::sync::mpsc::Sender<Vec<u8>>,
+            sender: Sender<Vec<u8>>,
             _: InternalCaptureControl<Self::Flags>,
         ) -> Result<Self, Self::Error> {
             Ok(Self { sender })
@@ -30,7 +30,7 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
         fn on_frame_arrived(
             &mut self,
             frame: &mut Frame,
-            _: InternalCaptureControl<Self::Flags>,
+            mut control: InternalCaptureControl<Self::Flags>,
         ) -> Result<(), Self::Error> {
             let buffer = frame.buffer()?;
 
@@ -55,6 +55,9 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
             )?;
 
             let _ = self.sender.send(jpeg);
+
+            // CRITICAL: STOP CAPTURE AFTER FIRST FRAME
+            control.stop();
 
             Ok(())
         }
