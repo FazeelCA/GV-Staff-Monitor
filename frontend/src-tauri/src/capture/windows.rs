@@ -1,7 +1,8 @@
 #[cfg(target_os = "windows")]
-pub fn capture_desktop() -> Result<Vec<u8>, String> {
+pub fn capture_desktop(app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String> {
     use std::{fs, thread, time::Duration};
-    use tauri::api::process::Command;
+    use tauri_plugin_shell::ShellExt;
+    use tauri_plugin_shell::process::CommandEvent;
 
     let output_path = temp_screenshot_path();
 
@@ -11,16 +12,17 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
     log::info!("[screenshot] Spawning Tauri sidecar wrapper for gv_capture");
 
     // "new_sidecar" requires the string exactly as defined in externalBin without the suffix
-    let (mut rx, mut _child) = Command::new_sidecar("gv_capture")
+    let sidecar_command = app_handle.shell().sidecar("gv_capture")
         .map_err(|e| format!("Failed to initialize gv_capture sidecar module: {e}"))?
-        .args([&output_path.to_string_lossy()])
-        .spawn()
+        .args([&output_path.to_string_lossy()]);
+
+    let (mut rx, mut _child) = sidecar_command.spawn()
         .map_err(|e| format!("gv_capture runtime launch failed: {e}"))?;
 
     // Wait for the sidecar process to exit
     let mut success = false;
     while let Some(event) = tauri::async_runtime::block_on(rx.recv()) {
-        if let tauri::api::process::CommandEvent::Terminated(payload) = event {
+        if let CommandEvent::Terminated(payload) = event {
             success = payload.code == Some(0);
             break;
         }

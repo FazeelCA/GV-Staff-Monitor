@@ -5,8 +5,8 @@ use sha2::{Digest, Sha256};
 // ─────────────────────────────────────────────────────────────────────────────
 
 #[cfg(target_os = "windows")]
-pub fn capture_screen() -> Result<Vec<u8>, String> {
-    crate::capture::capture_desktop()
+pub fn capture_screen(app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String> {
+    crate::capture::capture_desktop(app_handle)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -14,16 +14,16 @@ pub fn capture_screen() -> Result<Vec<u8>, String> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 #[cfg(not(target_os = "windows"))]
-pub fn capture_screen() -> Result<Vec<u8>, String> {
-    crate::capture::capture_desktop()
+pub fn capture_screen(app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String> {
+    crate::capture::capture_desktop(app_handle)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Common entry point
 // ─────────────────────────────────────────────────────────────────────────────
 
-pub fn capture_screenshot() -> Result<(Vec<u8>, String), String> {
-    let jpeg_bytes = capture_screen()?;
+pub fn capture_screenshot(app_handle: &tauri::AppHandle) -> Result<(Vec<u8>, String), String> {
+    let jpeg_bytes = capture_screen(app_handle)?;
     let mut hasher = Sha256::new();
     hasher.update(&jpeg_bytes);
     let hash = hex::encode(hasher.finalize());

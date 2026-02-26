@@ -141,8 +141,13 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
             tokio::select! {
                 _ = ticker.tick() => {
                     // 1. Capture screenshot on a BLOCKING thread (required for Windows COM/DXGI)
-                    let cap_result = tokio::task::spawn_blocking(|| {
-                        screenshot::capture_screenshot()
+                    let app_handle_for_capture = app_state.app_handle.lock().unwrap().clone();
+                    let cap_result = tokio::task::spawn_blocking(move || {
+                        if let Some(handle) = app_handle_for_capture {
+                            screenshot::capture_screenshot(&handle)
+                        } else {
+                            Err("No AppHandle initialized yet for sidecar binding".to_string())
+                        }
                     }).await;
 
                     let capture = match cap_result {
@@ -519,6 +524,7 @@ pub fn run() {
     let shared_state: SharedState = Arc::new(AppState::new());
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             // Store app_handle for cross-thread emission (e.g. from screenshot loop)
             {

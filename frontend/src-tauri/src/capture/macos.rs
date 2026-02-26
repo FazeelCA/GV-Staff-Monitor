@@ -1,5 +1,5 @@
 #[cfg(not(target_os = "windows"))]
-pub fn capture_desktop() -> Result<Vec<u8>, String> {
+pub fn capture_desktop(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String> {
     use std::fs;
     use std::process::Command;
 
