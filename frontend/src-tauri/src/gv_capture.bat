@@ -39,17 +39,19 @@ public class ScreenCapture
     private Image CaptureWindow(IntPtr handle)
     {
         IntPtr hdcSrc = User32.GetWindowDC(handle);
-        User32.RECT windowRect = new User32.RECT();
-        User32.GetWindowRect(handle, ref windowRect);
-
-        int width = windowRect.right - windowRect.left;
-        int height = windowRect.bottom - windowRect.top;
+        
+        // Only capture the Primary Monitor, isolating it from the Virtual Desktop Bounding Box
+        int SM_CXSCREEN = 0;
+        int SM_CYSCREEN = 1;
+        int width = User32.GetSystemMetrics(SM_CXSCREEN);
+        int height = User32.GetSystemMetrics(SM_CYSCREEN);
 
         IntPtr hdcDest = GDI32.CreateCompatibleDC(hdcSrc);
         IntPtr hBitmap = GDI32.CreateCompatibleBitmap(hdcSrc, width, height);
         IntPtr hOld = GDI32.SelectObject(hdcDest, hBitmap);
         
-        GDI32.BitBlt(hdcDest, 0, 0, width, height, hdcSrc, windowRect.left, windowRect.top, GDI32.SRCCOPY);
+        // (0,0) is always the origin of the primary monitor in Windows
+        GDI32.BitBlt(hdcDest, 0, 0, width, height, hdcSrc, 0, 0, GDI32.SRCCOPY);
         
         GDI32.SelectObject(hdcDest, hOld);
         GDI32.DeleteDC(hdcDest);
@@ -111,6 +113,6 @@ public class ScreenCapture
         [DllImport("user32.dll")]
         public static extern IntPtr ReleaseDC(IntPtr hWnd, IntPtr hDC);
         [DllImport("user32.dll")]
-        public static extern IntPtr GetWindowRect(IntPtr hWnd, ref RECT rect);
+        public static extern int GetSystemMetrics(int nIndex);
     }
 }
