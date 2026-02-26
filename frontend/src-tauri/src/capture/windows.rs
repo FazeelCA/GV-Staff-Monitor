@@ -14,12 +14,30 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
 
     let ps_script = format!(
         r#"
+# Make this process DPI-aware so Screen.Bounds returns PHYSICAL pixels
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public class DpiHelper {{
+    [DllImport("user32.dll")]
+    public static extern bool SetProcessDPIAware();
+}}
+"@
+[DpiHelper]::SetProcessDPIAware()
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
-$screen = [System.Windows.Forms.Screen]::PrimaryScreen
-$bitmap = New-Object System.Drawing.Bitmap($screen.Bounds.Width, $screen.Bounds.Height)
+
+# Get the FULL virtual screen bounds (all monitors, physical pixels)
+$left   = [System.Windows.Forms.SystemInformation]::VirtualScreen.Left
+$top    = [System.Windows.Forms.SystemInformation]::VirtualScreen.Top
+$width  = [System.Windows.Forms.SystemInformation]::VirtualScreen.Width
+$height = [System.Windows.Forms.SystemInformation]::VirtualScreen.Height
+
+$bitmap = New-Object System.Drawing.Bitmap($width, $height)
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
-$graphics.CopyFromScreen($screen.Bounds.Location, [System.Drawing.Point]::Empty, $screen.Bounds.Size)
+$graphics.CopyFromScreen($left, $top, 0, 0, $bitmap.Size)
+
 $encoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object {{ $_.MimeType -eq 'image/jpeg' }}
 $encoderParams = New-Object System.Drawing.Imaging.EncoderParameters(1)
 $encoderParams.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter([System.Drawing.Imaging.Encoder]::Quality, 40)
