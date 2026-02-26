@@ -1,7 +1,10 @@
 #[cfg(target_os = "windows")]
 pub fn capture_desktop() -> Result<Vec<u8>, String> {
     use std::fs;
+    use std::os::windows::process::CommandExt;
     use std::process::Command;
+
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
 
     let tmp_path = std::env::temp_dir().join("gv_screenshot_capture.jpg");
     let tmp_str = tmp_path.to_string_lossy().to_string();
@@ -28,7 +31,15 @@ $bitmap.Dispose()
     );
 
     let output = Command::new("powershell")
-        .args(["-NoProfile", "-NonInteractive", "-Command", &ps_script])
+        .args([
+            "-NoProfile",
+            "-NonInteractive",
+            "-WindowStyle",
+            "Hidden",
+            "-Command",
+            &ps_script,
+        ])
+        .creation_flags(CREATE_NO_WINDOW)
         .output()
         .map_err(|e| format!("PowerShell exec failed: {e}"))?;
 
