@@ -8,12 +8,11 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  // Multi-page app: manager dashboard at '/', staff tracker at '/tracker.html'
+  // Multi-page app: manager dashboard at '/'
   build: {
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        tracker: resolve(__dirname, 'tracker.html'),
       },
     },
   },
