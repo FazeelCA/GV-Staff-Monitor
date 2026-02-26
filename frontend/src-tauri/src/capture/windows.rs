@@ -28,15 +28,11 @@ public class DpiHelper {{
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-# Get the FULL virtual screen bounds (all monitors, physical pixels)
-$left   = [System.Windows.Forms.SystemInformation]::VirtualScreen.Left
-$top    = [System.Windows.Forms.SystemInformation]::VirtualScreen.Top
-$width  = [System.Windows.Forms.SystemInformation]::VirtualScreen.Width
-$height = [System.Windows.Forms.SystemInformation]::VirtualScreen.Height
-
-$bitmap = New-Object System.Drawing.Bitmap($width, $height)
+# Capture PRIMARY screen only (with DPI-aware physical pixel bounds)
+$screen = [System.Windows.Forms.Screen]::PrimaryScreen
+$bitmap = New-Object System.Drawing.Bitmap($screen.Bounds.Width, $screen.Bounds.Height)
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
-$graphics.CopyFromScreen($left, $top, 0, 0, $bitmap.Size)
+$graphics.CopyFromScreen($screen.Bounds.X, $screen.Bounds.Y, 0, 0, $bitmap.Size)
 
 $encoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object {{ $_.MimeType -eq 'image/jpeg' }}
 $encoderParams = New-Object System.Drawing.Imaging.EncoderParameters(1)
