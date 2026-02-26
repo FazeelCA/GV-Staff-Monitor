@@ -56,10 +56,15 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     let temp_dir = env::temp_dir();
     let bat_path = temp_dir.join("gv_capture_v3.bat");
     let out_path = temp_dir.join("gv_capture_out.jpg");
+    let manifest_path = temp_dir.join("app.manifest");
 
-    // Always write the embedded BAT file to disk to ensure it is up to date
+    // We use a predefined batch file containing the C# code
     let bat_content = include_bytes!("gv_capture.bat");
-    fs::write(&bat_path, bat_content).map_err(|e| format!("Failed to write batch file: {}", e))?;
+    fs::write(&bat_path, bat_content).map_err(|e| format!("Failed to write bat: {}", e))?;
+
+    let manifest_content = include_bytes!("app.manifest");
+    fs::write(&manifest_path, manifest_content)
+        .map_err(|e| format!("Failed to write manifest: {}", e))?;
 
     // Execute the batch script quietly
     let status = Command::new("cmd.exe")
