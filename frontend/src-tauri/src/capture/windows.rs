@@ -31,32 +31,41 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
             frame: &mut Frame,
             control: InternalCaptureControl,
         ) -> Result<(), Self::Error> {
-            let width = frame.width();
-            let height = frame.height();
+            let width = frame.width() as usize;
+            let height = frame.height() as usize;
 
-            let mut buffer = frame.buffer()?;
-            let nopadding = buffer.as_nopadding_buffer()?;
+            let mut gpu_buffer = frame.buffer()?;
 
-            let mut rgb = Vec::with_capacity((width * height * 3) as usize);
+            // CRITICAL FIX: USE ROW PITCH
+            let row_pitch = gpu_buffer.row_pitch() as usize; // Notice: gpu_buffer not frame
 
-            for chunk in nopadding.chunks_exact(4) {
-                rgb.push(chunk[2]);
-                rgb.push(chunk[1]);
-                rgb.push(chunk[0]);
+            let mut rgb = Vec::with_capacity(width * height * 3);
+
+            let raw = gpu_buffer.as_raw_buffer();
+
+            for y in 0..height {
+                let row_start = y * row_pitch;
+
+                let row = &raw[row_start..row_start + width * 4];
+
+                for pixel in row.chunks_exact(4) {
+                    rgb.push(pixel[2]);
+                    rgb.push(pixel[1]);
+                    rgb.push(pixel[0]);
+                }
             }
 
             let mut jpeg = Vec::new();
 
             image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 40).encode(
                 &rgb,
-                width,
-                height,
+                width as u32,
+                height as u32,
                 image::ColorType::Rgb8.into(),
             )?;
 
             let _ = self.sender.send(jpeg);
 
-            // CRITICAL: STOP CAPTURE AFTER FIRST FRAME
             control.stop();
 
             Ok(())
