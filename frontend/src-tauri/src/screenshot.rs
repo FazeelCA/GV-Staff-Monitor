@@ -108,7 +108,7 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
             img.as_bytes(),
             img.width(),
             img.height(),
-            img.color(),
+            img.color().into(),
         )
         .map_err(|e| format!("Software JPEG encode failed: {}", e))?;
 
