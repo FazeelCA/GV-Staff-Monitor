@@ -5,6 +5,7 @@ mod window;
 
 use base64::{engine::general_purpose, Engine as _};
 use device_query::{DeviceQuery, DeviceState};
+use sha2::Digest;
 use state::{AppState, WorkState};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -559,6 +560,13 @@ use tauri::{Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "windows")]
+    {
+        // Force the underlying Edge WebView2 to automatically bypass the WebRTC "Choose what to share"
+        // permission prompt and silently capture the entire primary monitor for the hidden Tracker window.
+        std::env::set_var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--auto-select-desktop-capture-source=\"Entire screen\" --enable-usermedia-screen-capturing");
+    }
+
     let shared_state: SharedState = Arc::new(AppState::new());
 
     tauri::Builder::default()

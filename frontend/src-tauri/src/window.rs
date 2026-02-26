@@ -1,4 +1,3 @@
-
 use active_win_pos_rs::get_active_window;
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -16,16 +15,16 @@ pub fn get_current_window() -> Option<ActiveWindow> {
             // We'll set URL to empty string for now as the crate doesn't easily expose URL for all browsers.
             // To get URL we usually need AppleScript for specific browsers (Safari, Chrome).
             // For MVP, we stick to window title which usually contains page title.
-            
+
             Some(ActiveWindow {
                 title: window.title,
                 app_name: window.app_name,
-                url: "".to_string(), 
+                url: "".to_string(),
             })
-        },
+        }
         Err(e) => {
             log::warn!("Active window error: {:?}", e);
             None
-        },
+        }
     }
 }
