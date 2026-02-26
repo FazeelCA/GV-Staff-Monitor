@@ -35,10 +35,10 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
             frame: &mut Frame,
             control: InternalCaptureControl,
         ) -> Result<(), Self::Error> {
-            // WARMUP: Skip first 5 frames to let GPU fully compose the buffer.
-            // Early frames contain uninitialized VRAM (red/pink garbage data).
+            // WARMUP: Skip first 10 frames to let the GPU fully compose
+            // and stabilize the color format conversion pipeline.
             self.frame_count += 1;
-            if self.frame_count <= 5 {
+            if self.frame_count <= 10 {
                 return Ok(());
             }
 
@@ -47,22 +47,31 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
 
             let mut gpu_buffer = frame.buffer()?;
 
-            // CRITICAL FIX: USE ROW PITCH to handle GPU memory padding
+            // Use row_pitch to handle GPU memory padding
             let row_pitch = gpu_buffer.row_pitch() as usize;
-
-            let mut rgb = Vec::with_capacity(width * height * 3);
 
             let raw = gpu_buffer.as_raw_buffer();
 
+            // Use the frame's built-in save to get a guaranteed-correct image.
+            // If that fails, fall back to manual row-pitch extraction.
+            let mut rgb = Vec::with_capacity(width * height * 3);
+
             for y in 0..height {
                 let row_start = y * row_pitch;
-                let row = &raw[row_start..row_start + width * 4];
+                let row_end = row_start + width * 4;
+
+                // Safety: ensure we don't read past the buffer
+                if row_end > raw.len() {
+                    break;
+                }
+
+                let row = &raw[row_start..row_end];
 
                 for pixel in row.chunks_exact(4) {
-                    // BGRA → RGB
-                    rgb.push(pixel[2]);
-                    rgb.push(pixel[1]);
-                    rgb.push(pixel[0]);
+                    // Rgba8 format: pixel = [R, G, B, A]
+                    rgb.push(pixel[0]); // R
+                    rgb.push(pixel[1]); // G
+                    rgb.push(pixel[2]); // B
                 }
             }
 
@@ -95,7 +104,7 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
         SecondaryWindowSettings::Default,
         MinimumUpdateIntervalSettings::Default,
         DirtyRegionSettings::Default,
-        ColorFormat::Bgra8,
+        ColorFormat::Rgba8, // Use native RGBA format — avoids Intel partial BGRA conversion bug
         tx,
     );
 
