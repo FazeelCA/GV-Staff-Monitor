@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.3.2"
+version = "0.4.0"
 description = "GV Staff Monitor"
 authors = ["GV Team"]
 license = ""
@@ -45,5 +45,3 @@ hex = "0.4"
 active-win-pos-rs = "0.8"
 lazy_static = "1.5.0"
 device_query = "4.0.1"
-[target.'cfg(target_os = "windows")'.dependencies]
-windows-capture = "1.5"
