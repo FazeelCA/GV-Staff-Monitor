@@ -54,7 +54,8 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     use std::process::Command;
 
     let temp_dir = env::temp_dir();
-    let bat_path = temp_dir.join("gv_capture_v3.bat");
+    let bat_filename = format!("gv_capture_v{}.bat", env!("CARGO_PKG_VERSION"));
+    let bat_path = temp_dir.join(&bat_filename);
     let out_path = temp_dir.join("gv_capture_out.png"); // Crucial: Ask C# for PNG to bypass buggy Optimus JPEG codec
     let manifest_path = temp_dir.join("app.manifest");
 
