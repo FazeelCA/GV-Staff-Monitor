@@ -1,11 +1,11 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "GV Staff Monitoring Tool",
-  "version": "0.6.28",
+  "version": "0.6.29",
   "identifier": "com.gv.staffmonitor",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173",
+    "devUrl": "http://localhost:5173/tracker.html",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
@@ -13,7 +13,7 @@
     "windows": [
       {
         "title": "GV Staff Monitoring Tool",
-        "url": "index.html",
+        "url": "tracker.html",
         "width": 520,
         "height": 740,
         "resizable": false,
