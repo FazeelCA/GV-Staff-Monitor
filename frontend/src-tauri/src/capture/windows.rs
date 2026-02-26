@@ -41,7 +41,7 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
 
     let mut jpeg = Vec::new();
     image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 40)
-        .write_image(&rgb, width, height, image::ColorType::Rgb8)
+        .write_image(&rgb, width, height, image::ColorType::Rgb8.into())
         .map_err(|e| format!("JPEG encode failed: {e}"))?;
 
     log::info!(
