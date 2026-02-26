@@ -70,6 +70,7 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     // Phase 1: List Displays (Mimicking Workfolio JS `listDisplays()`)
     // ─────────────────────────────────────────────────────────────────────────
     let list_output = Command::new("cmd.exe")
+        .current_dir(&temp_dir)
         .args(&["/C", bat_path.to_str().unwrap(), "/list"])
         .creation_flags(0x08000000)
         .output()
@@ -94,6 +95,7 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     // Phase 2: Capture Exact Display Buffer (Mimicking Workfolio JS `exec ... /d "..."`)
     // ─────────────────────────────────────────────────────────────────────────
     let status = Command::new("cmd.exe")
+        .current_dir(&temp_dir)
         .args(&[
             "/C",
             bat_path.to_str().unwrap(),
