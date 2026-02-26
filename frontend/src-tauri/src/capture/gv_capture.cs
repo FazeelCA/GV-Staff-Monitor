@@ -68,7 +68,7 @@ namespace GVCapture
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine("ERROR: " + ex.Message);
                 return 4;
             }
         }
