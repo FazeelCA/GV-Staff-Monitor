@@ -1,16 +1,16 @@
 mod api;
+mod capture;
 mod screenshot;
 mod state;
 mod window;
-mod windows_capture;
 
+use device_query::{DeviceQuery, DeviceState};
 use state::{AppState, WorkState};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::oneshot;
 use tokio::time::{interval, Duration};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use device_query::{DeviceQuery, DeviceState};
 
 lazy_static::lazy_static! {
     static ref ACTIVITY_COUNT: AtomicUsize = AtomicUsize::new(0);
@@ -22,14 +22,14 @@ fn start_rdev_listener() {
         let device_state = DeviceState::new();
         let mut last_mouse = device_state.get_mouse().coords;
         let mut last_keys = device_state.get_keys();
-        
+
         loop {
             std::thread::sleep(Duration::from_millis(100)); // Poll every 100ms
-            
+
             // Check mouse movement and clicks
             let mouse = device_state.get_mouse();
             let mut active = false;
-            
+
             if mouse.coords != last_mouse {
                 active = true;
                 last_mouse = mouse.coords;
@@ -109,7 +109,7 @@ type SharedState = Arc<AppState>;
 /// The loop now holds a reference to SharedState to read current task & auth on every tick.
 fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
     let (tx, mut rx) = oneshot::channel::<()>();
-    
+
     tokio::spawn(async move {
         // Run every 60s
         let mut ticker = interval(Duration::from_secs(60));
@@ -118,11 +118,21 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
 
         // Report that the screenshot loop has started
         {
-            let uid = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
+            let uid = app_state
+                .user_id
+                .lock()
+                .unwrap()
+                .clone()
+                .unwrap_or_default();
             if !uid.is_empty() {
                 let uid_clone = uid.clone();
                 tokio::spawn(async move {
-                    api::report_error("screenshot_loop", "Screenshot loop started successfully", &uid_clone).await;
+                    api::report_error(
+                        "screenshot_loop",
+                        "Screenshot loop started successfully",
+                        &uid_clone,
+                    )
+                    .await;
                 });
             }
         }
@@ -134,18 +144,18 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
                     let cap_result = tokio::task::spawn_blocking(|| {
                         screenshot::capture_screenshot()
                     }).await;
-                    
+
                     let capture = match cap_result {
                         Ok(inner) => inner,
                         Err(e) => {
                             let msg = format!("spawn_blocking panicked: {e}");
                             log::error!("[screenshot] {msg}");
-                            
+
                             // Send to frontend for user visible debugging
                             if let Some(handle) = app_state.app_handle.lock().unwrap().as_ref() {
                                 let _ = handle.emit("app-error", format!("WGC PANIC: {msg}"));
                             }
-                            
+
                             let uid = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
                             let msg_clone = msg.clone();
                             tokio::spawn(async move {
@@ -154,7 +164,7 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
                             continue;
                         }
                     };
-                    
+
                     match capture {
                         Ok((bytes, hash)) => {
                             // 2. Read current context from state locks
@@ -162,10 +172,10 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
                                 let t_guard = app_state.current_task.lock().unwrap();
                                 let tok_guard = app_state.auth_token.lock().unwrap();
                                 let uid_guard = app_state.user_id.lock().unwrap();
-                                
+
                                 (
-                                    t_guard.clone(), 
-                                    tok_guard.clone().unwrap_or_default(), 
+                                    t_guard.clone(),
+                                    tok_guard.clone().unwrap_or_default(),
                                     uid_guard.clone().unwrap_or_default()
                                 )
                             };
@@ -204,7 +214,7 @@ fn spawn_screenshot_loop(app_state: SharedState) -> oneshot::Sender<()> {
 
 fn spawn_activity_loop(app_state: SharedState) -> oneshot::Sender<()> {
     let (tx, mut rx) = oneshot::channel::<()>();
-    
+
     tokio::spawn(async move {
         // Run every 5s
         let mut ticker = interval(Duration::from_secs(5));
@@ -249,7 +259,7 @@ fn stop_loop(state: &AppState) {
     }
     {
         let mut guard = state.activity_stop_tx.lock().unwrap();
-        *guard = None; 
+        *guard = None;
     }
 }
 
@@ -258,7 +268,11 @@ fn stop_loop(state: &AppState) {
 // ─────────────────────────────────────────────
 
 #[tauri::command]
-async fn set_auth(token: String, user_id: String, state: State<'_, SharedState>) -> Result<(), String> {
+async fn set_auth(
+    token: String,
+    user_id: String,
+    state: State<'_, SharedState>,
+) -> Result<(), String> {
     let app_state = state.inner();
     {
         let mut t = app_state.auth_token.lock().unwrap();
@@ -290,7 +304,7 @@ async fn start_work(task: String, state: State<'_, SharedState>) -> Result<Strin
         let mut guard = app_state.screenshot_stop_tx.lock().unwrap();
         *guard = Some(tx);
     }
-    
+
     // Start activity loop
     let atx = spawn_activity_loop(app_state.clone());
     {
@@ -300,8 +314,18 @@ async fn start_work(task: String, state: State<'_, SharedState>) -> Result<Strin
 
     // Fire API event
     let (token, uid) = {
-        let t = app_state.auth_token.lock().unwrap().clone().unwrap_or_default();
-        let u = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
+        let t = app_state
+            .auth_token
+            .lock()
+            .unwrap()
+            .clone()
+            .unwrap_or_default();
+        let u = app_state
+            .user_id
+            .lock()
+            .unwrap()
+            .clone()
+            .unwrap_or_default();
         (t, u)
     };
 
@@ -317,7 +341,7 @@ async fn start_work(task: String, state: State<'_, SharedState>) -> Result<Strin
 #[tauri::command]
 async fn take_break(state: State<'_, SharedState>) -> Result<String, String> {
     let app_state = state.inner().clone();
-    
+
     // Update state
     let task = {
         let mut ws = app_state.work_state.lock().unwrap();
@@ -330,8 +354,18 @@ async fn take_break(state: State<'_, SharedState>) -> Result<String, String> {
 
     // Fire API event
     let (token, uid) = {
-        let t = app_state.auth_token.lock().unwrap().clone().unwrap_or_default();
-        let u = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
+        let t = app_state
+            .auth_token
+            .lock()
+            .unwrap()
+            .clone()
+            .unwrap_or_default();
+        let u = app_state
+            .user_id
+            .lock()
+            .unwrap()
+            .clone()
+            .unwrap_or_default();
         (t, u)
     };
 
@@ -347,7 +381,7 @@ async fn take_break(state: State<'_, SharedState>) -> Result<String, String> {
 #[tauri::command]
 async fn stop_work(state: State<'_, SharedState>) -> Result<String, String> {
     let app_state = state.inner().clone();
-    
+
     // Update state
     let task = {
         let mut ws = app_state.work_state.lock().unwrap();
@@ -360,8 +394,18 @@ async fn stop_work(state: State<'_, SharedState>) -> Result<String, String> {
 
     // Fire API event
     let (token, uid) = {
-        let t = app_state.auth_token.lock().unwrap().clone().unwrap_or_default();
-        let u = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
+        let t = app_state
+            .auth_token
+            .lock()
+            .unwrap()
+            .clone()
+            .unwrap_or_default();
+        let u = app_state
+            .user_id
+            .lock()
+            .unwrap()
+            .clone()
+            .unwrap_or_default();
         (t, u)
     };
 
@@ -377,7 +421,7 @@ async fn stop_work(state: State<'_, SharedState>) -> Result<String, String> {
 #[tauri::command]
 async fn resume_work(state: State<'_, SharedState>) -> Result<String, String> {
     let app_state = state.inner().clone();
-    
+
     // Update state
     let task = {
         let mut ws = app_state.work_state.lock().unwrap();
@@ -401,8 +445,18 @@ async fn resume_work(state: State<'_, SharedState>) -> Result<String, String> {
 
     // Fire API event
     let (token, uid) = {
-        let t = app_state.auth_token.lock().unwrap().clone().unwrap_or_default();
-        let u = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
+        let t = app_state
+            .auth_token
+            .lock()
+            .unwrap()
+            .clone()
+            .unwrap_or_default();
+        let u = app_state
+            .user_id
+            .lock()
+            .unwrap()
+            .clone()
+            .unwrap_or_default();
         (t, u)
     };
 
@@ -429,11 +483,21 @@ async fn update_task(task: String, state: State<'_, SharedState>) -> Result<(), 
     // Fire log only if Working
     if work_state_str == "Working" {
         let (token, uid) = {
-            let t = app_state.auth_token.lock().unwrap().clone().unwrap_or_default();
-            let u = app_state.user_id.lock().unwrap().clone().unwrap_or_default();
+            let t = app_state
+                .auth_token
+                .lock()
+                .unwrap()
+                .clone()
+                .unwrap_or_default();
+            let u = app_state
+                .user_id
+                .lock()
+                .unwrap()
+                .clone()
+                .unwrap_or_default();
             (t, u)
         };
-        
+
         if !token.is_empty() {
             tokio::spawn(async move {
                 api::log_time_event(&work_state_str, &task, &uid, &token).await;
@@ -448,7 +512,7 @@ async fn update_task(task: String, state: State<'_, SharedState>) -> Result<(), 
 // Tauri App Entry
 // ─────────────────────────────────────────────
 
-use tauri::{Manager, Emitter};
+use tauri::{Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

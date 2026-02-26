@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.3.3"
+version = "0.4.0"
 description = "GV Staff Monitor"
 authors = ["GV Team"]
 license = ""
@@ -47,22 +47,4 @@ lazy_static = "1.5.0"
 device_query = "4.0.1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { version = "0.61.3", features = [
-    "Win32_Foundation",
-    "Win32_Graphics_Gdi",
-    "Win32_UI_WindowsAndMessaging",
-    "Win32_Graphics_Dxgi",
-    "Win32_Graphics_Dxgi_Common",
-    "Win32_Graphics_Direct3D",
-    "Win32_Graphics_Direct3D11",
-    "Win32_System_Com",
-    "Graphics_Capture",
-    "Graphics_DirectX",
-    "Graphics_DirectX_Direct3D11",
-    "Win32_System_WinRT",
-    "Win32_System_WinRT_Graphics_Direct2D",
-    "Win32_System_WinRT_Graphics_Capture",
-    "Win32_System_WinRT_Direct3D11",
-    "Foundation",
-    "System",
-] }
+windows-capture = "1.3"
