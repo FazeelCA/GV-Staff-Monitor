@@ -31,6 +31,9 @@ using System.Collections.Generic;
 
 public class ScreenCapture
 {
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetProcessDPIAware();
+
     public Image CaptureScreen()
     {
         return CaptureWindow(User32.GetDesktopWindow());
@@ -68,6 +71,8 @@ public class ScreenCapture
 
     public static void Main()
     {
+        SetProcessDPIAware(); // Crucial for correct hardware resolution
+
         String[] arguments = Environment.GetCommandLineArgs();
         if (arguments.Length < 2) return;
         String file = arguments[1];
