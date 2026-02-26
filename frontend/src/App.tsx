@@ -10,7 +10,6 @@ import ScreenshotsView from './pages/ScreenshotsView';
 import WebsitesView from './pages/WebsitesView';
 import WorkHoursView from './pages/WorkHoursView';
 import Layout from './components/Layout';
-import TrackerCapture from './Tracker';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
@@ -40,24 +39,23 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <>
-      <TrackerCapture />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginView />} />
 
-        <Route path="/" element={<RequireAuth><TeamView /></RequireAuth>} />
-        <Route path="/users" element={<RequireAuth><UsersView /></RequireAuth>} />
-        <Route path="/tasks" element={<RequireAuth><TasksView /></RequireAuth>} />
-        <Route path="/screenshots" element={<RequireAuth><ScreenshotsView /></RequireAuth>} />
+          <Route path="/" element={<RequireAuth><TeamView /></RequireAuth>} />
+          <Route path="/users" element={<RequireAuth><UsersView /></RequireAuth>} />
+          <Route path="/tasks" element={<RequireAuth><TasksView /></RequireAuth>} />
+          <Route path="/screenshots" element={<RequireAuth><ScreenshotsView /></RequireAuth>} />
 
-        <Route path="/monitor/websites" element={<RequireAuth><WebsitesView /></RequireAuth>} />
-        <Route path="/monitor/work-hours" element={<RequireAuth><WorkHoursView /></RequireAuth>} />
+          <Route path="/monitor/websites" element={<RequireAuth><WebsitesView /></RequireAuth>} />
+          <Route path="/monitor/work-hours" element={<RequireAuth><WorkHoursView /></RequireAuth>} />
 
-        <Route path="/settings" element={<RequireAuth><SettingsView /></RequireAuth>} />
+          <Route path="/settings" element={<RequireAuth><SettingsView /></RequireAuth>} />
 
-        <Route path="/user/:userId" element={<RequireAuth><UserDetailView /></RequireAuth>} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="/user/:userId" element={<RequireAuth><UserDetailView /></RequireAuth>} />
+        </Routes>
+      </BrowserRouter>
     </>
   );
 }
