@@ -4,7 +4,6 @@ mod state;
 mod window;
 
 use device_query::{DeviceQuery, DeviceState};
-use sha2::Digest;
 use state::{AppState, WorkState};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;

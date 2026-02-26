@@ -1,9 +1,6 @@
 use image::codecs::jpeg::JpegEncoder;
-use log;
 use sha2::{Digest, Sha256};
 use std::io::Cursor;
-use std::thread;
-use std::time::Duration; // Added for log::warn!
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Universal Fallback: xcap (GDI / CoreGraphics)
