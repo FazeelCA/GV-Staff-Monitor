@@ -54,13 +54,6 @@ jobs:
         run: |
           C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe -out:bin\gv_capture-x86_64-pc-windows-msvc.exe -target:winexe src\capture\gv_capture.cs
 
-      - name: Build Desktop App
-        working-directory: frontend
-        run: npx tauri build ${{ matrix.args }}
-        env:
-          # Disable Apple code signing — use ad-hoc signing instead
-          APPLE_SIGNING_IDENTITY: "-"
-
       - name: Install dependencies (Ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -73,9 +66,18 @@ jobs:
         run: |
           mkdir -p bin
           touch bin/gv_capture-aarch64-apple-darwin
+          touch bin/gv_capture-universal-apple-darwin
           touch bin/gv_capture-x86_64-apple-darwin
           touch bin/gv_capture-x86_64-unknown-linux-gnu
           chmod +x bin/gv_capture-*
+
+      - name: Build Desktop App
+        working-directory: frontend
+        run: npx tauri build ${{ matrix.args }}
+        env:
+          # Disable Apple code signing — use ad-hoc signing instead
+          APPLE_SIGNING_IDENTITY: "-"
+
 
       - name: Ad-hoc sign & remove quarantine (macOS)
         if: matrix.platform == 'macos-latest'
