@@ -55,7 +55,7 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
 
     let temp_dir = env::temp_dir();
     let bat_path = temp_dir.join("gv_capture_v3.bat");
-    let out_path = temp_dir.join("gv_capture_out.jpg");
+    let out_path = temp_dir.join("gv_capture_out.png"); // Crucial: Ask C# for PNG to bypass buggy Optimus JPEG codec
     let manifest_path = temp_dir.join("app.manifest");
 
     // We use a predefined batch file containing the C# code
@@ -80,14 +80,39 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
         ));
     }
 
-    // Read the resulting JPEG bytes
-    let jpeg_bytes =
+    // Read the resulting PNG bytes
+    let png_bytes =
         fs::read(&out_path).map_err(|e| format!("Failed to read captured image buffer: {}", e))?;
 
-    // Cleanup the frame
+    // Cleanup the raw PNG file
     let _ = fs::remove_file(&out_path);
 
-    Ok(jpeg_bytes)
+    // ─────────────────────────────────────────────────────────────────────────
+    // Replicate Workfolio's Javascript Jimp Pipeline: PNG -> Scale 720p -> JPG
+    // ─────────────────────────────────────────────────────────────────────────
+    let mut img = image::load_from_memory(&png_bytes)
+        .map_err(|e| format!("Failed to parse raw PNG capture from C#: {}", e))?;
+
+    // Workfolio exact logic: limit height to 720p
+    if img.height() > 720 {
+        let aspect_ratio = img.width() as f32 / img.height() as f32;
+        let new_width = (720.0 * aspect_ratio) as u32;
+        img = img.resize_exact(new_width, 720, image::imageops::FilterType::Triangle);
+    }
+
+    // Workfolio exact logic: compress to JPG at 50% quality
+    let mut buffer = std::io::Cursor::new(Vec::new());
+    let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buffer, 50);
+    encoder
+        .encode(
+            img.as_bytes(),
+            img.width(),
+            img.height(),
+            img.color(),
+        )
+        .map_err(|e| format!("Software JPEG encode failed: {}", e))?;
+
+    Ok(buffer.into_inner())
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
