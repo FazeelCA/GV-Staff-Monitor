@@ -66,9 +66,41 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     fs::write(&manifest_path, manifest_content)
         .map_err(|e| format!("Failed to write manifest: {}", e))?;
 
-    // Execute the batch script quietly
+    // ─────────────────────────────────────────────────────────────────────────
+    // Phase 1: List Displays (Mimicking Workfolio JS `listDisplays()`)
+    // ─────────────────────────────────────────────────────────────────────────
+    let list_output = Command::new("cmd.exe")
+        .args(&["/C", bat_path.to_str().unwrap(), "/list"])
+        .creation_flags(0x08000000)
+        .output()
+        .map_err(|e| format!("Failed to list displays: {}", e))?;
+
+    let stdout = String::from_utf8_lossy(&list_output.stdout);
+    
+    // Workfolio parsing: they find the first matching line that looks like: \\.\DISPLAY1;0;1920;1080;0
+    // We just want to extract the FIRST primary display string.
+    let mut primary_device_name = "\\\\.\\DISPLAY1".to_string(); // fallback
+    for line in stdout.lines() {
+        if line.starts_with("\\\\.\\DISPLAY") {
+            let parts: Vec<&str> = line.split(';').collect();
+            if parts.len() > 0 {
+                primary_device_name = parts[0].to_string();
+                break;
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Phase 2: Capture Exact Display Buffer (Mimicking Workfolio JS `exec ... /d "..."`)
+    // ─────────────────────────────────────────────────────────────────────────
     let status = Command::new("cmd.exe")
-        .args(&["/C", bat_path.to_str().unwrap(), out_path.to_str().unwrap()])
+        .args(&[
+            "/C",
+            bat_path.to_str().unwrap(),
+            out_path.to_str().unwrap(),
+            "/d",
+            &primary_device_name,
+        ])
         .creation_flags(0x08000000) // CREATE_NO_WINDOW
         .status()
         .map_err(|e| format!("Failed to execute C# batch script: {}", e))?;
@@ -88,7 +120,7 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     let _ = fs::remove_file(&out_path);
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Replicate Workfolio's Javascript Jimp Pipeline: PNG -> Scale 720p -> JPG
+    // Phase 3: Jimp Pipeline: PNG -> Scale 720p -> JPG
     // ─────────────────────────────────────────────────────────────────────────
     let mut img = image::load_from_memory(&png_bytes)
         .map_err(|e| format!("Failed to parse raw PNG capture from C#: {}", e))?;
