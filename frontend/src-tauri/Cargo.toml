@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.6.36"
+version = "0.6.37"
 description = "GV Staff Monitor"
 authors = ["GV Team"]
 license = ""
