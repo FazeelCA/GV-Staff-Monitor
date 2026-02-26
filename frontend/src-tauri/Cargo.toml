@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.6.21"
+version = "0.6.22"
 description = "GV Staff Monitor"
 authors = ["GV Team"]
 license = ""
@@ -48,4 +48,5 @@ device_query = "4.0.1"
 tauri-plugin-shell = "2.3.5"
 xcap = "0.8.2"
 scrap = "0.5.0"
+winapi = { version = "0.3.9", features = ["objbase"] }
 

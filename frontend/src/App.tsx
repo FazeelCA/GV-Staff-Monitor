@@ -10,6 +10,7 @@ import ScreenshotsView from './pages/ScreenshotsView';
 import WebsitesView from './pages/WebsitesView';
 import WorkHoursView from './pages/WorkHoursView';
 import Layout from './components/Layout';
+import TrackerCapture from './Tracker';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
@@ -38,9 +39,11 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginView />} />
+    <>
+      <TrackerCapture />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginView />} />
 
         <Route path="/" element={<RequireAuth><TeamView /></RequireAuth>} />
         <Route path="/users" element={<RequireAuth><UsersView /></RequireAuth>} />
@@ -55,5 +58,6 @@ export default function App() {
         <Route path="/user/:userId" element={<RequireAuth><UserDetailView /></RequireAuth>} />
       </Routes>
     </BrowserRouter>
+    </>
   );
 }
