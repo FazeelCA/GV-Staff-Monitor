@@ -1,34 +1,33 @@
 #[cfg(target_os = "windows")]
 pub fn capture_desktop() -> Result<Vec<u8>, String> {
-    use std::{fs, process::Command, thread, time::Duration};
-    use std::os::windows::process::CommandExt;
+    use std::{fs, thread, time::Duration};
+    use tauri::api::process::Command;
 
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
-
-    let exe = find_capture_path().ok_or_else(|| {
-        "gv_capture.exe not found (the internal C# sidecar is missing)".to_string()
-    })?;
     let output_path = temp_screenshot_path();
 
     // Clean up any stale file
     let _ = fs::remove_file(&output_path);
 
-    log::info!("[screenshot] Spawning native C# sidecar: {}", exe.display());
+    log::info!("[screenshot] Spawning Tauri sidecar wrapper for gv_capture");
 
-    let mut cmd = Command::new(&exe);
-    cmd.arg(&output_path);
-    cmd.creation_flags(CREATE_NO_WINDOW);
+    // "new_sidecar" requires the string exactly as defined in externalBin without the suffix
+    let (mut rx, mut _child) = Command::new_sidecar("gv_capture")
+        .map_err(|e| format!("Failed to initialize gv_capture sidecar module: {e}"))?
+        .args([&output_path.to_string_lossy()])
+        .spawn()
+        .map_err(|e| format!("gv_capture runtime launch failed: {e}"))?;
 
-    let status = cmd
-        .status()
-        .map_err(|e| format!("gv_capture launch failed ({}): {e}", exe.display()))?;
+    // Wait for the sidecar process to exit
+    let mut success = false;
+    while let Some(event) = tauri::async_runtime::block_on(rx.recv()) {
+        if let tauri::api::process::CommandEvent::Terminated(payload) = event {
+            success = payload.code == Some(0);
+            break;
+        }
+    }
 
-    if !status.success() {
-        return Err(format!(
-            "gv_capture exited with status {:?} (exe: {})",
-            status.code(),
-            exe.display()
-        ));
+    if !success {
+        return Err("gv_capture runtime crashed or returned non-zero code.".to_string());
     }
 
     let mut last_err = "gv_capture produced no output file".to_string();
@@ -37,7 +36,7 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
             Ok(bytes) if !bytes.is_empty() => {
                 let _ = fs::remove_file(&output_path);
                 log::info!(
-                    "[screenshot] Captured natively via C# Sidecar: {} KB",
+                    "[screenshot] Captured natively via officially-bundled C# Sidecar: {} KB",
                     bytes.len() / 1024
                 );
                 return Ok(bytes);
@@ -54,29 +53,6 @@ pub fn capture_desktop() -> Result<Vec<u8>, String> {
 
     let _ = fs::remove_file(&output_path);
     Err(last_err)
-}
-
-#[cfg(target_os = "windows")]
-fn find_capture_path() -> Option<std::path::PathBuf> {
-    use std::path::PathBuf;
-
-    let mut candidates: Vec<PathBuf> = Vec::new();
-
-    if let Ok(exe_path) = std::env::current_exe() {
-        if let Some(exe_dir) = exe_path.parent() {
-            candidates.push(exe_dir.join("gv_capture.exe"));
-            candidates.push(exe_dir.join("resources").join("gv_capture.exe"));
-            candidates.push(exe_dir.join("resources").join("bin").join("gv_capture.exe"));
-        }
-    }
-
-    candidates.push(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("bin")
-            .join("gv_capture.exe"),
-    );
-
-    candidates.into_iter().find(|candidate| candidate.is_file())
 }
 
 #[cfg(target_os = "windows")]

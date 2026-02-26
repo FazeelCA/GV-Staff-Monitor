@@ -48,6 +48,12 @@ jobs:
         with:
           workspaces: frontend/src-tauri
 
+      - name: Compile C# Capture Sidecar (Windows)
+        if: matrix.platform == 'windows-latest'
+        working-directory: frontend/src-tauri
+        run: |
+          C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe -out:bin\gv_capture-x86_64-pc-windows-msvc.exe -target:winexe src\capture\gv_capture.cs
+
       - name: Build Desktop App
         working-directory: frontend
         run: npx tauri build ${{ matrix.args }}
