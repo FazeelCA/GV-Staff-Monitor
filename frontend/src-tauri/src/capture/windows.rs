@@ -1,57 +1,61 @@
 #[cfg(target_os = "windows")]
 pub fn capture_desktop() -> Result<Vec<u8>, String> {
-    use std::fs;
-    use std::os::windows::process::CommandExt;
-    use std::process::Command;
+    use image::ImageEncoder;
+    use screenshots::Screen;
 
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
+    log::info!("[screenshot] Starting capture via `screenshots` crate...");
 
-    let tmp_path = std::env::temp_dir().join("gv_screenshot_final.jpg");
-    let tmp_str = tmp_path.to_string_lossy().to_string();
+    let screens = Screen::all().map_err(|e| format!("Failed to fetch screens: {e}"))?;
 
-    let _ = fs::remove_file(&tmp_path);
-
-    let ps_script = format!(
-        r#"
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
-$screen = [System.Windows.Forms.Screen]::PrimaryScreen
-$bitmap = New-Object System.Drawing.Bitmap($screen.Bounds.Width, $screen.Bounds.Height)
-$graphics = [System.Drawing.Graphics]::FromImage($bitmap)
-$graphics.CopyFromScreen($screen.Bounds.Location, [System.Drawing.Point]::Empty, $screen.Bounds.Size)
-$encoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object {{ $_.MimeType -eq 'image/jpeg' }}
-$encoderParams = New-Object System.Drawing.Imaging.EncoderParameters(1)
-$encoderParams.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter([System.Drawing.Imaging.Encoder]::Quality, 40)
-$bitmap.Save('{}', $encoder, $encoderParams)
-$graphics.Dispose()
-$bitmap.Dispose()
-"#,
-        tmp_str.replace('\'', "''")
-    );
-
-    log::info!("[screenshot] Executing native .NET Capture engine...");
-
-    let output = Command::new("powershell")
-        .args(["-NoProfile", "-NonInteractive", "-Command", &ps_script])
-        .creation_flags(CREATE_NO_WINDOW)
-        .output()
-        .map_err(|e| format!("PowerShell exec failed: {e}"))?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("PowerShell failed: {}", stderr));
+    if screens.is_empty() {
+        return Err("No transparent screens found attached to desktop".to_string());
     }
 
-    let bytes = fs::read(&tmp_path).map_err(|e| format!("Failed to read JPEG: {e}"))?;
-    let _ = fs::remove_file(&tmp_path);
-
-    if bytes.is_empty() {
-        return Err("Produced completely empty JPEG".to_string());
-    }
+    // Get the primary screen logically mapping to the main display hook
+    let primary = screens
+        .into_iter()
+        .find(|s| s.display_info.is_primary)
+        .unwrap_or_else(|| screens[0]);
 
     log::info!(
-        "[screenshot] .NET Capture success: {} KB",
-        bytes.len() / 1024
+        "[screenshot] Capturing screen ID: {} ({}x{})",
+        primary.display_info.id,
+        primary.display_info.width,
+        primary.display_info.height
     );
-    Ok(bytes)
+
+    // This internal implementation flawlessly handles row pitch padding
+    // switching smoothly between DXGI Desktop Duplication and GDI backends natively.
+    let capture_buffer = primary
+        .capture()
+        .map_err(|e| format!("Hardware frame extraction error: {e}"))?;
+
+    let width = capture_buffer.width();
+    let height = capture_buffer.height();
+
+    // We get absolutely pristine, stride-corrected RGBA bytes.
+    let rgba = capture_buffer.rgba();
+
+    // Convert to RGB for JPEG encoding natively without striding drift
+    let mut rgb = Vec::with_capacity((width * height * 3) as usize);
+    for pixel in rgba.chunks_exact(4) {
+        rgb.push(pixel[0]); // R
+        rgb.push(pixel[1]); // G
+        rgb.push(pixel[2]); // B
+    }
+
+    // Compress to 40-quality JPEG precisely via memory buffer
+    let mut jpeg = Vec::new();
+    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 40)
+        .write_image(&rgb, width, height, image::ColorType::Rgb8.into())
+        .map_err(|e| format!("JPEG encoding panic: {e}"))?;
+
+    log::info!(
+        "[screenshot] Core capture pipeline success: {}x{} -> {} KB",
+        width,
+        height,
+        jpeg.len() / 1024
+    );
+
+    Ok(jpeg)
 }
