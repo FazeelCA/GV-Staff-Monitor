@@ -42,4 +42,30 @@ impl AppState {
             activity_stop_tx: Mutex::new(None),
         }
     }
+
+    pub fn token(&self) -> Result<String, String> {
+        let lock = self
+            .auth_token
+            .lock()
+            .map_err(|_| "Failed to lock auth_token")?;
+        lock.clone().ok_or_else(|| "No token set".to_string())
+    }
+
+    pub fn user_id(&self) -> Result<String, String> {
+        let lock = self.user_id.lock().map_err(|_| "Failed to lock user_id")?;
+        lock.clone().ok_or_else(|| "No user_id set".to_string())
+    }
+
+    pub fn tracking_task(&self) -> Result<String, String> {
+        let lock = self
+            .current_task
+            .lock()
+            .map_err(|_| "Failed to lock current_task")?;
+        let task = lock.clone();
+        if task.is_empty() {
+            Ok("Unspecified Task".to_string())
+        } else {
+            Ok(task)
+        }
+    }
 }
