@@ -23,9 +23,12 @@ function deriveStatus(latestType?: string, lastActiveAt?: Date): "Working" | "On
 }
 
 // GET /api/dashboard/users
-router.get("/users", async (_req: Request, res: Response) => {
+router.get("/users", async (req: Request, res: Response) => {
     try {
-        const today = new Date();
+        const { date } = req.query as { date?: string };
+        const queryDate = date ? new Date(date) : new Date();
+
+        const today = new Date(queryDate);
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(today.getDate() + 1);

@@ -197,10 +197,10 @@ export default function WebsitesView() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-white/10 text-left">
-                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-[20%]">User</th>
-                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-[50%]">Application / Title</th>
-                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-[15%]">Time</th>
-                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-[15%]">Duration</th>
+                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider" style={{ width: '20%' }}>User</th>
+                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider" style={{ width: '50%' }}>Application / Title</th>
+                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider" style={{ width: '15%' }}>Time</th>
+                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider" style={{ width: '15%' }}>Duration</th>
                             </tr>
                         </thead>
                         <tbody>

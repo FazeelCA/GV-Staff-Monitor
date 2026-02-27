@@ -51,7 +51,7 @@ export default function WorkHoursView() {
             // Manual fetch to pass date param since api.ts wrapper might not support it yet
             // Wait, api.ts `fetchDashboardUsers` does NOT take arguments usually.
             // Let's assume I check api.ts or just use fetch directly.
-            const url = `${BASE_URL}/dashboard${selectedDate ? `?date=${selectedDate}` : ''}`;
+            const url = `${BASE_URL}/dashboard/users${selectedDate ? `?date=${selectedDate}` : ''}`;
             const res = await fetch(url, {
                 headers: { Authorization: `Bearer ${token}` }
             });
