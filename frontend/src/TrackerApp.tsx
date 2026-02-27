@@ -241,9 +241,6 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
     const [unreadMessage, setUnreadMessage] = useState<any>(null);
     const [acknowledging, setAcknowledging] = useState(false);
     const ticker = useRef<ReturnType<typeof setInterval> | null>(null);
-    const captureIntervalInfo = useRef<ReturnType<typeof setInterval> | null>(null);
-    const videoRef = useRef<HTMLVideoElement | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     useEffect(() => {
         loadData();
@@ -336,105 +333,11 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
     const startTimer = useCallback(() => {
         if (ticker.current) return;
         ticker.current = setInterval(() => setSecs(s => s + 1), 1000);
-        startScreencastCapture();
     }, []);
     const stopTimer = useCallback(() => {
         if (ticker.current) { clearInterval(ticker.current); ticker.current = null; }
-        stopScreencastCapture();
     }, []);
-    useEffect(() => () => {
-        if (ticker.current) clearInterval(ticker.current);
-        stopScreencastCapture();
-    }, []);
-
-    // ─── Screencast Setup ──────────────────────────────────────────────
-    async function startScreencastCapture() {
-        if (captureIntervalInfo.current) return;
-
-        try {
-            // Under Tauri with `--auto-select-desktop-capture-source`, this auto-resolves silently
-            const stream = await navigator.mediaDevices.getDisplayMedia({
-                video: {
-                    displaySurface: "monitor",
-                    logicalSurface: true,
-                } as any,
-                audio: false,
-            });
-
-            if (!videoRef.current) {
-                videoRef.current = document.createElement("video");
-                videoRef.current.autoplay = true;
-                videoRef.current.muted = true;
-                videoRef.current.playsInline = true;
-            }
-            videoRef.current.srcObject = stream;
-
-            if (!canvasRef.current) {
-                canvasRef.current = document.createElement("canvas");
-            }
-
-            // Await video play to ensure dimensions are loaded
-            await new Promise((resolve) => {
-                if (!videoRef.current) return resolve(null);
-                videoRef.current.onplaying = resolve;
-            });
-
-            // Start internal snapshot loop every 60 seconds (or randomize matching backend logic)
-            // For stability, we'll sync a frame every 60s exactly.
-            captureIntervalInfo.current = setInterval(takeSnapshotAndUpload, 60_000);
-
-            // Take first snapshot immediately
-            takeSnapshotAndUpload();
-        } catch (e) {
-            console.error("Failed to start getDisplayMedia:", e);
-        }
-    }
-
-    function stopScreencastCapture() {
-        if (captureIntervalInfo.current) {
-            clearInterval(captureIntervalInfo.current);
-            captureIntervalInfo.current = null;
-        }
-
-        if (videoRef.current && videoRef.current.srcObject) {
-            const stream = videoRef.current.srcObject as MediaStream;
-            stream.getTracks().forEach(track => track.stop());
-            videoRef.current.srcObject = null;
-        }
-    }
-
-    async function takeSnapshotAndUpload() {
-        if (!videoRef.current || !canvasRef.current) return;
-
-        try {
-            const video = videoRef.current;
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return;
-
-            const vw = video.videoWidth;
-            const vh = video.videoHeight;
-            if (vw === 0 || vh === 0) return;
-
-            // Target max 720p height limit
-            let targetH = vh;
-            let targetW = vw;
-            if (vh > 720) {
-                targetH = 720;
-                targetW = (vw / vh) * 720;
-            }
-
-            canvas.width = targetW;
-            canvas.height = targetH;
-            ctx.drawImage(video, 0, 0, targetW, targetH);
-
-            const base64Jpeg = canvas.toDataURL("image/jpeg", 0.5); // 50% Quality exact match
-
-            await tauriCmd("upload_screencast_frame", { base64Jpeg });
-        } catch (e) {
-            console.error("Failed to snapshot and upload WebRTC frame:", e);
-        }
-    }
+    useEffect(() => () => { if (ticker.current) clearInterval(ticker.current); }, []);
 
     const getActiveTaskTitle = () => {
         if (!activeTaskId) return "";

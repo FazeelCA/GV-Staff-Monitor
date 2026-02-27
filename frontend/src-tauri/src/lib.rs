@@ -519,38 +519,6 @@ async fn update_task(task: String, state: State<'_, SharedState>) -> Result<(), 
 use tauri::{Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-use sha2::Digest;
-
-// ─────────────────────────────────────────────
-// HTML5 Screencast Upload Handler
-// ─────────────────────────────────────────────
-#[tauri::command]
-async fn upload_screencast_frame(
-    state: State<'_, SharedState>,
-    base64_jpeg: String,
-) -> Result<(), String> {
-    let base64_data = base64_jpeg.trim_start_matches("data:image/jpeg;base64,");
-    let jpeg_bytes = base64::decode(base64_data).map_err(|e| format!("Base64 Error: {}", e))?;
-
-    let token = state.token()?;
-    let user_id = state.user_id()?;
-    let tracking_task = state.tracking_task()?;
-    let count = ACTIVITY_COUNT.swap(0, Ordering::Relaxed);
-
-    // Add logic to query Window Titles via active-win-pos-rs if needed, or rely on existing api::sync
-    use active_win_pos_rs::get_active_window;
-    let window_title = match get_active_window() {
-        Ok(w) => w.title,
-        Err(_) => "Unknown Window".to_string(),
-    };
-
-    let hash = format!("{:x}", sha2::Sha256::digest(&jpeg_bytes));
-
-    crate::api::upload_screenshot(jpeg_bytes, hash, tracking_task, user_id, token, count).await;
-
-    Ok(())
-}
-
 pub fn run() {
     let shared_state: SharedState = Arc::new(AppState::new());
 
@@ -572,9 +540,7 @@ pub fn run() {
                     .level(log::LevelFilter::Info)
                     .targets([
                         tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
-                        tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
-                            file_name: None,
-                        }),
+                        tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir { file_name: None }),
                         tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Webview),
                     ])
                     .build(),
@@ -612,7 +578,6 @@ pub fn run() {
             update_task,
             check_screen_permission,
             open_screen_privacy_settings,
-            upload_screencast_frame
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
