@@ -68,7 +68,6 @@ export default function Sidebar({ collapsed, setCollapsed }: { collapsed: boolea
                     className={`
                         flex items-center gap-3 w-full px-3 py-3 rounded-xl 
                         text-muted-foreground hover:text-white hover:bg-white/5 transition-all group
-                        ${collapsed ? 'justify-center' : ''}
                     `}
                 >
                     <LogOut size={20} className="group-hover:text-red-400 transition-colors" />
@@ -99,7 +98,6 @@ function NavItem({ to, icon, label, collapsed }: { to: string; icon: React.React
                     ? 'bg-primary/10 text-primary shadow-[0_0_20px_rgba(99,102,241,0.15)] border border-primary/20'
                     : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
                 }
-                ${collapsed ? 'justify-center' : ''}
             `}
         >
             <div className={`transition-transform duration-300 ${collapsed ? 'scale-110' : ''}`}>

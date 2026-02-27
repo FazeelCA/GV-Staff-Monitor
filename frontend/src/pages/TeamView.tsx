@@ -245,7 +245,7 @@ export default function TeamView() {
 
                     <Badge variant="glass" className="self-start md:self-auto py-1.5 px-3">
                         <StatusDot className="bg-green-500 animate-pulse" />
-                        Live · Updated {lastUpdate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        Live · Updated {lastUpdate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
                     </Badge>
                 </div>
             </div>

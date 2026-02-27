@@ -182,7 +182,7 @@ export default function WorkHoursView() {
                         const h = Math.floor(user.totalTimeMs / 3600000);
                         const m = Math.floor((user.totalTimeMs % 3600000) / 60000);
                         const totalTimeStr = `${h}h ${m}m`;
-                        const startTime = user.firstLog ? new Date(user.firstLog.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+                        const startTime = user.firstLog ? new Date(user.firstLog.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '-';
 
                         return (
                             <GlassCard key={user.id} className="flex flex-col gap-4">

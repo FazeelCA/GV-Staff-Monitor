@@ -7,7 +7,7 @@ import { Button } from '../components/ui/Button';
 import { ArrowLeft, Clock, Monitor, Lock, X, Trash2, AlertTriangle, Activity, Check, Edit2 } from 'lucide-react';
 
 function formatTime(iso: string) {
-    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
 function formatDate(iso: string) {
@@ -305,7 +305,7 @@ export default function UserDetailView() {
                             >
                                 <img
                                     src={latestShot.imageUrl}
-                                    alt={latestShot.taskAtTheTime}
+                                    alt={latestShot.taskAtTheTime || 'Screenshot'}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
@@ -338,7 +338,7 @@ export default function UserDetailView() {
                 <GlassCard className="p-4 h-[250px] w-full mt-4 bg-black/10">
                     <h3 className="text-sm font-semibold text-muted-foreground mb-4 ml-2 uppercase tracking-wide">Productivity Trend (Activity Count)</h3>
                     <ResponsiveContainer width="100%" height="80%">
-                        <AreaChart data={[...screenshots].reverse().map(s => ({ time: new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), activity: s.activityCount || 0 }))}>
+                        <AreaChart data={[...screenshots].reverse().map(s => ({ time: new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }), activity: s.activityCount || 0 }))}>
                             <defs>
                                 <linearGradient id="colorActivity" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5} />
@@ -394,7 +394,7 @@ export default function UserDetailView() {
                             >
                                 <img
                                     src={shot.imageUrl}
-                                    alt={shot.taskAtTheTime}
+                                    alt={shot.taskAtTheTime || 'Screenshot'}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
 
@@ -564,7 +564,7 @@ export default function UserDetailView() {
                                 <div>
                                     <h3 className="font-medium text-foreground">{task.title || 'Untitled Task'}</h3>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Date unknown'}
+                                        {task.createdAt ? new Date(task.createdAt).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'Date unknown'}
                                     </p>
                                 </div>
                                 {task.status && task.status !== 'UNKNOWN' && (

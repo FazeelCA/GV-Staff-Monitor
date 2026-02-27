@@ -9,7 +9,7 @@ import { useSearchParams } from 'react-router-dom';
 type ScreenshotWithUser = Screenshot & { user: { name: string; email: string }; hash?: string };
 
 function formatTime(iso: string) {
-    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
 function formatDate(iso: string) {
@@ -211,7 +211,7 @@ export default function ScreenshotsView() {
                                 >
                                     <img
                                         src={shot.imageUrl}
-                                        alt={shot.taskAtTheTime}
+                                        alt={shot.taskAtTheTime || 'Screenshot'}
                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                         loading="lazy"
                                     />

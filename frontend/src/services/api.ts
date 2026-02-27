@@ -22,8 +22,11 @@ export interface Screenshot {
     imageUrl: string;
     hash?: string;
     activityCount?: number;
-    taskAtTheTime: string;
+    taskAtTheTime: string | null;
     timestamp: string;
+    appName?: string;
+    windowTitle?: string;
+    user?: { name: string };
 }
 
 // User Management

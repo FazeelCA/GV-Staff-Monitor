@@ -657,7 +657,7 @@ function TrackerScreen({ token, user, onLogout, onHistory }: {
                         </div>
 
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-6">
-                            Sent at {new Date(unreadMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            Sent at {new Date(unreadMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
                         </p>
 
                         <button

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from './Button';
-import { X, ChevronLeft, ChevronRight, Monitor, Clock, Trash2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Monitor, Clock, Trash2, Globe } from 'lucide-react';
 import type { Screenshot } from '../../services/api';
 
 interface LightboxProps {
@@ -45,10 +45,18 @@ export function Lightbox({ screenshot, onClose, onPrev, onNext, onDelete, hasPre
                         <h3 className="font-semibold text-lg flex items-center gap-2">
                             <Monitor size={18} className="text-primary" />
                             {screenshot.taskAtTheTime || 'No active task'}
+                            {screenshot.user?.name && <span className="ml-2 px-2.5 py-0.5 rounded-full bg-white/10 text-xs text-white border border-white/20">{screenshot.user.name}</span>}
                         </h3>
-                        <p className="text-sm text-gray-400 flex items-center gap-1.5 mt-1">
+                        {(screenshot.appName || screenshot.windowTitle) && (
+                            <p className="text-sm text-gray-300 flex items-center gap-2 mt-2 break-all line-clamp-2">
+                                <Globe size={14} className="text-blue-400 shrink-0" />
+                                {screenshot.appName && <span className="font-semibold text-white">{screenshot.appName}</span>}
+                                {screenshot.windowTitle && <span className="text-gray-400">{screenshot.appName ? '-' : ''} {screenshot.windowTitle}</span>}
+                            </p>
+                        )}
+                        <p className="text-sm text-gray-400 flex items-center gap-1.5 mt-2">
                             <Clock size={14} />
-                            {new Date(screenshot.timestamp).toLocaleString()}
+                            {new Date(screenshot.timestamp).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -85,7 +93,7 @@ export function Lightbox({ screenshot, onClose, onPrev, onNext, onDelete, hasPre
                 <div className="flex-1 flex items-center justify-center min-h-0 bg-black/50 rounded-2xl border border-white/10 overflow-hidden relative group">
                     <img
                         src={screenshot.imageUrl}
-                        alt={screenshot.taskAtTheTime}
+                        alt={screenshot.taskAtTheTime || 'Screenshot'}
                         className="max-w-full max-h-full object-contain shadow-2xl"
                     />
                 </div>

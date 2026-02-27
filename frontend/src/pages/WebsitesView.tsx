@@ -259,7 +259,7 @@ export default function WebsitesView() {
                                                 </div>
                                             </td>
                                             <td className="p-4 text-sm text-muted-foreground whitespace-nowrap">
-                                                {new Date(log.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {new Date(log.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
                                             </td>
                                             <td className="p-4">
                                                 <Badge variant="glass" className="bg-white/5 text-xs">
