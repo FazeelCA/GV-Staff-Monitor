@@ -91,9 +91,8 @@ public class ScreenCapture
         IntPtr hBitmap = GDI32.CreateCompatibleBitmap(hdcSrc, width, height);
         // select the bitmap object
         IntPtr hOld = GDI32.SelectObject(hdcDest, hBitmap);
-        // bitblt over (SRCCOPY | CAPTUREBLT)
-        // CAPTUREBLT forces Windows to include layered windows and hardware overlays (like Chrome/YouTube)
-        GDI32.BitBlt(hdcDest, 0, 0, width, height, hdcSrc, windowRect.left, windowRect.top, GDI32.SRCCOPY | GDI32.CAPTUREBLT);
+        // bitblt over
+        GDI32.BitBlt(hdcDest, 0, 0, width, height, hdcSrc, windowRect.left, windowRect.top, GDI32.SRCCOPY);
         // restore selection
         GDI32.SelectObject(hdcDest, hOld);
         // clean up
