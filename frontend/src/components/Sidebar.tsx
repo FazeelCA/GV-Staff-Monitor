@@ -11,11 +11,9 @@ import {
     Clock
 } from 'lucide-react';
 import { logout } from '../services/api';
-import { useState } from 'react';
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean, setCollapsed: (val: boolean) => void }) {
     const navigate = useNavigate();
-    const [collapsed, setCollapsed] = useState(false);
 
     const handleLogout = () => {
         logout();

@@ -219,7 +219,7 @@ export default function WorkHoursView() {
                                             <BarChart size={12} />
                                             Logs
                                         </div>
-                                        <div className="text-sm font-medium">{user.timeLogs.length} events</div>
+                                        <div className="text-sm font-medium">{user.isAbsent ? 'Absent' : 'Present'}</div>
                                     </div>
                                 </div>
                             </GlassCard>
