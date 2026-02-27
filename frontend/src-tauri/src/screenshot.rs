@@ -51,21 +51,22 @@ fn capture_screen_xcap() -> Result<Vec<u8>, String> {
 #[cfg(target_os = "windows")]
 pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String> {
     use scrap::{Capturer, Display};
-    use std::time::{Duration, Instant};
     use std::thread;
+    use std::time::{Duration, Instant};
 
     let display = Display::primary().map_err(|e| format!("Scrap primary display error: {}", e))?;
-    let mut capturer = Capturer::new(display).map_err(|e| format!("Scrap capturer error: {}", e))?;
-    
+    let mut capturer =
+        Capturer::new(display).map_err(|e| format!("Scrap capturer error: {}", e))?;
+
     let width = capturer.width() as usize;
     let height = capturer.height() as usize;
-    
+
     // We must poll for a frame, since DXGI only updates when the screen changes
     // Allow up to 2 seconds for a frame to composite
     let timeout = Duration::from_millis(2000);
     let start = Instant::now();
     let sleep_dur = Duration::from_millis(16); // ~60fps poll
-    
+
     let mut raw_bgra = Vec::new();
 
     loop {
@@ -94,9 +95,11 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     for y in 0..height {
         let row_start = y * stride;
         let row_end = row_start + (width * 4);
-        
+
         // Safety bounds check for malformed DXGI stride padding
-        if row_end > raw_bgra.len() { break; }
+        if row_end > raw_bgra.len() {
+            break;
+        }
 
         let row = &raw_bgra[row_start..row_end];
 
@@ -108,9 +111,10 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
         }
     }
 
-    let img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_raw(width as u32, height as u32, rgb)
-        .ok_or("Failed to construct image buffer from DXGI output")?;
-    
+    let img =
+        image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_raw(width as u32, height as u32, rgb)
+            .ok_or("Failed to construct image buffer from DXGI output")?;
+
     let mut dyn_img = image::DynamicImage::ImageRgb8(img);
 
     // Scale to 720p
@@ -121,12 +125,14 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     }
 
     let mut jpeg = Vec::new();
-    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 50).encode(
-        dyn_img.as_bytes(),
-        dyn_img.width(),
-        dyn_img.height(),
-        image::ExtendedColorType::Rgb8,
-    ).map_err(|e| format!("JPEG encode fail: {:?}", e))?;
+    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 50)
+        .encode(
+            dyn_img.as_bytes(),
+            dyn_img.width(),
+            dyn_img.height(),
+            image::ExtendedColorType::Rgb8,
+        )
+        .map_err(|e| format!("JPEG encode fail: {:?}", e))?;
 
     Ok(jpeg)
 }
