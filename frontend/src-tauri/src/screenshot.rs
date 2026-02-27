@@ -28,14 +28,16 @@ fn capture_screen_xcap() -> Result<Vec<u8>, String> {
         .capture_image()
         .map_err(|e| format!("xcap display capture failed completely: {e}"))?;
 
+    let rgb_image = image::DynamicImage::ImageRgba8(image).to_rgb8();
+
     let mut buffer = Cursor::new(Vec::new());
     let mut encoder = JpegEncoder::new_with_quality(&mut buffer, 40);
     encoder
         .encode(
-            image.as_raw(),
-            image.width(),
-            image.height(),
-            image::ExtendedColorType::Rgba8,
+            rgb_image.as_raw(),
+            rgb_image.width(),
+            rgb_image.height(),
+            image::ExtendedColorType::Rgb8,
         )
         .map_err(|e| format!("JPEG encode failed: {e}"))?;
 
