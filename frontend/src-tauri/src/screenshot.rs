@@ -151,12 +151,13 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     // Workfolio exact logic: compress to JPG at 50% quality
     let mut buffer = std::io::Cursor::new(Vec::new());
     let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buffer, 50);
+    let rgb_image = img.to_rgb8();
     encoder
         .encode(
-            img.as_bytes(),
-            img.width(),
-            img.height(),
-            img.color().into(),
+            rgb_image.as_raw(),
+            rgb_image.width(),
+            rgb_image.height(),
+            image::ExtendedColorType::Rgb8,
         )
         .map_err(|e| format!("Software JPEG encode failed: {}", e))?;
 
