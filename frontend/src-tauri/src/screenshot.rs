@@ -50,111 +50,110 @@ fn capture_screen_xcap() -> Result<Vec<u8>, String> {
 
 #[cfg(target_os = "windows")]
 pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String> {
-    use std::env;
-    use std::fs;
-    use std::os::windows::process::CommandExt;
-    use std::process::Command;
+    use windows_capture::{
+        capture::{Context, GraphicsCaptureApiHandler},
+        frame::Frame,
+        graphics_capture_api::InternalCaptureControl,
+        monitor::Monitor,
+        settings::{
+            ColorFormat, CursorCaptureSettings, DirtyRegionSettings, DrawBorderSettings,
+            MinimumUpdateIntervalSettings, SecondaryWindowSettings, Settings,
+        },
+    };
+    use std::sync::mpsc::{channel, Sender};
 
-    let temp_dir = env::temp_dir();
-    let exe_filename = format!("gv_capture_v{}.exe", env!("CARGO_PKG_VERSION"));
-    let exe_path = temp_dir.join(&exe_filename);
-    let out_path = temp_dir.join("gv_capture_out.png"); // Crucial: Ask C# for PNG to bypass buggy Optimus JPEG codec
-    // We use the pre-compiled 32-bit Workfolio executable (screenshot-desktop v1.3.2)
-    // This perfectly bypasses all local compiler mismatches and 64-bit Optimus overlay DPI slicing bugs.
-    let exe_content = include_bytes!("gv_capture.exe");
-    fs::write(&exe_path, exe_content).map_err(|e| format!("Failed to write exe: {}", e))?;
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Phase 1: List Displays (Mimicking Workfolio JS `listDisplays()`)
-    // ─────────────────────────────────────────────────────────────────────────
-    let list_output = Command::new(&exe_path)
-        .current_dir(&temp_dir)
-        .args(&["/list"])
-        .creation_flags(0x08000000)
-        .output()
-        .map_err(|e| format!("Failed to execute list command: {}", e))?;
-
-    if !list_output.status.success() {
-        return Err(format!(
-            "C# Phase 1 Display Enumeration failed: {}\nStdout: {}\nStderr: {}",
-            list_output.status,
-            String::from_utf8_lossy(&list_output.stdout),
-            String::from_utf8_lossy(&list_output.stderr)
-        ));
+    struct CaptureHandler {
+        sender: Sender<Vec<u8>>,
+        frame_count: u32,
     }
 
-    let stdout = String::from_utf8_lossy(&list_output.stdout);
-    
-    // Workfolio parsing: they find the first matching line that looks like: \\.\DISPLAY1;0;1920;1080;0
-    // We just want to extract the FIRST primary display string.
-    let mut primary_device_name = "\\\\.\\DISPLAY1".to_string(); // fallback
-    for line in stdout.lines() {
-        if line.starts_with("\\\\.\\DISPLAY") {
-            let parts: Vec<&str> = line.split(';').collect();
-            if parts.len() > 0 {
-                primary_device_name = parts[0].to_string();
-                break;
+    impl GraphicsCaptureApiHandler for CaptureHandler {
+        type Flags = Sender<Vec<u8>>;
+        type Error = Box<dyn std::error::Error + Send + Sync>;
+
+        fn new(ctx: Context<Self::Flags>) -> Result<Self, Self::Error> {
+            Ok(Self {
+                sender: ctx.flags,
+                frame_count: 0,
+            })
+        }
+
+        fn on_frame_arrived(
+            &mut self,
+            frame: &mut Frame,
+            control: InternalCaptureControl,
+        ) -> Result<(), Self::Error> {
+            // WARMUP: Skip first 5 frames to let GPU fully compose the buffer.
+            self.frame_count += 1;
+            if self.frame_count <= 5 {
+                return Ok(());
             }
+
+            let width = frame.width() as usize;
+            let height = frame.height() as usize;
+
+            let mut gpu_buffer = frame.buffer()?;
+            let row_pitch = gpu_buffer.row_pitch() as usize;
+
+            let mut rgb = Vec::with_capacity(width * height * 3);
+            let raw = gpu_buffer.as_raw_buffer();
+
+            for y in 0..height {
+                let row_start = y * row_pitch;
+                let row = &raw[row_start..row_start + width * 4];
+
+                for pixel in row.chunks_exact(4) {
+                    // BGRA → RGB
+                    rgb.push(pixel[2]);
+                    rgb.push(pixel[1]);
+                    rgb.push(pixel[0]);
+                }
+            }
+
+            let img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_raw(width as u32, height as u32, rgb)
+                .ok_or("Failed to construct image buffer")?;
+            
+            let mut dyn_img = image::DynamicImage::ImageRgb8(img);
+
+            // Scale to 720p
+            if dyn_img.height() > 720 {
+                let aspect_ratio = dyn_img.width() as f32 / dyn_img.height() as f32;
+                let new_width = (720.0 * aspect_ratio) as u32;
+                dyn_img = dyn_img.resize_exact(new_width, 720, image::imageops::FilterType::Triangle);
+            }
+
+            let mut jpeg = Vec::new();
+            image::codecs::jpeg::JpegEncoder::new_with_quality(&mut jpeg, 50).encode(
+                dyn_img.as_bytes(),
+                dyn_img.width(),
+                dyn_img.height(),
+                image::ExtendedColorType::Rgb8,
+            )?;
+
+            let _ = self.sender.send(jpeg);
+            control.stop();
+
+            Ok(())
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Phase 2: Capture Exact Display Buffer (Mimicking Workfolio JS `exec ... /d "..."`)
-    // ─────────────────────────────────────────────────────────────────────────
-    let execution = Command::new(&exe_path)
-        .current_dir(&temp_dir)
-        .args(&[
-            out_path.to_str().unwrap(),
-            "/d",
-            &primary_device_name,
-        ])
-        .creation_flags(0x08000000) // CREATE_NO_WINDOW
-        .output()
-        .map_err(|e| format!("Failed to execute C# executable: {}", e))?;
+    let monitor = Monitor::primary().map_err(|e| e.to_string())?;
+    let (tx, rx) = channel();
 
-    if !execution.status.success() {
-        return Err(format!(
-            "C# Phase 2 Capture execution failed: {}\nStdout: {}\nStderr: {}",
-            execution.status,
-            String::from_utf8_lossy(&execution.stdout),
-            String::from_utf8_lossy(&execution.stderr)
-        ));
-    }
+    let settings = Settings::new(
+        monitor,
+        CursorCaptureSettings::WithoutCursor,
+        DrawBorderSettings::WithoutBorder,
+        SecondaryWindowSettings::Default,
+        MinimumUpdateIntervalSettings::Default,
+        DirtyRegionSettings::Default,
+        ColorFormat::Bgra8,
+        tx,
+    );
 
-    // Read the resulting PNG bytes
-    let png_bytes =
-        fs::read(&out_path).map_err(|e| format!("Failed to read captured image buffer: {}", e))?;
+    CaptureHandler::start(settings).map_err(|e| e.to_string())?;
 
-    // Cleanup the raw PNG file
-    let _ = fs::remove_file(&out_path);
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Phase 3: Jimp Pipeline: PNG -> Scale 720p -> JPG
-    // ─────────────────────────────────────────────────────────────────────────
-    let mut img = image::load_from_memory(&png_bytes)
-        .map_err(|e| format!("Failed to parse raw PNG capture from C#: {}", e))?;
-
-    // Workfolio exact logic: limit height to 720p
-    if img.height() > 720 {
-        let aspect_ratio = img.width() as f32 / img.height() as f32;
-        let new_width = (720.0 * aspect_ratio) as u32;
-        img = img.resize_exact(new_width, 720, image::imageops::FilterType::Triangle);
-    }
-
-    // Workfolio exact logic: compress to JPG at 50% quality
-    let mut buffer = std::io::Cursor::new(Vec::new());
-    let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buffer, 50);
-    let rgb_image = img.to_rgb8();
-    encoder
-        .encode(
-            rgb_image.as_raw(),
-            rgb_image.width(),
-            rgb_image.height(),
-            image::ExtendedColorType::Rgb8,
-        )
-        .map_err(|e| format!("Software JPEG encode failed: {}", e))?;
-
-    Ok(buffer.into_inner())
+    rx.recv().map_err(|e| e.to_string())
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
