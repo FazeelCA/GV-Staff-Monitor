@@ -26,12 +26,20 @@ function deriveStatus(latestType?: string, lastActiveAt?: Date): "Working" | "On
 router.get("/users", async (req: Request, res: Response) => {
     try {
         const { date } = req.query as { date?: string };
-        const queryDate = date ? new Date(date) : new Date();
-
-        const today = new Date(queryDate);
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
+        let today: Date, tomorrow: Date;
+        if (date) {
+            const parts = date.split('-');
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+            today = new Date(year, month, day);
+            tomorrow = new Date(year, month, day + 1);
+        } else {
+            today = new Date();
+            today.setHours(0, 0, 0, 0);
+            tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+        }
 
         const users = await prisma.user.findMany({
             where: {

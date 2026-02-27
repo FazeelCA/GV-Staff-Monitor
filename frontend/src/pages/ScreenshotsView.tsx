@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { fetchAllScreenshots, fetchDashboardUsers, deleteScreenshot, type Screenshot, type DashboardUser } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
-import { Monitor, Clock, Calendar, Filter, User, AlertTriangle, Trash2, Activity, X } from 'lucide-react';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
+import { Monitor, Clock, Calendar, Filter, AlertTriangle, Trash2, Activity, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 type ScreenshotWithUser = Screenshot & { user: { name: string; email: string }; hash?: string };
@@ -137,18 +138,15 @@ export default function ScreenshotsView() {
 
                 <div className="flex flex-col sm:flex-row gap-3">
                     {/* User Filter */}
-                    <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                        <select
-                            className="w-full sm:w-48 pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
+                    <div className="w-full sm:w-48 shrink-0 relative z-10">
+                        <SearchableSelect
                             value={selectedUser}
-                            onChange={(e) => setSelectedUser(e.target.value)}
-                        >
-                            <option value="ALL" className="bg-[#09090b]">All Staff</option>
-                            {users.map(u => (
-                                <option key={u.id} value={u.id} className="bg-[#09090b]">{u.name}</option>
-                            ))}
-                        </select>
+                            onChange={(val) => setSelectedUser(val)}
+                            options={[
+                                { value: 'ALL', label: 'All Staff' },
+                                ...users.map(u => ({ value: u.id, label: u.name }))
+                            ]}
+                        />
                     </div>
 
                     {/* Date Filter */}
