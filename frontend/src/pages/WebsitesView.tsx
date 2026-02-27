@@ -234,31 +234,31 @@ export default function WebsitesView() {
                                                 navigate(`/screenshots?userId=${log.userId}&date=${date}&startTime=${startTime}&endTime=${endTime}`);
                                             }}
                                         >
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
+                                            <td className="p-4 overflow-hidden">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <div className="w-6 h-6 shrink-0 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
                                                         {log.user?.name.charAt(0)}
                                                     </div>
-                                                    <span className="text-sm">{log.user?.name}</span>
+                                                    <span className="text-sm truncate">{log.user?.name}</span>
                                                 </div>
                                             </td>
-                                            <td className="p-4">
-                                                <div className="flex flex-col">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-foreground">{log.appName || 'Unknown App'}</span>
+                                            <td className="p-4 overflow-hidden">
+                                                <div className="flex flex-col min-w-0">
+                                                    <div className="flex items-center gap-2 overflow-hidden">
+                                                        <span className="text-sm font-medium text-foreground truncate">{log.appName || 'Unknown App'}</span>
                                                         {log.url && (
-                                                            <a href={log.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline flex items-center gap-1">
+                                                            <a href={log.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline flex items-center gap-1 shrink-0">
                                                                 <Globe size={10} />
                                                                 Link
                                                             </a>
                                                         )}
                                                     </div>
-                                                    <span className="text-xs text-muted-foreground line-clamp-1" title={log.title}>
+                                                    <span className="text-xs text-muted-foreground truncate" title={log.title}>
                                                         {log.title}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-sm text-muted-foreground">
+                                            <td className="p-4 text-sm text-muted-foreground whitespace-nowrap">
                                                 {new Date(log.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                             <td className="p-4">

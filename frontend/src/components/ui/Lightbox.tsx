@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from './Button';
 import { X, ChevronLeft, ChevronRight, Monitor, Clock, Trash2 } from 'lucide-react';
 import type { Screenshot } from '../../services/api';
@@ -26,7 +27,9 @@ export function Lightbox({ screenshot, onClose, onPrev, onNext, onDelete, hasPre
         return () => window.removeEventListener('keydown', handler);
     }, [onClose, onPrev, onNext, hasPrev, hasNext]);
 
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
         <div
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)' }}
@@ -87,6 +90,7 @@ export function Lightbox({ screenshot, onClose, onPrev, onNext, onDelete, hasPre
                     />
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
