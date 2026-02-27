@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.6.48"
+version = "0.6.49"
 description = "GV Staff Monitor"
 authors = ["GV Team"]
 license = ""
@@ -50,6 +50,3 @@ xcap = "0.8.2"
 scrap = "0.5.0"
 winapi = { version = "0.3.9", features = ["objbase"] }
 crossbeam-channel = "0.5.15"
-
-[target.'cfg(target_os = "windows")'.dependencies]
-windows-capture = "1.5.0"
