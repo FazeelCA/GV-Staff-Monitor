@@ -75,7 +75,16 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
         .args(&["/C", bat_path.to_str().unwrap(), "/list"])
         .creation_flags(0x08000000)
         .output()
-        .map_err(|e| format!("Failed to list displays: {}", e))?;
+        .map_err(|e| format!("Failed to execute list command: {}", e))?;
+
+    if !list_output.status.success() {
+        return Err(format!(
+            "C# Phase 1 Display Enumeration failed: {}\nStdout: {}\nStderr: {}",
+            list_output.status,
+            String::from_utf8_lossy(&list_output.stdout),
+            String::from_utf8_lossy(&list_output.stderr)
+        ));
+    }
 
     let stdout = String::from_utf8_lossy(&list_output.stdout);
     
@@ -95,7 +104,7 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     // ─────────────────────────────────────────────────────────────────────────
     // Phase 2: Capture Exact Display Buffer (Mimicking Workfolio JS `exec ... /d "..."`)
     // ─────────────────────────────────────────────────────────────────────────
-    let status = Command::new("cmd.exe")
+    let execution = Command::new("cmd.exe")
         .current_dir(&temp_dir)
         .args(&[
             "/C",
@@ -105,13 +114,15 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
             &primary_device_name,
         ])
         .creation_flags(0x08000000) // CREATE_NO_WINDOW
-        .status()
+        .output()
         .map_err(|e| format!("Failed to execute C# batch script: {}", e))?;
 
-    if !status.success() {
+    if !execution.status.success() {
         return Err(format!(
-            "C# Batch script compiler failed with exit status: {}",
-            status
+            "C# Phase 2 Capture execution failed: {}\nStdout: {}\nStderr: {}",
+            execution.status,
+            String::from_utf8_lossy(&execution.stdout),
+            String::from_utf8_lossy(&execution.stderr)
         ));
     }
 
