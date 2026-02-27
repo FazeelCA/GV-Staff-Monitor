@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { type DashboardUser } from '../services/api'; // Reuse existing API
-import { Calendar, Clock, BarChart, AlertTriangle } from 'lucide-react';
+import { Calendar, Clock, BarChart, AlertTriangle, Search } from 'lucide-react';
 
 const BASE_URL = 'https://track.gallerydigital.in/api';
 
@@ -37,6 +37,7 @@ export default function WorkHoursView() {
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
     const [quickFilter, setQuickFilter] = useState<'ALL' | 'ABSENT' | 'LATE' | 'LOW_TIME' | 'CRITICAL'>('ALL');
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         loadData();
@@ -103,10 +104,20 @@ export default function WorkHoursView() {
     });
 
     const filteredUsers = processedUsers.filter(user => {
+        // Text Search Filter
+        if (searchQuery.trim() !== '') {
+            const query = searchQuery.toLowerCase();
+            if (!user.name.toLowerCase().includes(query) && !user.email.toLowerCase().includes(query)) {
+                return false;
+            }
+        }
+
+        // Quick Category Filter
         if (quickFilter === 'ABSENT') return user.isAbsent;
         if (quickFilter === 'LATE') return user.isLate;
         if (quickFilter === 'LOW_TIME') return user.isLowTime;
         if (quickFilter === 'CRITICAL') return user.isCritical;
+
         return true;
     });
 
@@ -155,6 +166,18 @@ export default function WorkHoursView() {
                         >
                             <AlertTriangle size={12} /> Critical
                         </button>
+                    </div>
+
+                    {/* Search Filter */}
+                    <div className="relative shrink-0 w-full sm:w-48">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search staff..."
+                            className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
 
                     {/* Date Filter */}
