@@ -56,25 +56,20 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     use std::process::Command;
 
     let temp_dir = env::temp_dir();
-    let bat_filename = format!("gv_capture_v{}.bat", env!("CARGO_PKG_VERSION"));
-    let bat_path = temp_dir.join(&bat_filename);
+    let exe_filename = format!("gv_capture_v{}.exe", env!("CARGO_PKG_VERSION"));
+    let exe_path = temp_dir.join(&exe_filename);
     let out_path = temp_dir.join("gv_capture_out.png"); // Crucial: Ask C# for PNG to bypass buggy Optimus JPEG codec
-    let manifest_path = temp_dir.join("app.manifest");
-
-    // We use a predefined batch file containing the C# code
-    let bat_content = include_bytes!("gv_capture.bat");
-    fs::write(&bat_path, bat_content).map_err(|e| format!("Failed to write bat: {}", e))?;
-
-    let manifest_content = include_bytes!("app.manifest");
-    fs::write(&manifest_path, manifest_content)
-        .map_err(|e| format!("Failed to write manifest: {}", e))?;
+    // We use the pre-compiled 32-bit Workfolio executable (screenshot-desktop v1.3.2)
+    // This perfectly bypasses all local compiler mismatches and 64-bit Optimus overlay DPI slicing bugs.
+    let exe_content = include_bytes!("gv_capture.exe");
+    fs::write(&exe_path, exe_content).map_err(|e| format!("Failed to write exe: {}", e))?;
 
     // ─────────────────────────────────────────────────────────────────────────
     // Phase 1: List Displays (Mimicking Workfolio JS `listDisplays()`)
     // ─────────────────────────────────────────────────────────────────────────
-    let list_output = Command::new("cmd.exe")
+    let list_output = Command::new(&exe_path)
         .current_dir(&temp_dir)
-        .args(&["/C", bat_path.to_str().unwrap(), "/list"])
+        .args(&["/list"])
         .creation_flags(0x08000000)
         .output()
         .map_err(|e| format!("Failed to execute list command: {}", e))?;
@@ -106,18 +101,16 @@ pub fn capture_screen(_app_handle: &tauri::AppHandle) -> Result<Vec<u8>, String>
     // ─────────────────────────────────────────────────────────────────────────
     // Phase 2: Capture Exact Display Buffer (Mimicking Workfolio JS `exec ... /d "..."`)
     // ─────────────────────────────────────────────────────────────────────────
-    let execution = Command::new("cmd.exe")
+    let execution = Command::new(&exe_path)
         .current_dir(&temp_dir)
         .args(&[
-            "/C",
-            bat_path.to_str().unwrap(),
             out_path.to_str().unwrap(),
             "/d",
             &primary_device_name,
         ])
         .creation_flags(0x08000000) // CREATE_NO_WINDOW
         .output()
-        .map_err(|e| format!("Failed to execute C# batch script: {}", e))?;
+        .map_err(|e| format!("Failed to execute C# executable: {}", e))?;
 
     if !execution.status.success() {
         return Err(format!(
