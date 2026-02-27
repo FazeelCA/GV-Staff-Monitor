@@ -194,7 +194,7 @@ export default function WebsitesView() {
             {/* Content */}
             <GlassCard className="overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full table-fixed">
                         <thead>
                             <tr className="border-b border-white/10 text-left">
                                 <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider" style={{ width: '20%' }}>User</th>
