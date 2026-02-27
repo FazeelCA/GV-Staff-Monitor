@@ -651,7 +651,7 @@ export default function UserDetailView() {
 
             {/* Password Reset Modal */}
             {showResetModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
                     <div className="w-full max-w-md animate-in zoom-in-95 duration-200">
                         <GlassCard className="border-white/10 shadow-2xl">
                             <div className="flex items-center justify-between mb-6">
@@ -695,7 +695,7 @@ export default function UserDetailView() {
 
             {/* Push Message Modal */}
             {showPushModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
                     <div className="w-full max-w-md animate-in zoom-in-95 duration-200">
                         <GlassCard className="border-white/10 shadow-2xl">
                             <div className="flex items-center justify-between mb-6">

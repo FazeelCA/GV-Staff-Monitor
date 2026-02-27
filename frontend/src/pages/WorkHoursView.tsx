@@ -66,41 +66,7 @@ export default function WorkHoursView() {
         }
     };
 
-    // Helper to calculate total hours from logs
-    const calculateTotalTime = (logs: TimeLog[]) => {
-        // This logic mimics the one in UserDetailView or Dashboard
-        // Simple approximation: Sum (STOP - START) durations
-        // Or state machine replay. 
-        // For simplicity, let's just show "First Start" and "Last Stop" and "Approx Duration".
-        // Better: Reuse the calculation logic if available.
-        // Assuming strict pairs: START -> STOP/BREAK.
 
-        let total = 0;
-        let lastStart: number | null = null;
-
-        // logs are typically desc or asc? Dashboard route orders logs by timestamp desc.
-        // We need asc for replay.
-        const sorted = [...logs].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
-        for (const log of sorted) {
-            const time = new Date(log.timestamp).getTime();
-            if (log.type === 'START' || log.type === 'BREAK_END') {
-                if (lastStart === null) lastStart = time;
-            } else if (log.type === 'STOP' || log.type === 'BREAK_START') {
-                if (lastStart !== null) {
-                    total += (time - lastStart);
-                    lastStart = null;
-                }
-            }
-        }
-        if (lastStart !== null) {
-            if (!selectedDate || selectedDate === new Date().toISOString().split('T')[0]) {
-                total += (Date.now() - lastStart);
-            }
-        }
-
-        return total;
-    };
 
     const checkIsLate = (firstLogTime: string | null | undefined, expectedStart: string | null | undefined) => {
         if (!firstLogTime) return false;
@@ -115,18 +81,25 @@ export default function WorkHoursView() {
     };
 
     // Calculate derived data for filtering
-    const processedUsers = users.map(user => {
-        const totalTimeMs = calculateTotalTime(user.timeLogs);
-        const hours = totalTimeMs / 3600000;
-        const sortedLogs = [...user.timeLogs].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-        const firstLog = sortedLogs[0];
+    const processedUsers = users.map((user: any) => {
+        const hours = user.totalHoursToday || 0;
+        const totalTimeMs = hours * 3600000;
 
-        const isAbsent = user.timeLogs.length === 0;
-        const isLate = checkIsLate(firstLog?.timestamp, user.expectedStartTime);
+        const isAbsent = !user.firstStartTime;
+        const isLate = checkIsLate(user.firstStartTime, user.expectedStartTime);
         const isLowTime = !isAbsent && hours < 4;
         const isCritical = isAbsent || isLate || isLowTime;
 
-        return { ...user, totalTimeMs, hours, firstLog, isAbsent, isLate, isLowTime, isCritical };
+        return {
+            ...user,
+            totalTimeMs,
+            hours,
+            firstLog: { timestamp: user.firstStartTime },
+            isAbsent,
+            isLate,
+            isLowTime,
+            isCritical
+        };
     });
 
     const filteredUsers = processedUsers.filter(user => {

@@ -28,7 +28,7 @@ export function Lightbox({ screenshot, onClose, onPrev, onNext, onDelete, hasPre
 
     return (
         <div
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)' }}
             onClick={onClose}
         >
