@@ -35,7 +35,7 @@ export default function WebsitesView() {
     const [users, setUsers] = useState<DashboardUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<string>('ALL');
-    const [selectedDate, setSelectedDate] = useState<string>('');
+    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
     const [filterUnproductive, setFilterUnproductive] = useState(false);
     const navigate = useNavigate();
 
@@ -71,12 +71,14 @@ export default function WebsitesView() {
 
             let allLogs: ActivityLog[] = [];
 
+            let currentUsers = users;
+
             if (selectedUser === 'ALL') {
                 if (users.length === 0) {
                     // Need users first
-                    const u = await fetchDashboardUsers();
-                    setUsers(u);
-                    const promises = u.map(user =>
+                    currentUsers = await fetchDashboardUsers();
+                    setUsers(currentUsers);
+                    const promises = currentUsers.map((user: any) =>
                         fetch(`${BASE_URL}/activity/${user.id}${selectedDate ? `?date=${selectedDate}` : ''}`, {
                             headers: { Authorization: `Bearer ${token}` }
                         }).then(r => r.json())
@@ -86,7 +88,7 @@ export default function WebsitesView() {
                         if (Array.isArray(logs)) allLogs = [...allLogs, ...logs];
                     });
                 } else {
-                    const promises = users.map(user =>
+                    const promises = currentUsers.map(user =>
                         fetch(`${BASE_URL}/activity/${user.id}${selectedDate ? `?date=${selectedDate}` : ''}`, {
                             headers: { Authorization: `Bearer ${token}` }
                         }).then(r => r.json())
@@ -101,6 +103,10 @@ export default function WebsitesView() {
                 allLogs.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
 
             } else {
+                if (users.length === 0) {
+                    currentUsers = await fetchDashboardUsers();
+                    setUsers(currentUsers);
+                }
                 const res = await fetch(`${BASE_URL}/activity/${selectedUser}${selectedDate ? `?date=${selectedDate}` : ''}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -114,7 +120,7 @@ export default function WebsitesView() {
             // I should have added it. Front-end mapping fallback:
             const enriched = allLogs.map(log => ({
                 ...log,
-                user: users.find(u => u.id === log.userId) || { name: 'Unknown', email: '' }
+                user: currentUsers.find(u => u.id === log.userId) || { name: 'Unknown', email: '' }
             }));
 
             setActivities(enriched);
@@ -191,10 +197,10 @@ export default function WebsitesView() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-white/10 text-left">
-                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
-                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Application / Title</th>
-                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Time</th>
-                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Duration</th>
+                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-[20%]">User</th>
+                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-[50%]">Application / Title</th>
+                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-[15%]">Time</th>
+                                <th className="p-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-[15%]">Duration</th>
                             </tr>
                         </thead>
                         <tbody>

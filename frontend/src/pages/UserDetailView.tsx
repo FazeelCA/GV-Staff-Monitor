@@ -292,6 +292,47 @@ export default function UserDetailView() {
                 </div>
             </div>
 
+            {/* Latest Screenshot Spotlight */}
+            {!loading && screenshots.length > 0 && (
+                <div className="mt-6 mb-2">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">Latest Screenshot</h2>
+                    {(() => {
+                        const latestShot = screenshots[screenshots.length - 1];
+                        return (
+                            <GlassCard
+                                className="group p-0 overflow-hidden relative aspect-video sm:aspect-[21/9] transition-all hover:shadow-2xl hover:shadow-primary/10 cursor-zoom-in border-primary/20 ring-1 ring-white/10"
+                                onClick={() => setLightboxIdx(screenshots.length - 1)}
+                            >
+                                <img
+                                    src={latestShot.imageUrl}
+                                    alt={latestShot.taskAtTheTime}
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                <div className="absolute top-4 right-4 flex gap-2">
+                                    <Badge variant="glass" className="bg-primary text-white border-primary/50 shadow-lg shadow-primary/20 animate-pulse">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5 animate-ping"></div> Live
+                                    </Badge>
+                                </div>
+
+                                <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                    <h3 className="text-lg font-bold text-white mb-2 line-clamp-1 drop-shadow-lg">
+                                        {latestShot.taskAtTheTime || 'No task detected'}
+                                    </h3>
+                                    <div className="flex items-center gap-3">
+                                        <Badge variant="glass" className="h-6 px-2 text-xs gap-1.5 border-white/20 bg-black/60 text-white/90">
+                                            <Clock size={12} />
+                                            {formatTime(latestShot.timestamp)}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </GlassCard>
+                        );
+                    })()}
+                </div>
+            )}
+
             {/* Productivity Graph */}
             {!loading && screenshots.length > 0 && (
                 <GlassCard className="p-4 h-[250px] w-full mt-4 bg-black/10">

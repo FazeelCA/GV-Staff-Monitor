@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { type DashboardUser } from '../services/api'; // Reuse existing API
-import { Calendar, Clock, BarChart } from 'lucide-react';
+import { Calendar, Clock, BarChart, AlertTriangle } from 'lucide-react';
 
 const BASE_URL = 'https://track.gallerydigital.in/api';
 
@@ -35,7 +35,8 @@ interface UserWithLogs extends DashboardUser {
 export default function WorkHoursView() {
     const [users, setUsers] = useState<UserWithLogs[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState<string>('');
+    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [quickFilter, setQuickFilter] = useState<'ALL' | 'ABSENT' | 'LATE' | 'LOW_TIME' | 'CRITICAL'>('ALL');
 
     useEffect(() => {
         loadData();
@@ -92,19 +93,49 @@ export default function WorkHoursView() {
                 }
             }
         }
-        // If still ongoing?
         if (lastStart !== null) {
-            // total += (Date.now() - lastStart); // Only if today?
-            // Don't add live time for historical dates.
             if (!selectedDate || selectedDate === new Date().toISOString().split('T')[0]) {
                 total += (Date.now() - lastStart);
             }
         }
 
-        const h = Math.floor(total / 3600000);
-        const m = Math.floor((total % 3600000) / 60000);
-        return `${h}h ${m}m`;
+        return total;
     };
+
+    const checkIsLate = (firstLogTime: string | null | undefined, expectedStart: string | null | undefined) => {
+        if (!firstLogTime) return false;
+        const expected = expectedStart || '09:00';
+        const expectedParts = expected.split(':');
+        const expectedMins = parseInt(expectedParts[0]) * 60 + parseInt(expectedParts[1]);
+
+        const actualDate = new Date(firstLogTime);
+        const actualMins = actualDate.getHours() * 60 + actualDate.getMinutes();
+
+        return actualMins > expectedMins;
+    };
+
+    // Calculate derived data for filtering
+    const processedUsers = users.map(user => {
+        const totalTimeMs = calculateTotalTime(user.timeLogs);
+        const hours = totalTimeMs / 3600000;
+        const sortedLogs = [...user.timeLogs].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        const firstLog = sortedLogs[0];
+
+        const isAbsent = user.timeLogs.length === 0;
+        const isLate = checkIsLate(firstLog?.timestamp, user.expectedStartTime);
+        const isLowTime = !isAbsent && hours < 4;
+        const isCritical = isAbsent || isLate || isLowTime;
+
+        return { ...user, totalTimeMs, hours, firstLog, isAbsent, isLate, isLowTime, isCritical };
+    });
+
+    const filteredUsers = processedUsers.filter(user => {
+        if (quickFilter === 'ABSENT') return user.isAbsent;
+        if (quickFilter === 'LATE') return user.isLate;
+        if (quickFilter === 'LOW_TIME') return user.isLowTime;
+        if (quickFilter === 'CRITICAL') return user.isCritical;
+        return true;
+    });
 
     return (
         <div className="space-y-8">
@@ -118,15 +149,51 @@ export default function WorkHoursView() {
                     </p>
                 </div>
 
-                {/* Date Filter */}
-                <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                    <input
-                        type="date"
-                        className="w-full sm:w-40 pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors cursor-pointer"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                    />
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                    {/* Quick Filters */}
+                    <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 overflow-x-auto hide-scrollbar max-w-[calc(100vw-2rem)] sm:max-w-none">
+                        <button
+                            onClick={() => setQuickFilter('ALL')}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${quickFilter === 'ALL' ? 'bg-primary text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            All Staff
+                        </button>
+                        <button
+                            onClick={() => setQuickFilter('ABSENT')}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${quickFilter === 'ABSENT' ? 'bg-red-500 text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            Absent
+                        </button>
+                        <button
+                            onClick={() => setQuickFilter('LATE')}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${quickFilter === 'LATE' ? 'bg-amber-500 text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            Late Checkins
+                        </button>
+                        <button
+                            onClick={() => setQuickFilter('LOW_TIME')}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${quickFilter === 'LOW_TIME' ? 'bg-orange-500 text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            Low Time
+                        </button>
+                        <button
+                            onClick={() => setQuickFilter('CRITICAL')}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${quickFilter === 'CRITICAL' ? 'bg-rose-600 text-white shadow flex items-center gap-1' : 'text-muted-foreground hover:text-foreground flex items-center gap-1'}`}
+                        >
+                            <AlertTriangle size={12} /> Critical
+                        </button>
+                    </div>
+
+                    {/* Date Filter */}
+                    <div className="relative shrink-0">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                        <input
+                            type="date"
+                            className="w-full sm:w-40 pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors cursor-pointer"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -135,13 +202,14 @@ export default function WorkHoursView() {
                     Array.from({ length: 3 }).map((_, i) => (
                         <div key={i} className="h-48 rounded-2xl bg-white/5 animate-pulse" />
                     ))
-                ) : users.length === 0 ? (
+                ) : filteredUsers.length === 0 ? (
                     <div className="col-span-full text-center p-12 text-muted-foreground">No records found.</div>
                 ) : (
-                    users.map(user => {
-                        const totalTime = calculateTotalTime(user.timeLogs);
-                        const firstLog = user.timeLogs[user.timeLogs.length - 1]; // sorted desc in API
-                        const startTime = firstLog ? new Date(firstLog.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+                    filteredUsers.map(user => {
+                        const h = Math.floor(user.totalTimeMs / 3600000);
+                        const m = Math.floor((user.totalTimeMs % 3600000) / 60000);
+                        const totalTimeStr = `${h}h ${m}m`;
+                        const startTime = user.firstLog ? new Date(user.firstLog.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
 
                         return (
                             <GlassCard key={user.id} className="flex flex-col gap-4">
@@ -155,9 +223,14 @@ export default function WorkHoursView() {
                                             <p className="text-xs text-muted-foreground">{user.email}</p>
                                         </div>
                                     </div>
-                                    <Badge variant="glass" className="bg-primary/10 text-primary border-primary/20">
-                                        {totalTime}
-                                    </Badge>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <Badge variant="glass" className="bg-primary/10 text-primary border-primary/20">
+                                            {totalTimeStr}
+                                        </Badge>
+                                        {user.isAbsent && <Badge variant="glass" className="bg-red-500/10 text-red-400 border-red-500/20 text-[10px]">Absent</Badge>}
+                                        {user.isLate && !user.isAbsent && <Badge variant="glass" className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px]">Late Checkin</Badge>}
+                                        {user.isLowTime && !user.isAbsent && <Badge variant="glass" className="bg-orange-500/10 text-orange-400 border-orange-500/20 text-[10px]">Low Hours</Badge>}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4 mt-2">

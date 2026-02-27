@@ -29,7 +29,7 @@ import { Lightbox } from '../components/ui/Lightbox';
 export default function ScreenshotsView() {
     const [searchParams, setSearchParams] = useSearchParams();
     const initialUser = searchParams.get('userId') || 'ALL';
-    const initialDate = searchParams.get('date') || '';
+    const initialDate = searchParams.get('date') || new Date().toISOString().split('T')[0];
 
     const [screenshots, setScreenshots] = useState<ScreenshotWithUser[]>([]);
     const [users, setUsers] = useState<DashboardUser[]>([]);
