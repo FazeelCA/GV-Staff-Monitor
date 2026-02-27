@@ -36,7 +36,7 @@ export default function WorkHoursView() {
     const [users, setUsers] = useState<UserWithLogs[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-    const [quickFilter, setQuickFilter] = useState<'ALL' | 'ABSENT' | 'LATE' | 'LOW_TIME' | 'CRITICAL'>('ALL');
+    const [quickFilter, setQuickFilter] = useState<'ALL' | 'ABSENT' | 'LATE' | 'LOW_TIME' | 'OVER_WORKED' | 'CRITICAL'>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
@@ -54,7 +54,8 @@ export default function WorkHoursView() {
             // Let's assume I check api.ts or just use fetch directly.
             const url = `${BASE_URL}/dashboard/users${selectedDate ? `?date=${selectedDate}` : ''}`;
             const res = await fetch(url, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
+                cache: 'no-store'
             });
             if (res.ok) {
                 const data = await res.json();
@@ -89,6 +90,7 @@ export default function WorkHoursView() {
         const isAbsent = !user.firstStartTime;
         const isLate = checkIsLate(user.firstStartTime, user.expectedStartTime);
         const isLowTime = !isAbsent && hours < 4;
+        const isOverWorked = !isAbsent && hours >= 9;
         const isCritical = isAbsent || isLate || isLowTime;
 
         return {
@@ -99,6 +101,7 @@ export default function WorkHoursView() {
             isAbsent,
             isLate,
             isLowTime,
+            isOverWorked,
             isCritical
         };
     });
@@ -116,6 +119,7 @@ export default function WorkHoursView() {
         if (quickFilter === 'ABSENT') return user.isAbsent;
         if (quickFilter === 'LATE') return user.isLate;
         if (quickFilter === 'LOW_TIME') return user.isLowTime;
+        if (quickFilter === 'OVER_WORKED') return user.isOverWorked;
         if (quickFilter === 'CRITICAL') return user.isCritical;
 
         return true;
@@ -193,6 +197,40 @@ export default function WorkHoursView() {
                 </div>
             </div>
 
+            {/* Summary Stats Container */}
+            {!loading && processedUsers.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-2">
+                    <GlassCard
+                        className={`p-4 flex flex-col justify-center items-center cursor-pointer transition-all duration-300 ${quickFilter === 'ABSENT' ? 'border-red-500/50 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.15)]' : 'hover:border-red-500/30'}`}
+                        onClick={() => setQuickFilter('ABSENT')}
+                    >
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Absent Staff</p>
+                        <p className="text-3xl font-bold text-red-500">{processedUsers.filter((u: any) => u.isAbsent).length}</p>
+                    </GlassCard>
+                    <GlassCard
+                        className={`p-4 flex flex-col justify-center items-center cursor-pointer transition-all duration-300 ${quickFilter === 'LATE' ? 'border-amber-500/50 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.15)]' : 'hover:border-amber-500/30'}`}
+                        onClick={() => setQuickFilter('LATE')}
+                    >
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Late Check-ins</p>
+                        <p className="text-3xl font-bold text-amber-500">{processedUsers.filter((u: any) => u.isLate && !u.isAbsent).length}</p>
+                    </GlassCard>
+                    <GlassCard
+                        className={`p-4 flex flex-col justify-center items-center cursor-pointer transition-all duration-300 ${quickFilter === 'LOW_TIME' ? 'border-orange-500/50 bg-orange-500/10 shadow-[0_0_15px_rgba(249,115,22,0.15)]' : 'hover:border-orange-500/30'}`}
+                        onClick={() => setQuickFilter('LOW_TIME')}
+                    >
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Low Work Time</p>
+                        <p className="text-3xl font-bold text-orange-500">{processedUsers.filter((u: any) => u.isLowTime && !u.isAbsent).length}</p>
+                    </GlassCard>
+                    <GlassCard
+                        className={`p-4 flex flex-col justify-center items-center cursor-pointer transition-all duration-300 ${quickFilter === 'OVER_WORKED' ? 'border-purple-500/50 bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.15)]' : 'hover:border-purple-500/30'}`}
+                        onClick={() => setQuickFilter('OVER_WORKED')}
+                    >
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Overworked (&gt;9h)</p>
+                        <p className="text-3xl font-bold text-purple-500">{processedUsers.filter((u: any) => u.isOverWorked).length}</p>
+                    </GlassCard>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
                     Array.from({ length: 3 }).map((_, i) => (
@@ -226,6 +264,7 @@ export default function WorkHoursView() {
                                         {user.isAbsent && <Badge variant="glass" className="bg-red-500/10 text-red-400 border-red-500/20 text-[10px]">Absent</Badge>}
                                         {user.isLate && !user.isAbsent && <Badge variant="glass" className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px]">Late Checkin</Badge>}
                                         {user.isLowTime && !user.isAbsent && <Badge variant="glass" className="bg-orange-500/10 text-orange-400 border-orange-500/20 text-[10px]">Low Hours</Badge>}
+                                        {user.isOverWorked && !user.isAbsent && <Badge variant="glass" className="bg-purple-500/10 text-purple-400 border-purple-500/20 text-[10px]">Overworked</Badge>}
                                     </div>
                                 </div>
 

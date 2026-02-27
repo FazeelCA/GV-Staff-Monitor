@@ -109,7 +109,7 @@ export default function TeamView() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-    const [statusFilter, setStatusFilter] = useState<UserStatus | 'All' | 'Critical' | 'Late'>('All');
+    const [statusFilter, setStatusFilter] = useState<UserStatus | 'All' | 'Critical' | 'Late' | 'Absent'>('All');
     const [sortBy, setSortBy] = useState<'hours-asc' | 'hours-desc' | 'name-asc'>('name-asc');
     const navigate = useNavigate();
 
@@ -155,8 +155,9 @@ export default function TeamView() {
     const offline = users.filter((u) => u.status === 'Offline').length;
     const critical = users.filter((u) => u.totalHoursToday < 7).length;
     const lateCount = users.filter(isLate).length;
+    const absentCount = users.filter((u) => !u.firstStartTime && u.status !== 'Working').length;
 
-    const handleFilterClick = (status: UserStatus | 'Critical' | 'Late') => {
+    const handleFilterClick = (status: UserStatus | 'Critical' | 'Late' | 'Absent') => {
         setStatusFilter(prev => prev === status ? 'All' : status);
     };
 
@@ -165,6 +166,8 @@ export default function TeamView() {
         filteredUsers = filteredUsers.filter((u) => u.totalHoursToday < 7);
     } else if (statusFilter === 'Late') {
         filteredUsers = filteredUsers.filter(isLate);
+    } else if (statusFilter === 'Absent') {
+        filteredUsers = filteredUsers.filter((u) => !u.firstStartTime && u.status !== 'Working');
     } else if (statusFilter !== 'All') {
         filteredUsers = filteredUsers.filter((u) => u.status === statusFilter);
     }
@@ -252,7 +255,7 @@ export default function TeamView() {
 
             {/* Stats bar */}
             {!loading && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
                     <GlassCard
                         className={`flex items-center justify-between p-6 cursor-pointer transition-all duration-300 ${statusFilter === 'Working' ? 'border-green-500/50 bg-green-500/10' : 'hover:border-green-500/30'}`}
                         onClick={() => handleFilterClick('Working')}
@@ -337,42 +340,52 @@ export default function TeamView() {
                         </div>
                         <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
                             ⏱️
+                            <GlassCard
+                                className={`flex items-center justify-between p-6 cursor-pointer transition-all duration-300 ${statusFilter === 'Absent' ? 'border-red-500/50 bg-red-500/10' : 'hover:border-red-500/30'}`}
+                                onClick={() => handleFilterClick('Absent')}
+                            >
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground mb-1">Absent</p>
+                                    <p className="text-3xl font-bold text-red-500">{absentCount}</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
+                                    🚷
+                                </div>
+                            </GlassCard>
                         </div>
-                    </GlassCard>
-                </div>
             )}
 
-            {/* Error */}
-            {error && (
-                <div className="rounded-xl p-4 text-sm border border-red-500/30 bg-red-500/10 text-red-300 flex items-center gap-3">
-                    <span className="text-lg">⚠️</span>
-                    {error} — Make sure the backend is running on port 4000.
-                </div>
-            )}
+                        {/* Error */}
+                        {error && (
+                            <div className="rounded-xl p-4 text-sm border border-red-500/30 bg-red-500/10 text-red-300 flex items-center gap-3">
+                                <span className="text-lg">⚠️</span>
+                                {error} — Make sure the backend is running on port 4000.
+                            </div>
+                        )}
 
-            {/* Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {loading
-                    ? Array.from({ length: 6 }).map((_, i) => <SkeletonGlassCard key={i} />)
-                    : filteredUsers.map((user) => (
-                        <UserCard key={user.id} user={user} onClick={() => navigate(`/user/${user.id}`)} />
-                    ))}
-            </div>
+                        {/* Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {loading
+                                ? Array.from({ length: 6 }).map((_, i) => <SkeletonGlassCard key={i} />)
+                                : filteredUsers.map((user) => (
+                                    <UserCard key={user.id} user={user} onClick={() => navigate(`/user/${user.id}`)} />
+                                ))}
+                        </div>
 
-            {!loading && filteredUsers.length === 0 && !error && (
-                <div className="text-center py-24 text-muted-foreground">
-                    <p className="text-6xl mb-4 opacity-50">👥</p>
-                    <p className="text-xl font-medium mb-2 text-foreground">
-                        {statusFilter === 'All'
-                            ? 'No team members yet'
-                            : statusFilter === 'Critical'
-                                ? 'No users with critical hours (< 7h)'
-                                : `No users are currently ${statusFilter}`
-                        }
-                    </p>
-                    {statusFilter === 'All' && <p className="text-sm">Run the seed script to add mock data.</p>}
+                        {!loading && filteredUsers.length === 0 && !error && (
+                            <div className="text-center py-24 text-muted-foreground">
+                                <p className="text-6xl mb-4 opacity-50">👥</p>
+                                <p className="text-xl font-medium mb-2 text-foreground">
+                                    {statusFilter === 'All'
+                                        ? 'No team members yet'
+                                        : statusFilter === 'Critical'
+                                            ? 'No users with critical hours (< 7h)'
+                                            : `No users are currently ${statusFilter}`
+                                    }
+                                </p>
+                                {statusFilter === 'All' && <p className="text-sm">Run the seed script to add mock data.</p>}
+                            </div>
+                        )}
                 </div>
-            )}
-        </div>
-    );
+            );
 }
