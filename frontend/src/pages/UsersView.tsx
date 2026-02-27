@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchUsers, createUser, deleteUser, updateUserRole, type User } from '../services/api';
-import { UserPlus, Trash2, Shield, User as UserIcon, X, Mail, Lock, Edit3 } from 'lucide-react';
+import { UserPlus, Trash2, Shield, User as UserIcon, X, Mail, Lock, Edit3, Search } from 'lucide-react';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -11,6 +11,7 @@ export default function UsersView() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
 
     // Form state
@@ -83,13 +84,25 @@ export default function UsersView() {
                         Create and manage access for your team.
                     </p>
                 </div>
-                <Button
-                    onClick={() => setShowModal(true)}
-                    className="shadow-lg shadow-primary/20"
-                >
-                    <UserPlus size={18} />
-                    Add Member
-                </Button>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="relative w-full sm:w-64 shrink-0">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <input
+                            type="text"
+                            placeholder="Search staff..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors"
+                        />
+                    </div>
+                    <Button
+                        onClick={() => setShowModal(true)}
+                        className="shadow-lg shadow-primary/20 shrink-0"
+                    >
+                        <UserPlus size={18} />
+                        Add Member
+                    </Button>
+                </div>
             </div>
 
             {error && (
@@ -107,7 +120,10 @@ export default function UsersView() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {users.map(user => (
+                    {users.filter(user =>
+                        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+                    ).map(user => (
                         <GlassCard
                             key={user.id}
                             className="group hover:border-primary/30 transition-all duration-300 cursor-pointer"
