@@ -148,7 +148,7 @@ export default function UsersView() {
                                         </Badge>
                                     </button>
 
-                                    {user.role !== 'ADMIN' && (
+                                    {user.email !== 'fazeel@gallery.vision' && (
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleDelete(user.id); }}
                                             className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
