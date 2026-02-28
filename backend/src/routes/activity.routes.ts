@@ -100,8 +100,7 @@ router.get("/:userId", authenticateToken, async (req: Request, res: Response) =>
 
         const logs = await prisma.activityLog.findMany({
             where,
-            orderBy: { startTime: "desc" },
-            take: 500
+            orderBy: { startTime: "desc" }
         });
 
         res.json(logs);

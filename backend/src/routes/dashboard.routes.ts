@@ -164,8 +164,7 @@ router.get("/all-screenshots", async (req: Request, res: Response) => {
                     select: { name: true, email: true }
                 }
             },
-            orderBy: { timestamp: "desc" },
-            take: 200 // Limit to avoid crashing
+            orderBy: { timestamp: "desc" }
         });
 
         res.json(screenshots);
