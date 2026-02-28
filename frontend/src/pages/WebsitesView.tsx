@@ -1,11 +1,14 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { fetchDashboardUsers, type DashboardUser } from '../services/api';
 import { Globe, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+
+const COLORS = ["#2DD4BF", "#F87171", "#A78BFA", "#FBBF24", "#60A5FA", "#34D399"];
 
 const BASE_URL = 'https://track.gallerydigital.in/api';
 
@@ -140,6 +143,23 @@ export default function WebsitesView() {
         return `${h > 0 ? `${h}h ` : ''}${m}m ${s}s`;
     };
 
+    const topApps = useMemo(() => {
+        const appMap = new Map<string, number>();
+        const filtered = activities.filter(log => filterUnproductive ? isUnproductive(log) : true);
+
+        filtered.forEach(log => {
+            const name = log.appName || 'Unknown App';
+            if (log.duration) {
+                appMap.set(name, (appMap.get(name) || 0) + log.duration);
+            }
+        });
+
+        return Array.from(appMap.entries())
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 5);
+    }, [activities, filterUnproductive]);
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -188,6 +208,56 @@ export default function WebsitesView() {
                     </div>
                 </div>
             </div>
+
+            {/* Top Used Apps */}
+            {topApps.length > 0 && (
+                <GlassCard className="p-6">
+                    <h2 className="text-xl font-semibold mb-6">Top Used Apps</h2>
+                    <div className="flex flex-col md:flex-row gap-8 items-center h-auto md:h-64">
+                        {/* Legend */}
+                        <div className="flex-1 flex flex-col gap-3 w-full max-w-md">
+                            {topApps.map((entry, index) => (
+                                <div key={entry.name} className="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all hover:scale-[1.02]" style={{ backgroundColor: `${COLORS[index % COLORS.length]}15`, borderColor: `${COLORS[index % COLORS.length]}30`, color: COLORS[index % COLORS.length] }}>
+                                    <div
+                                        className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm"
+                                        style={{ backgroundColor: COLORS[index % COLORS.length], color: '#111' }}
+                                    >
+                                        {entry.name.substring(0, 2).toUpperCase()}
+                                    </div>
+                                    <span className="text-sm font-medium text-white/90 truncate">{entry.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Donut */}
+                        <div className="flex-1 h-64 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={topApps}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={80}
+                                        outerRadius={110}
+                                        paddingAngle={2}
+                                        dataKey="value"
+                                        stroke="none"
+                                        cornerRadius={4}
+                                    >
+                                        {topApps.map((_entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        formatter={(value: any) => formatDuration(Number(value) || 0)}
+                                        contentStyle={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
+                                        itemStyle={{ color: '#fff', fontWeight: 500 }}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </GlassCard>
+            )}
 
             {/* Content */}
             <GlassCard className="overflow-hidden">
