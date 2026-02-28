@@ -4,7 +4,7 @@ import { fetchAllScreenshots, fetchDashboardUsers, deleteScreenshot, type Screen
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
-import { Monitor, Clock, Filter, AlertTriangle, Trash2, Activity, X } from 'lucide-react';
+import { Monitor, Clock, Filter, AlertTriangle, Trash2, Activity, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 type ScreenshotWithUser = Screenshot & { user: { name: string; email: string }; hash?: string };
@@ -40,6 +40,7 @@ export default function ScreenshotsView() {
     const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: initialDate, endDate: initialDate });
     const [activityFilter, setActivityFilter] = useState<'All' | 'Low Activity'>('All');
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = currentUser?.role === 'ADMIN';
 
@@ -56,7 +57,12 @@ export default function ScreenshotsView() {
 
     useEffect(() => {
         loadData();
+        setCurrentPage(1);
     }, [selectedUser, dateFilter]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activityFilter]);
 
     const loadData = async () => {
         setLoading(true);
@@ -112,7 +118,11 @@ export default function ScreenshotsView() {
         setSearchParams(searchParams);
         setSelectedUser('ALL');
         setDateFilter({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
+        setCurrentPage(1);
     };
+
+    const totalPages = Math.ceil(displayedScreenshots.length / 100);
+    const paginatedScreenshots = displayedScreenshots.slice((currentPage - 1) * 100, currentPage * 100);
 
     return (
         <div className="space-y-8">
@@ -199,7 +209,7 @@ export default function ScreenshotsView() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {displayedScreenshots.map((shot, idx) => (
+                            {paginatedScreenshots.map((shot, idx) => (
                                 <GlassCard
                                     key={shot.id}
                                     className={`group p-0 overflow-hidden relative aspect-video transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 cursor-pointer ${shot.isStatic ? 'ring-2 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : shot.isLowActivity ? 'ring-2 ring-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]' : ''}`}
@@ -263,22 +273,44 @@ export default function ScreenshotsView() {
                             ))}
                         </div>
                     )}
+
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-4 mt-8">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                            >
+                                <ChevronLeft size={16} /> Previous
+                            </button>
+                            <span className="text-sm font-medium text-foreground bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <button
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                            >
+                                Next <ChevronRight size={16} />
+                            </button>
+                        </div>
+                    )}
                 </>
             )}
 
             {/* Lightbox */}
-            {lightboxIdx !== null && displayedScreenshots[lightboxIdx] && (
+            {lightboxIdx !== null && paginatedScreenshots[lightboxIdx] && (
                 <Lightbox
-                    screenshot={displayedScreenshots[lightboxIdx]}
+                    screenshot={paginatedScreenshots[lightboxIdx]}
                     onClose={() => setLightboxIdx(null)}
                     onPrev={() => setLightboxIdx(i => (i !== null && i > 0 ? i - 1 : null))}
-                    onNext={() => setLightboxIdx(i => (i !== null && i < displayedScreenshots.length - 1 ? i + 1 : null))}
+                    onNext={() => setLightboxIdx(i => (i !== null && i < paginatedScreenshots.length - 1 ? i + 1 : null))}
                     onDelete={(id) => {
                         handleDeleteScreenshot({ stopPropagation: () => { } } as any, id);
                         setLightboxIdx(null);
                     }}
                     hasPrev={lightboxIdx > 0}
-                    hasNext={lightboxIdx < displayedScreenshots.length - 1}
+                    hasNext={lightboxIdx < paginatedScreenshots.length - 1}
                 />
             )}
         </div>

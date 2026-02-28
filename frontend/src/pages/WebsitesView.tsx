@@ -4,7 +4,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { fetchDashboardUsers, type DashboardUser } from '../services/api';
-import { Globe } from 'lucide-react';
+import { Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { DateFilterSelect } from '../components/ui/DateFilterSelect';
@@ -42,6 +42,7 @@ export default function WebsitesView() {
     const [selectedUser, setSelectedUser] = useState<string>('ALL');
     const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
     const [filterUnproductive, setFilterUnproductive] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -54,7 +55,12 @@ export default function WebsitesView() {
 
     useEffect(() => {
         loadActivities();
+        setCurrentPage(1);
     }, [selectedUser, dateFilter]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterUnproductive]);
 
     const loadActivities = async () => {
         setLoading(true);
@@ -161,6 +167,10 @@ export default function WebsitesView() {
             .sort((a, b) => b.value - a.value)
             .slice(0, 5);
     }, [activities, filterUnproductive]);
+
+    const filteredActivities = activities.filter(log => filterUnproductive ? isUnproductive(log) : true);
+    const totalPages = Math.ceil(filteredActivities.length / 100);
+    const paginatedActivities = filteredActivities.slice((currentPage - 1) * 100, currentPage * 100);
 
     return (
         <div className="space-y-8">
@@ -280,14 +290,14 @@ export default function WebsitesView() {
                                         <td className="p-4"><div className="h-4 w-16 bg-white/5 rounded animate-pulse" /></td>
                                     </tr>
                                 ))
-                            ) : activities.filter(log => filterUnproductive ? isUnproductive(log) : true).length === 0 ? (
+                            ) : filteredActivities.length === 0 ? (
                                 <tr>
                                     <td colSpan={4} className="p-8 text-center text-muted-foreground">
                                         No matching activity logs found.
                                     </td>
                                 </tr>
                             ) : (
-                                activities.filter(log => filterUnproductive ? isUnproductive(log) : true).map((log) => {
+                                paginatedActivities.map((log) => {
                                     const unproductive = isUnproductive(log);
                                     return (
                                         <tr
@@ -341,6 +351,28 @@ export default function WebsitesView() {
                     </table>
                 </div>
             </GlassCard>
+
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4 py-4 mt-8">
+                    <button
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                    >
+                        <ChevronLeft size={16} /> Previous
+                    </button>
+                    <span className="text-sm font-medium text-foreground bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+                        Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                    >
+                        Next <ChevronRight size={16} />
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
