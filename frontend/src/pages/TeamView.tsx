@@ -340,52 +340,55 @@ export default function TeamView() {
                         </div>
                         <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
                             ⏱️
-                            <GlassCard
-                                className={`flex items-center justify-between p-6 cursor-pointer transition-all duration-300 ${statusFilter === 'Absent' ? 'border-red-500/50 bg-red-500/10' : 'hover:border-red-500/30'}`}
-                                onClick={() => handleFilterClick('Absent')}
-                            >
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground mb-1">Absent</p>
-                                    <p className="text-3xl font-bold text-red-500">{absentCount}</p>
-                                </div>
-                                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
-                                    🚷
-                                </div>
-                            </GlassCard>
                         </div>
+                    </GlassCard>
+
+                    <GlassCard
+                        className={`flex items-center justify-between p-6 cursor-pointer transition-all duration-300 ${statusFilter === 'Absent' ? 'border-red-500/50 bg-red-500/10' : 'hover:border-red-500/30'}`}
+                        onClick={() => handleFilterClick('Absent')}
+                    >
+                        <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Absent</p>
+                            <p className="text-3xl font-bold text-red-500">{absentCount}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
+                            🚷
+                        </div>
+                    </GlassCard>
+                </div>
             )}
 
-                        {/* Error */}
-                        {error && (
-                            <div className="rounded-xl p-4 text-sm border border-red-500/30 bg-red-500/10 text-red-300 flex items-center gap-3">
-                                <span className="text-lg">⚠️</span>
-                                {error} — Make sure the backend is running on port 4000.
-                            </div>
-                        )}
-
-                        {/* Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {loading
-                                ? Array.from({ length: 6 }).map((_, i) => <SkeletonGlassCard key={i} />)
-                                : filteredUsers.map((user) => (
-                                    <UserCard key={user.id} user={user} onClick={() => navigate(`/user/${user.id}`)} />
-                                ))}
-                        </div>
-
-                        {!loading && filteredUsers.length === 0 && !error && (
-                            <div className="text-center py-24 text-muted-foreground">
-                                <p className="text-6xl mb-4 opacity-50">👥</p>
-                                <p className="text-xl font-medium mb-2 text-foreground">
-                                    {statusFilter === 'All'
-                                        ? 'No team members yet'
-                                        : statusFilter === 'Critical'
-                                            ? 'No users with critical hours (< 7h)'
-                                            : `No users are currently ${statusFilter}`
-                                    }
-                                </p>
-                                {statusFilter === 'All' && <p className="text-sm">Run the seed script to add mock data.</p>}
-                            </div>
-                        )}
+            {/* Error */}
+            {error && (
+                <div className="rounded-xl p-4 text-sm border border-red-500/30 bg-red-500/10 text-red-300 flex items-center gap-3">
+                    <span className="text-lg">⚠️</span>
+                    {error} — Make sure the backend is running on port 4000.
                 </div>
-            );
+            )}
+
+            {/* Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {loading
+                    ? Array.from({ length: 6 }).map((_, i) => <SkeletonGlassCard key={i} />)
+                    : filteredUsers.map((user) => (
+                        <UserCard key={user.id} user={user} onClick={() => navigate(`/user/${user.id}`)} />
+                    ))}
+            </div>
+
+            {!loading && filteredUsers.length === 0 && !error && (
+                <div className="text-center py-24 text-muted-foreground">
+                    <p className="text-6xl mb-4 opacity-50">👥</p>
+                    <p className="text-xl font-medium mb-2 text-foreground">
+                        {statusFilter === 'All'
+                            ? 'No team members yet'
+                            : statusFilter === 'Critical'
+                                ? 'No users with critical hours (< 7h)'
+                                : `No users are currently ${statusFilter}`
+                        }
+                    </p>
+                    {statusFilter === 'All' && <p className="text-sm">Run the seed script to add mock data.</p>}
+                </div>
+            )}
+        </div>
+    );
 }
