@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, resetUserHours, deleteScreenshot, fetchUserHistory, pushAdminMessage, updateUserStartTime, type Screenshot, type DashboardUser } from '../services/api';
+import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPassword, resetUserHours, deleteScreenshot, fetchUserHistory, pushAdminMessage, updateUserStartTime, updateUserName, type Screenshot, type DashboardUser } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge, StatusDot } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -58,6 +58,11 @@ export default function UserDetailView() {
     const [editingStartTime, setEditingStartTime] = useState(false);
     const [tempStartTime, setTempStartTime] = useState('');
     const [savingStartTime, setSavingStartTime] = useState(false);
+
+    // Edit Name
+    const [editingName, setEditingName] = useState(false);
+    const [tempName, setTempName] = useState('');
+    const [savingName, setSavingName] = useState(false);
 
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = currentUser?.role === 'ADMIN';
@@ -135,6 +140,21 @@ export default function UserDetailView() {
         }
     };
 
+    const handleSaveName = async () => {
+        if (!userId || !user || !tempName.trim()) return;
+        setSavingName(true);
+        try {
+            const data = await updateUserName(userId, tempName);
+            setUser({ ...user, name: data.name });
+            setEditingName(false);
+        } catch (error: any) {
+            console.error(error);
+            alert("Failed to save name: " + error.message);
+        } finally {
+            setSavingName(false);
+        }
+    };
+
     const load = useCallback(async () => {
         if (!userId) return;
         try {
@@ -194,8 +214,44 @@ export default function UserDetailView() {
                         )}
                         <div>
                             <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                                {user ? user.name : 'Loading...'}
-                                {user && (
+                                {editingName ? (
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={tempName}
+                                            onChange={e => setTempName(e.target.value)}
+                                            className="bg-black/30 border border-white/20 rounded-lg px-3 py-1 text-2xl font-bold text-foreground focus:outline-none focus:border-primary/50 w-full max-w-[300px]"
+                                            autoFocus
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter') handleSaveName();
+                                                if (e.key === 'Escape') setEditingName(false);
+                                            }}
+                                        />
+                                        <button onClick={handleSaveName} disabled={savingName} className="text-emerald-400 hover:text-emerald-300 transition-colors p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10">
+                                            <Check size={18} />
+                                        </button>
+                                        <button onClick={() => setEditingName(false)} className="text-rose-400 hover:text-rose-300 transition-colors p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10">
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {user ? user.name : 'Loading...'}
+                                        {user && isAdmin && (
+                                            <button
+                                                onClick={() => {
+                                                    setTempName(user.name);
+                                                    setEditingName(true);
+                                                }}
+                                                className="text-muted-foreground hover:text-primary transition-colors ml-1"
+                                                title="Edit Name"
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+                                {user && !editingName && (
                                     <Badge variant={user.status === 'Working' ? 'success' : user.status === 'On Break' ? 'warning' : 'outline'}>
                                         <StatusDot className={user.status === 'Working' ? 'animate-pulse bg-current' : 'bg-current'} />
                                         {user.status}

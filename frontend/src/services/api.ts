@@ -141,6 +141,18 @@ export async function updateUserStartTime(userId: string, expectedStartTime: str
     return res.json();
 }
 
+export async function updateUserName(id: string, name: string) {
+    const res = await fetch(`${BASE}/users/${id}/name`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ name }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update username');
+    }
+    return res.json();
+}
 export async function deleteUser(id: string) {
     const res = await fetch(`${BASE}/users/${id}`, {
         method: 'DELETE',

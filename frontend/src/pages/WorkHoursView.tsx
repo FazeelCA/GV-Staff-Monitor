@@ -4,6 +4,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { type DashboardUser } from '../services/api'; // Reuse existing API
 import { Calendar, Clock, BarChart, AlertTriangle, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const BASE_URL = 'https://track.gallerydigital.in/api';
 
@@ -33,6 +34,7 @@ interface UserWithLogs extends DashboardUser {
 }
 
 export default function WorkHoursView() {
+    const navigate = useNavigate();
     const [users, setUsers] = useState<UserWithLogs[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -246,7 +248,11 @@ export default function WorkHoursView() {
                         const startTime = user.firstLog ? new Date(user.firstLog.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '-';
 
                         return (
-                            <GlassCard key={user.id} className="flex flex-col gap-4">
+                            <GlassCard
+                                key={user.id}
+                                className="flex flex-col gap-4 cursor-pointer hover:scale-[1.02] transition-transform duration-200 hover:border-white/20"
+                                onClick={() => navigate(`/user/${user.id}`)}
+                            >
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-bold">

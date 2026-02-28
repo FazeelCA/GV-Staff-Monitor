@@ -141,6 +141,29 @@ router.put("/:id/password", requireAdmin, async (req: Request, res: Response) =>
     }
 });
 
+// PUT /:id/name - Edit User Name
+router.put("/:id/name", requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params as { id: string };
+        const { name } = req.body;
+
+        if (!name || name.trim().length === 0) {
+            res.status(400).json({ error: "Name is required" });
+            return;
+        }
+
+        const user = await prisma.user.update({
+            where: { id },
+            data: { name: name.trim() },
+            select: { id: true, name: true, email: true, role: true }
+        });
+
+        res.json(user);
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // PUT /ping - Update last interaction time for online status
 router.put("/ping", async (req: Request, res: Response) => {
     try {
