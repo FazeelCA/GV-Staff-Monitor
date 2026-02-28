@@ -4,7 +4,7 @@ import { fetchUserScreenshots, fetchDashboardUsers, fetchUserTasks, resetUserPas
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge, StatusDot } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { ArrowLeft, Clock, Monitor, Lock, X, Trash2, AlertTriangle, Activity, Check, Edit2 } from 'lucide-react';
+import { ArrowLeft, Clock, Monitor, Lock, X, Trash2, AlertTriangle, Activity, Check, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 function formatTime(iso: string) {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -32,6 +32,10 @@ export default function UserDetailView() {
         return UNPRODUCTIVE_KEYWORDS.some(kw => text.includes(kw));
     };
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+
+    // Pagination for Screenshots & Websites
+    const [screenshotsPage, setScreenshotsPage] = useState(1);
+    const [websitesPage, setWebsitesPage] = useState(1);
 
     // Pagination and Filtering for timeline
     const [timelinePage, setTimelinePage] = useState(1);
@@ -180,6 +184,8 @@ export default function UserDetailView() {
             console.error(e);
         } finally {
             setLoading(false);
+            setScreenshotsPage(1);
+            setWebsitesPage(1);
         }
     }, [userId, dateFilter]);
 
@@ -430,66 +436,98 @@ export default function UserDetailView() {
 
             {/* Screenshot grid */}
             {!loading && screenshots.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {screenshots.map((shot, idx) => {
-                        // UserDetail API sorts ASC, so idx - 1 is the older screenshot it should be compared to
-                        const prevShot = idx > 0 ? screenshots[idx - 1] : null;
-                        const isStatic = shot.hash && prevShot?.hash && shot.hash === prevShot.hash;
-                        const isLowActivity = shot.activityCount !== undefined && shot.activityCount < 50;
+                <>
+                    {(() => {
+                        const totalScreenshotPages = Math.ceil(screenshots.length / 100);
+                        const paginatedScreenshots = screenshots.slice((screenshotsPage - 1) * 100, screenshotsPage * 100);
 
                         return (
-                            <GlassCard
-                                key={shot.id}
-                                className={`group p-0 overflow-hidden cursor-zoom-in relative aspect-video transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 ${isStatic ? 'ring-2 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : isLowActivity ? 'ring-2 ring-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]' : ''}`}
-                                onClick={() => setLightboxIdx(idx)}
-                            >
-                                <img
-                                    src={shot.imageUrl}
-                                    alt={shot.taskAtTheTime || 'Screenshot'}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                />
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    {paginatedScreenshots.map((shot, idx) => {
+                                        // UserDetail API sorts ASC, so idx - 1 is the older screenshot it should be compared to
+                                        const prevShot = idx > 0 ? paginatedScreenshots[idx - 1] : null;
+                                        const isStatic = shot.hash && prevShot?.hash && shot.hash === prevShot.hash;
+                                        const isLowActivity = shot.activityCount !== undefined && shot.activityCount < 50;
 
-                                {isStatic ? (
-                                    <div className="absolute top-2 right-2 z-20 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg flex items-center gap-1 animate-pulse">
-                                        <AlertTriangle className="w-3 h-3" />
-                                        <span>Static</span>
-                                    </div>
-                                ) : isLowActivity ? (
-                                    <div className="absolute top-2 right-2 z-20 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg flex items-center gap-1">
-                                        <Activity className="w-3 h-3" />
-                                        <span>Low Act</span>
-                                    </div>
-                                ) : null}
-
-                                {/* Gradient Overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
-
-                                {/* Content Overlay */}
-                                <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                    <p className="text-xs font-medium text-white/90 line-clamp-1 mb-1">
-                                        {shot.taskAtTheTime || 'No task detected'}
-                                    </p>
-                                    <div className="flex items-center justify-between">
-                                        <Badge variant="glass" className="h-5 px-1.5 text-[10px] gap-1 border-white/10 bg-black/40">
-                                            <Clock size={10} />
-                                            {formatTime(shot.timestamp)}
-                                        </Badge>
-
-                                        {isAdmin && (
-                                            <button
-                                                onClick={(e) => handleDeleteScreenshot(e, shot.id)}
-                                                className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white transition-all border border-red-500/20"
-                                                title="Delete Screenshot"
+                                        return (
+                                            <GlassCard
+                                                key={shot.id}
+                                                className={`group p-0 overflow-hidden cursor-zoom-in relative aspect-video transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 ${isStatic ? 'ring-2 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : isLowActivity ? 'ring-2 ring-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]' : ''}`}
+                                                onClick={() => setLightboxIdx(idx)}
                                             >
-                                                <Trash2 size={12} />
-                                            </button>
-                                        )}
-                                    </div>
+                                                <img
+                                                    src={shot.imageUrl}
+                                                    alt={shot.taskAtTheTime || 'Screenshot'}
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                />
+
+                                                {isStatic ? (
+                                                    <div className="absolute top-2 right-2 z-20 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg flex items-center gap-1 animate-pulse">
+                                                        <AlertTriangle className="w-3 h-3" />
+                                                        <span>Static</span>
+                                                    </div>
+                                                ) : isLowActivity ? (
+                                                    <div className="absolute top-2 right-2 z-20 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg flex items-center gap-1">
+                                                        <Activity className="w-3 h-3" />
+                                                        <span>Low Act</span>
+                                                    </div>
+                                                ) : null}
+
+                                                {/* Gradient Overlay */}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                                {/* Content Overlay */}
+                                                <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                                    <p className="text-xs font-medium text-white/90 line-clamp-1 mb-1">
+                                                        {shot.taskAtTheTime || 'No task detected'}
+                                                    </p>
+                                                    <div className="flex items-center justify-between">
+                                                        <Badge variant="glass" className="h-5 px-1.5 text-[10px] gap-1 border-white/10 bg-black/40">
+                                                            <Clock size={10} />
+                                                            {formatTime(shot.timestamp)}
+                                                        </Badge>
+
+                                                        {isAdmin && (
+                                                            <button
+                                                                onClick={(e) => handleDeleteScreenshot(e, shot.id)}
+                                                                className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white transition-all border border-red-500/20"
+                                                                title="Delete Screenshot"
+                                                            >
+                                                                <Trash2 size={12} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </GlassCard>
+                                        )
+                                    })}
                                 </div>
-                            </GlassCard>
-                        )
-                    })}
-                </div>
+                                {totalScreenshotPages > 1 && (
+                                    <div className="flex justify-center items-center gap-4 py-4 mt-8">
+                                        <button
+                                            disabled={screenshotsPage === 1}
+                                            onClick={() => setScreenshotsPage(prev => Math.max(1, prev - 1))}
+                                            className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                                        >
+                                            <ChevronLeft size={16} /> Previous
+                                        </button>
+                                        <span className="text-sm font-medium text-foreground bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+                                            Page {screenshotsPage} of {totalScreenshotPages}
+                                        </span>
+                                        <button
+                                            disabled={screenshotsPage === totalScreenshotPages}
+                                            onClick={() => setScreenshotsPage(prev => Math.min(totalScreenshotPages, prev + 1))}
+                                            className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                                        >
+                                            Next <ChevronRight size={16} />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
+                </>
             )}
 
 
@@ -653,33 +691,63 @@ export default function UserDetailView() {
                     <SkeletonGlassCard className="h-32" />
                 ) : (
                     <div className="space-y-3">
-                        {activityLogs
-                            .filter(log => filterUnproductive ? isUnproductive(log) : true)
-                            .map(log => {
-                                const bad = isUnproductive(log);
-                                return (
-                                    <GlassCard
-                                        key={log.id}
-                                        className={`flex flex-col p-4 transition-colors ${bad ? 'border-red-500/50 bg-red-500/10' : ''}`}
-                                    >
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h3 className="font-semibold text-foreground">{log.appName || 'Unknown App'}</h3>
-                                            <span className="text-xs text-muted-foreground font-mono bg-black/20 px-2 py-0.5 rounded border border-white/10">
-                                                {formatTime(log.startTime)} {log.duration ? `(${Math.floor(log.duration / 60)}m ${log.duration % 60}s)` : ''}
-                                            </span>
-                                        </div>
-                                        {log.title && <p className="text-sm text-muted-foreground mb-1 line-clamp-1">{log.title}</p>}
-                                        {log.url && <a href={log.url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline line-clamp-1">{log.url}</a>}
-                                        {bad && <Badge variant="outline" className="mt-2 self-start text-red-400 border-red-500/30 bg-red-500/10 text-[10px] py-0">Unproductive</Badge>}
-                                    </GlassCard>
-                                )
-                            })}
+                        {(() => {
+                            const filteredActivities = activityLogs.filter(log => filterUnproductive ? isUnproductive(log) : true);
+                            const totalWebsitesPages = Math.ceil(filteredActivities.length / 100);
+                            const paginatedWebsites = filteredActivities.slice((websitesPage - 1) * 100, websitesPage * 100);
 
-                        {(activityLogs.length === 0 || (filterUnproductive && !activityLogs.some(isUnproductive))) && (
-                            <div className="text-center py-8 text-muted-foreground bg-white/5 rounded-xl border border-white/5">
-                                No websites or apps recorded.
-                            </div>
-                        )}
+                            return (
+                                <>
+                                    {paginatedWebsites.map(log => {
+                                        const bad = isUnproductive(log);
+                                        return (
+                                            <GlassCard
+                                                key={log.id}
+                                                className={`flex flex-col p-4 transition-colors ${bad ? 'border-red-500/50 bg-red-500/10' : ''}`}
+                                            >
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <h3 className="font-semibold text-foreground">{log.appName || 'Unknown App'}</h3>
+                                                    <span className="text-xs text-muted-foreground font-mono bg-black/20 px-2 py-0.5 rounded border border-white/10">
+                                                        {formatTime(log.startTime)} {log.duration ? `(${Math.floor(log.duration / 60)}m ${log.duration % 60}s)` : ''}
+                                                    </span>
+                                                </div>
+                                                {log.title && <p className="text-sm text-muted-foreground mb-1 line-clamp-1">{log.title}</p>}
+                                                {log.url && <a href={log.url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline line-clamp-1">{log.url}</a>}
+                                                {bad && <Badge variant="outline" className="mt-2 self-start text-red-400 border-red-500/30 bg-red-500/10 text-[10px] py-0">Unproductive</Badge>}
+                                            </GlassCard>
+                                        )
+                                    })}
+
+                                    {(activityLogs.length === 0 || (filterUnproductive && !activityLogs.some(isUnproductive))) && (
+                                        <div className="text-center py-8 text-muted-foreground bg-white/5 rounded-xl border border-white/5">
+                                            No websites or apps recorded.
+                                        </div>
+                                    )}
+
+                                    {totalWebsitesPages > 1 && (
+                                        <div className="flex justify-center items-center gap-4 py-4 mt-8">
+                                            <button
+                                                disabled={websitesPage === 1}
+                                                onClick={() => setWebsitesPage(prev => Math.max(1, prev - 1))}
+                                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                                            >
+                                                <ChevronLeft size={16} /> Previous
+                                            </button>
+                                            <span className="text-sm font-medium text-foreground bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+                                                Page {websitesPage} of {totalWebsitesPages}
+                                            </span>
+                                            <button
+                                                disabled={websitesPage === totalWebsitesPages}
+                                                onClick={() => setWebsitesPage(prev => Math.min(totalWebsitesPages, prev + 1))}
+                                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                                            >
+                                                Next <ChevronRight size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
+                            )
+                        })()}
                     </div>
                 )}
             </div>
