@@ -235,7 +235,7 @@ export function DateFilterSelect({ value, onChange }: DateFilterSelectProps) {
             </button>
 
             {isOpen && (
-                <div className="absolute top-full mt-2 right-0 sm:left-0 sm:right-auto bg-[#ffffff] dark:bg-[#1a1b1e] border border-gray-200 dark:border-white/10 rounded-2xl shadow-xl z-50 flex flex-col sm:flex-row text-gray-900 dark:text-foreground text-sm font-medium w-max max-w-[90vw] overflow-y-auto max-h-[80vh]">
+                <div className="absolute top-full mt-2 right-0 sm:right-0 sm:left-auto bg-[#ffffff] dark:bg-[#1a1b1e] border border-gray-200 dark:border-white/10 rounded-2xl shadow-xl z-50 flex flex-col sm:flex-row text-gray-900 dark:text-foreground text-sm font-medium w-max max-w-[90vw] overflow-y-auto max-h-[80vh]">
 
                     {/* Left Panel: Calendar Grid */}
                     <div className="p-4 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-white/10 w-full sm:w-[280px]">
