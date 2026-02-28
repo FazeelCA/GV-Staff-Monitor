@@ -10,12 +10,10 @@ function formatTime(iso: string) {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
-function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
-}
 
 import { Lightbox } from '../components/ui/Lightbox';
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { DateFilterSelect } from '../components/ui/DateFilterSelect';
 
 export default function UserDetailView() {
     const { userId } = useParams<{ userId: string }>();
@@ -41,7 +39,7 @@ export default function UserDetailView() {
     const timelineLimit = 20;
 
 
-    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); // Default today
+    const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
 
     // Password Reset
     const [showResetModal, setShowResetModal] = useState(false);
@@ -159,10 +157,10 @@ export default function UserDetailView() {
         if (!userId) return;
         try {
             const [shots, users, userTasks, hist] = await Promise.all([
-                fetchUserScreenshots(userId, selectedDate),
+                fetchUserScreenshots(userId, dateFilter),
                 fetchDashboardUsers(),
-                fetchUserTasks(userId, selectedDate),
-                fetchUserHistory(userId, selectedDate)
+                fetchUserTasks(userId, dateFilter),
+                fetchUserHistory(userId, dateFilter)
             ]);
             setScreenshots(shots);
             setUser(users.find((u) => u.id === userId) ?? null);
@@ -183,7 +181,7 @@ export default function UserDetailView() {
         } finally {
             setLoading(false);
         }
-    }, [userId, selectedDate]);
+    }, [userId, dateFilter]);
 
     // Load data
     useEffect(() => {
@@ -337,14 +335,11 @@ export default function UserDetailView() {
 
             <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">Activity Log</h2>
-                <div className="flex items-center gap-3">
-                    <input
-                        type="date"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                        className="bg-black/20 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                <div className="flex items-center gap-3 relative z-50">
+                    <DateFilterSelect
+                        value={dateFilter}
+                        onChange={(val) => setDateFilter(val)}
                     />
-                    <Badge variant="outline" className="font-mono hidden sm:inline-flex">{formatDate(selectedDate)}</Badge>
                 </div>
             </div>
 

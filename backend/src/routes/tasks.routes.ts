@@ -62,11 +62,20 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/user/:userId", async (req: Request, res: Response) => {
     try {
         const { userId } = req.params as { userId: string };
-        const { date } = req.query as { date?: string };
+        const { date, startDate, endDate } = req.query as { date?: string; startDate?: string; endDate?: string };
 
         const where: any = { userId };
 
-        if (date) {
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            where.createdAt = {
+                gte: start,
+                lte: end
+            };
+        } else if (date) {
             const queryDate = new Date(date);
             const nextDay = new Date(queryDate);
             nextDay.setDate(queryDate.getDate() + 1);

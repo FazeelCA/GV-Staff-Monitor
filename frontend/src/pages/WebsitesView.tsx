@@ -4,9 +4,10 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { fetchDashboardUsers, type DashboardUser } from '../services/api';
-import { Globe, Calendar } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { DateFilterSelect } from '../components/ui/DateFilterSelect';
 
 const COLORS = ["#2DD4BF", "#F87171", "#A78BFA", "#FBBF24", "#60A5FA", "#34D399"];
 
@@ -39,7 +40,7 @@ export default function WebsitesView() {
     const [users, setUsers] = useState<DashboardUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<string>('ALL');
-    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
     const [filterUnproductive, setFilterUnproductive] = useState(false);
     const navigate = useNavigate();
 
@@ -53,7 +54,7 @@ export default function WebsitesView() {
 
     useEffect(() => {
         loadActivities();
-    }, [selectedUser, selectedDate]);
+    }, [selectedUser, dateFilter]);
 
     const loadActivities = async () => {
         setLoading(true);
@@ -76,6 +77,7 @@ export default function WebsitesView() {
             let allLogs: ActivityLog[] = [];
 
             let currentUsers = users;
+            const queryParams = `?startDate=${dateFilter.startDate}&endDate=${dateFilter.endDate}`;
 
             if (selectedUser === 'ALL') {
                 if (users.length === 0) {
@@ -83,7 +85,7 @@ export default function WebsitesView() {
                     currentUsers = await fetchDashboardUsers();
                     setUsers(currentUsers);
                     const promises = currentUsers.map((user: any) =>
-                        fetch(`${BASE_URL}/activity/${user.id}${selectedDate ? `?date=${selectedDate}` : ''}`, {
+                        fetch(`${BASE_URL}/activity/${user.id}${queryParams}`, {
                             headers: { Authorization: `Bearer ${token}` }
                         }).then(r => r.json())
                     );
@@ -93,7 +95,7 @@ export default function WebsitesView() {
                     });
                 } else {
                     const promises = currentUsers.map(user =>
-                        fetch(`${BASE_URL}/activity/${user.id}${selectedDate ? `?date=${selectedDate}` : ''}`, {
+                        fetch(`${BASE_URL}/activity/${user.id}${queryParams}`, {
                             headers: { Authorization: `Bearer ${token}` }
                         }).then(r => r.json())
                     );
@@ -111,7 +113,7 @@ export default function WebsitesView() {
                     currentUsers = await fetchDashboardUsers();
                     setUsers(currentUsers);
                 }
-                const res = await fetch(`${BASE_URL}/activity/${selectedUser}${selectedDate ? `?date=${selectedDate}` : ''}`, {
+                const res = await fetch(`${BASE_URL}/activity/${selectedUser}${queryParams}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -197,13 +199,10 @@ export default function WebsitesView() {
                     </div>
 
                     {/* Date Filter */}
-                    <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                        <input
-                            type="date"
-                            className="w-full sm:w-40 pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors cursor-pointer"
-                            value={selectedDate}
-                            onChange={(e) => setSelectedDate(e.target.value)}
+                    <div className="relative z-10">
+                        <DateFilterSelect
+                            value={dateFilter}
+                            onChange={(val) => setDateFilter(val)}
                         />
                     </div>
                 </div>

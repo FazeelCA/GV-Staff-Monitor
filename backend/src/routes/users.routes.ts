@@ -189,18 +189,26 @@ router.put("/ping", async (req: Request, res: Response) => {
 router.get("/:id/history", requireAdmin, async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
-        const dateParam = req.query.date as string;
+        const { date: dateParam, startDate, endDate } = req.query as { date?: string; startDate?: string; endDate?: string };
 
         let startOfDay, endOfDay;
-        if (dateParam) {
+        if (startDate && endDate) {
+            startOfDay = new Date(startDate);
+            startOfDay.setHours(0, 0, 0, 0);
+            endOfDay = new Date(endDate);
+            endOfDay.setDate(endOfDay.getDate() + 1);
+            endOfDay.setHours(0, 0, 0, 0);
+        } else if (dateParam) {
             startOfDay = new Date(dateParam);
             startOfDay.setHours(0, 0, 0, 0);
+            endOfDay = new Date(startOfDay);
+            endOfDay.setDate(startOfDay.getDate() + 1);
         } else {
             startOfDay = new Date();
             startOfDay.setHours(0, 0, 0, 0);
+            endOfDay = new Date(startOfDay);
+            endOfDay.setDate(startOfDay.getDate() + 1);
         }
-        endOfDay = new Date(startOfDay);
-        endOfDay.setDate(startOfDay.getDate() + 1);
 
         const [timeLogs, screenshots, activityLogs] = await Promise.all([
             prisma.timeLog.findMany({

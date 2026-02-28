@@ -4,7 +4,7 @@ import { fetchAllScreenshots, fetchDashboardUsers, deleteScreenshot, type Screen
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
-import { Monitor, Clock, Calendar, Filter, AlertTriangle, Trash2, Activity, X } from 'lucide-react';
+import { Monitor, Clock, Filter, AlertTriangle, Trash2, Activity, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 type ScreenshotWithUser = Screenshot & { user: { name: string; email: string }; hash?: string };
@@ -25,6 +25,7 @@ function formatDate(iso: string) {
     return d.toLocaleDateString();
 }
 
+import { DateFilterSelect } from '../components/ui/DateFilterSelect';
 import { Lightbox } from '../components/ui/Lightbox';
 
 export default function ScreenshotsView() {
@@ -36,7 +37,7 @@ export default function ScreenshotsView() {
     const [users, setUsers] = useState<DashboardUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<string>(initialUser);
-    const [selectedDate, setSelectedDate] = useState<string>(initialDate); // YYYY-MM-DD
+    const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: initialDate, endDate: initialDate });
     const [activityFilter, setActivityFilter] = useState<'All' | 'Low Activity'>('All');
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -55,13 +56,13 @@ export default function ScreenshotsView() {
 
     useEffect(() => {
         loadData();
-    }, [selectedUser, selectedDate]);
+    }, [selectedUser, dateFilter]);
 
     const loadData = async () => {
         setLoading(true);
         try {
             const [shotsData, usersData] = await Promise.all([
-                fetchAllScreenshots({ userId: selectedUser, date: selectedDate }),
+                fetchAllScreenshots({ userId: selectedUser, startDate: dateFilter.startDate, endDate: dateFilter.endDate }),
                 // Only fetch users once if possible, but for simplicity fetching every time or use cached?
                 // Let's optimize: fetch users only once on mount.
                 users.length === 0 ? fetchDashboardUsers() : Promise.resolve(users),
@@ -110,7 +111,7 @@ export default function ScreenshotsView() {
         searchParams.delete('endTime');
         setSearchParams(searchParams);
         setSelectedUser('ALL');
-        setSelectedDate('');
+        setDateFilter({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
     };
 
     return (
@@ -150,13 +151,10 @@ export default function ScreenshotsView() {
                     </div>
 
                     {/* Date Filter */}
-                    <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                        <input
-                            type="date"
-                            className="w-full sm:w-40 pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors cursor-pointer"
-                            value={selectedDate}
-                            onChange={(e) => setSelectedDate(e.target.value)}
+                    <div className="relative z-10 w-full sm:w-auto">
+                        <DateFilterSelect
+                            value={dateFilter}
+                            onChange={(val) => setDateFilter(val)}
                         />
                     </div>
 
@@ -174,7 +172,7 @@ export default function ScreenshotsView() {
                     </div>
 
                     <button
-                        onClick={() => { setSelectedUser('ALL'); setSelectedDate(''); setActivityFilter('All'); }}
+                        onClick={() => { setSelectedUser('ALL'); setDateFilter({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] }); setActivityFilter('All'); }}
                         className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
                         title="Clear Filters"
                     >

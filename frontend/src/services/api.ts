@@ -187,27 +187,58 @@ export async function resetUserHours(id: string) {
     return res.json();
 }
 
-export async function fetchDashboardUsers(): Promise<DashboardUser[]> {
-    const res = await fetch(`${BASE}/dashboard/users?t=${Date.now()}`, { headers: getHeaders() });
+export async function fetchDashboardUsers(filters?: { date?: string; startDate?: string; endDate?: string }): Promise<DashboardUser[]> {
+    const params = new URLSearchParams();
+    params.append('t', Date.now().toString());
+    if (filters?.startDate && filters?.endDate) {
+        params.append('startDate', filters.startDate);
+        params.append('endDate', filters.endDate);
+    } else if (filters?.date) {
+        params.append('date', filters.date);
+    }
+
+    const res = await fetch(`${BASE}/dashboard/users?${params.toString()}`, { headers: getHeaders() });
     if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
     if (!res.ok) throw new Error('Failed to fetch users');
     return res.json();
 }
 
-export async function fetchUserScreenshots(userId: string, date?: string): Promise<Screenshot[]> {
-    const url = date
-        ? `${BASE}/dashboard/screenshots/${userId}?date=${date}`
-        : `${BASE}/dashboard/screenshots/${userId}`;
+export async function fetchUserScreenshots(userId: string, filters?: { date?: string; startDate?: string; endDate?: string } | string): Promise<Screenshot[]> {
+    const params = new URLSearchParams();
+    if (typeof filters === 'string') {
+        params.append('date', filters);
+    } else if (filters) {
+        if (filters.startDate && filters.endDate) {
+            params.append('startDate', filters.startDate);
+            params.append('endDate', filters.endDate);
+        } else if (filters.date) {
+            params.append('date', filters.date);
+        }
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const url = `${BASE}/dashboard/screenshots/${userId}${queryString}`;
     const res = await fetch(url, { headers: getHeaders() });
     if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
     if (!res.ok) throw new Error('Failed to fetch screenshots');
     return res.json();
 }
 
-export async function fetchUserHistory(userId: string, date?: string) {
-    const url = date
-        ? `${BASE}/users/${userId}/history?date=${date}`
-        : `${BASE}/users/${userId}/history`;
+export async function fetchUserHistory(userId: string, filters?: { date?: string; startDate?: string; endDate?: string } | string) {
+    const params = new URLSearchParams();
+    if (typeof filters === 'string') {
+        params.append('date', filters);
+    } else if (filters) {
+        if (filters.startDate && filters.endDate) {
+            params.append('startDate', filters.startDate);
+            params.append('endDate', filters.endDate);
+        } else if (filters.date) {
+            params.append('date', filters.date);
+        }
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const url = `${BASE}/users/${userId}/history${queryString}`;
     const res = await fetch(url, { headers: getHeaders() });
     if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
     if (!res.ok) throw new Error('Failed to fetch history');
@@ -269,10 +300,15 @@ export async function fetchAllTasks(): Promise<Task[]> {
     return res.json();
 }
 
-export const fetchAllScreenshots = async (filters?: { userId?: string; date?: string }): Promise<(Screenshot & { user: { name: string; email: string } })[]> => {
+export const fetchAllScreenshots = async (filters?: { userId?: string; date?: string; startDate?: string; endDate?: string }): Promise<(Screenshot & { user: { name: string; email: string } })[]> => {
     const params = new URLSearchParams();
     if (filters?.userId && filters.userId !== 'ALL') params.append('userId', filters.userId);
-    if (filters?.date) params.append('date', filters.date);
+    if (filters?.startDate && filters?.endDate) {
+        params.append('startDate', filters.startDate);
+        params.append('endDate', filters.endDate);
+    } else if (filters?.date) {
+        params.append('date', filters.date);
+    }
 
     const token = localStorage.getItem('token');
     const res = await fetch(`${BASE}/dashboard/all-screenshots?${params.toString()}`, {
@@ -284,11 +320,22 @@ export const fetchAllScreenshots = async (filters?: { userId?: string; date?: st
     return res.json();
 };
 
-export const fetchUserTasks = async (userId: string, date?: string): Promise<Task[]> => {
+export const fetchUserTasks = async (userId: string, filters?: { date?: string; startDate?: string; endDate?: string } | string): Promise<Task[]> => {
     const token = localStorage.getItem('token');
-    const url = date
-        ? `${BASE}/tasks/user/${userId}?date=${date}`
-        : `${BASE}/tasks/user/${userId}`;
+    const params = new URLSearchParams();
+    if (typeof filters === 'string') {
+        params.append('date', filters);
+    } else if (filters) {
+        if (filters.startDate && filters.endDate) {
+            params.append('startDate', filters.startDate);
+            params.append('endDate', filters.endDate);
+        } else if (filters.date) {
+            params.append('date', filters.date);
+        }
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const url = `${BASE}/tasks/user/${userId}${queryString}`;
 
     const res = await fetch(url, {
         headers: {

@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
-import { type DashboardUser } from '../services/api'; // Reuse existing API
-import { Calendar, Clock, BarChart, AlertTriangle, Search } from 'lucide-react';
+import { type DashboardUser } from '../services/api';
+import { Clock, BarChart, AlertTriangle, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { DateFilterSelect } from '../components/ui/DateFilterSelect';
 
 const BASE_URL = 'https://track.gallerydigital.in/api';
 
@@ -37,13 +38,13 @@ export default function WorkHoursView() {
     const navigate = useNavigate();
     const [users, setUsers] = useState<UserWithLogs[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
     const [quickFilter, setQuickFilter] = useState<'ALL' | 'ABSENT' | 'LATE' | 'LOW_TIME' | 'OVER_WORKED' | 'CRITICAL'>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         loadData();
-    }, [selectedDate]);
+    }, [dateFilter]);
 
     const loadData = async () => {
         setLoading(true);
@@ -51,10 +52,11 @@ export default function WorkHoursView() {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            // Manual fetch to pass date param since api.ts wrapper might not support it yet
-            // Wait, api.ts `fetchDashboardUsers` does NOT take arguments usually.
-            // Let's assume I check api.ts or just use fetch directly.
-            const url = `${BASE_URL}/dashboard/users${selectedDate ? `?date=${selectedDate}` : ''}`;
+            const params = new URLSearchParams();
+            params.append('startDate', dateFilter.startDate);
+            params.append('endDate', dateFilter.endDate);
+
+            const url = `${BASE_URL}/dashboard/users?${params.toString()}`;
             const res = await fetch(url, {
                 headers: { Authorization: `Bearer ${token}` },
                 cache: 'no-store'
@@ -187,13 +189,10 @@ export default function WorkHoursView() {
                     </div>
 
                     {/* Date Filter */}
-                    <div className="relative shrink-0">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                        <input
-                            type="date"
-                            className="w-full sm:w-40 pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors cursor-pointer"
-                            value={selectedDate}
-                            onChange={(e) => setSelectedDate(e.target.value)}
+                    <div className="relative shrink-0 z-10 w-full sm:w-auto">
+                        <DateFilterSelect
+                            value={dateFilter}
+                            onChange={(val) => setDateFilter(val)}
                         />
                     </div>
                 </div>

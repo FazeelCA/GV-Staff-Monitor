@@ -25,9 +25,17 @@ function deriveStatus(latestType?: string, lastActiveAt?: Date): "Working" | "On
 // GET /api/dashboard/users
 router.get("/users", async (req: Request, res: Response) => {
     try {
-        const { date } = req.query as { date?: string };
+        const { date, startDate, endDate } = req.query as { date?: string; startDate?: string; endDate?: string };
         let today: Date, tomorrow: Date;
-        if (date) {
+
+        if (startDate && endDate) {
+            const startParts = startDate.split('-');
+            today = new Date(parseInt(startParts[0], 10), parseInt(startParts[1], 10) - 1, parseInt(startParts[2], 10));
+
+            const endParts = endDate.split('-');
+            tomorrow = new Date(parseInt(endParts[0], 10), parseInt(endParts[1], 10) - 1, parseInt(endParts[2], 10));
+            tomorrow.setDate(tomorrow.getDate() + 1);
+        } else if (date) {
             const parts = date.split('-');
             const year = parseInt(parts[0], 10);
             const month = parseInt(parts[1], 10) - 1;
@@ -115,7 +123,7 @@ router.get("/users", async (req: Request, res: Response) => {
 // GET /api/dashboard/all-screenshots
 router.get("/all-screenshots", async (req: Request, res: Response) => {
     try {
-        const { userId, date } = req.query as { userId?: string; date?: string };
+        const { userId, date, startDate, endDate } = req.query as { userId?: string; date?: string; startDate?: string; endDate?: string };
 
         const where: any = {};
 
@@ -123,7 +131,16 @@ router.get("/all-screenshots", async (req: Request, res: Response) => {
             where.userId = userId;
         }
 
-        if (date) {
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            where.timestamp = {
+                gte: start,
+                lte: end
+            };
+        } else if (date) {
             const queryDate = new Date(date);
             const nextDay = new Date(queryDate);
             nextDay.setDate(queryDate.getDate() + 1);
@@ -162,11 +179,20 @@ router.get("/all-screenshots", async (req: Request, res: Response) => {
 router.get("/screenshots/:userId", async (req: Request, res: Response) => {
     try {
         const { userId } = req.params as { userId: string };
-        const { date } = req.query as { date?: string };
+        const { date, startDate, endDate } = req.query as { date?: string; startDate?: string; endDate?: string };
 
         const where: any = { userId };
 
-        if (date) {
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            where.timestamp = {
+                gte: start,
+                lte: end
+            };
+        } else if (date) {
             const queryDate = new Date(date);
             const nextDay = new Date(queryDate);
             nextDay.setDate(queryDate.getDate() + 1);
