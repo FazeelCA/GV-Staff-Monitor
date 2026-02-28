@@ -36,7 +36,7 @@ jobs:
             npm install
             
             echo "Stopping PM2 backend service for SQLite schema update..."
-            pm2 stop gv-backend || true
+            pm2 stop gv-monitoring-backend || true
 
             echo "Generating Prisma client and pushing schema..."
             npx prisma generate || true
@@ -57,12 +57,12 @@ jobs:
             cp -r dist/* /var/www/workfolio/ || true
             
             echo "Restarting PM2 backend service..."
-            pm2 start gv-backend || pm2 restart gv-backend || true
+            pm2 start gv-monitoring-backend || pm2 restart gv-monitoring-backend || true
             
             echo "Committing PM2 logs for local debugging..."
             git checkout -b debug-logs || git checkout debug-logs
-            cp /root/.pm2/logs/gv-backend-error.log ./backend-error.log
-            cp /root/.pm2/logs/gv-backend-out.log ./backend-out.log
+            cp /root/.pm2/logs/gv-monitoring-backend-error.log ./backend-error.log
+            cp /root/.pm2/logs/gv-monitoring-backend-out.log ./backend-out.log
             git config --global user.email "deploy@gallerydigital.in"
             git config --global user.name "Deploy Action"
             git add -f backend-error.log backend-out.log
