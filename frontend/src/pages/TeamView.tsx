@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { fetchDashboardUsers, type DashboardUser, type UserStatus } from '../services/api';
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge, StatusDot } from '../components/ui/Badge';
@@ -111,6 +112,7 @@ export default function TeamView() {
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
     const [statusFilter, setStatusFilter] = useState<UserStatus | 'All' | 'Critical' | 'Late' | 'Absent'>('All');
     const [sortBy, setSortBy] = useState<'hours-asc' | 'hours-desc' | 'name-asc'>('name-asc');
+    const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
 
     const load = useCallback(async () => {
@@ -172,6 +174,14 @@ export default function TeamView() {
         filteredUsers = filteredUsers.filter((u) => u.status === statusFilter);
     }
 
+    if (searchQuery.trim() !== '') {
+        const query = searchQuery.toLowerCase();
+        filteredUsers = filteredUsers.filter((u) =>
+            u.name.toLowerCase().includes(query) ||
+            u.email.toLowerCase().includes(query)
+        );
+    }
+
     const exportToCSV = () => {
         const headers = ["Name", "Email", "Role", "Status", "Current Task", "Hours Today"];
         const rows = filteredUsers.map(u => [
@@ -223,6 +233,17 @@ export default function TeamView() {
                             Clear Filter
                         </button>
                     )}
+
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 h-4 w-4" />
+                        <input
+                            type="text"
+                            placeholder="Search team..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full sm:w-64 appearance-none bg-black/20 border border-white/10 hover:border-white/20 rounded-xl pl-10 pr-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:border-primary/50 transition-all placeholder:text-muted-foreground/50"
+                        />
+                    </div>
 
                     <div className="relative">
                         <select
