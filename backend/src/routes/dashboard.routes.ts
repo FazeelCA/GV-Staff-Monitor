@@ -123,7 +123,10 @@ router.get("/users", async (req: Request, res: Response) => {
 // GET /api/dashboard/all-screenshots
 router.get("/all-screenshots", async (req: Request, res: Response) => {
     try {
-        const { userId, date, startDate, endDate } = req.query as { userId?: string; date?: string; startDate?: string; endDate?: string };
+        const { userId, date, startDate, endDate, page, limit } = req.query as any;
+        const pageNum = parseInt(page as string) || 1;
+        const limitNum = parseInt(limit as string) || 20;
+        const skip = (pageNum - 1) * limitNum;
 
         const where: any = {};
 
@@ -164,7 +167,9 @@ router.get("/all-screenshots", async (req: Request, res: Response) => {
                     select: { name: true, email: true }
                 }
             },
-            orderBy: { timestamp: "desc" }
+            orderBy: { timestamp: "desc" },
+            skip,
+            take: limitNum,
         });
 
         res.json(screenshots);
@@ -178,7 +183,10 @@ router.get("/all-screenshots", async (req: Request, res: Response) => {
 router.get("/screenshots/:userId", async (req: Request, res: Response) => {
     try {
         const { userId } = req.params as { userId: string };
-        const { date, startDate, endDate } = req.query as { date?: string; startDate?: string; endDate?: string };
+        const { date, startDate, endDate, page, limit } = req.query as any;
+        const pageNum = parseInt(page as string) || 1;
+        const limitNum = parseInt(limit as string) || 20;
+        const skip = (pageNum - 1) * limitNum;
 
         const where: any = { userId };
 
@@ -215,6 +223,8 @@ router.get("/screenshots/:userId", async (req: Request, res: Response) => {
         const screenshots = await prisma.screenshot.findMany({
             where,
             orderBy: { timestamp: "asc" },
+            skip,
+            take: limitNum,
         });
 
         res.json(screenshots);

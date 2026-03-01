@@ -40,7 +40,9 @@ export default function ScreenshotsView() {
     const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: initialDate, endDate: initialDate });
     const [activityFilter, setActivityFilter] = useState<'All' | 'Low Activity'>('All');
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = currentUser?.role === 'ADMIN';
 
@@ -56,30 +58,49 @@ export default function ScreenshotsView() {
     };
 
     useEffect(() => {
-        loadData();
-        setCurrentPage(1);
+        setPage(1);
+        setHasMore(true);
+        loadData(1);
     }, [selectedUser, dateFilter]);
 
     useEffect(() => {
-        setCurrentPage(1);
+        // Just keeping activityFilter local for now, but resetting page might be weird if we don't refetch
+        // Let's refetch on activity filter change too for consistency, or just let local filter work.
+        // Let's just reset page and refetch.
+        setPage(1);
+        setHasMore(true);
     }, [activityFilter]);
 
-    const loadData = async () => {
-        setLoading(true);
+    const loadData = async (pageNum = page) => {
+        if (pageNum === 1) setLoading(true);
+        else setLoadingMore(true);
         try {
             const [shotsData, usersData] = await Promise.all([
-                fetchAllScreenshots({ userId: selectedUser, startDate: dateFilter.startDate, endDate: dateFilter.endDate }),
-                // Only fetch users once if possible, but for simplicity fetching every time or use cached?
-                // Let's optimize: fetch users only once on mount.
+                fetchAllScreenshots({ userId: selectedUser, startDate: dateFilter.startDate, endDate: dateFilter.endDate, page: pageNum, limit: 20 }),
                 users.length === 0 ? fetchDashboardUsers() : Promise.resolve(users),
             ]);
 
-            setScreenshots(shotsData);
+            if (pageNum === 1) {
+                setScreenshots(shotsData as any);
+            } else {
+                setScreenshots(prev => [...prev, ...(shotsData as any)]);
+            }
+            setHasMore(shotsData.length === 20);
+
             if (users.length === 0) setUsers(usersData as DashboardUser[]);
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
+        }
+    };
+
+    const handleLoadMore = () => {
+        if (!loadingMore && hasMore) {
+            const nextPage = page + 1;
+            setPage(nextPage);
+            loadData(nextPage);
         }
     };
 
@@ -118,11 +139,10 @@ export default function ScreenshotsView() {
         setSearchParams(searchParams);
         setSelectedUser('ALL');
         setDateFilter({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
-        setCurrentPage(1);
+        setActivityFilter('All');
+        setPage(1);
+        setHasMore(true);
     };
-
-    const totalPages = Math.ceil(displayedScreenshots.length / 100);
-    const paginatedScreenshots = displayedScreenshots.slice((currentPage - 1) * 100, currentPage * 100);
 
     return (
         <div className="space-y-8">
@@ -209,16 +229,16 @@ export default function ScreenshotsView() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {paginatedScreenshots.map((shot, idx) => (
+                            {displayedScreenshots.map((shot, idx) => (
                                 <GlassCard
-                                    key={shot.id}
+                                    key={`${shot.id}-${idx}`}
                                     className={`group p-0 overflow-hidden relative aspect-video transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 cursor-pointer ${shot.isStatic ? 'ring-2 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : shot.isLowActivity ? 'ring-2 ring-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]' : ''}`}
                                     onClick={() => setLightboxIdx(idx)}
                                 >
                                     <img
-                                        src={shot.imageUrl}
+                                        src={shot.thumbnailUrl || shot.imageUrl}
                                         alt={shot.taskAtTheTime || 'Screenshot'}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 bg-black/20"
                                         loading="lazy"
                                     />
 
@@ -274,24 +294,21 @@ export default function ScreenshotsView() {
                         </div>
                     )}
 
-                    {totalPages > 1 && (
-                        <div className="flex justify-center items-center gap-4 mt-8">
+                    {hasMore && (
+                        <div className="flex justify-center mt-8">
                             <button
-                                disabled={currentPage === 1}
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                                onClick={handleLoadMore}
+                                disabled={loadingMore}
+                                className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-2 text-sm text-foreground disabled:opacity-50"
                             >
-                                <ChevronLeft size={16} /> Previous
-                            </button>
-                            <span className="text-sm font-medium text-foreground bg-white/5 px-4 py-2 rounded-xl border border-white/10">
-                                Page {currentPage} of {totalPages}
-                            </span>
-                            <button
-                                disabled={currentPage === totalPages}
-                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
-                            >
-                                Next <ChevronRight size={16} />
+                                {loadingMore ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                        Loading...
+                                    </>
+                                ) : (
+                                    'Load More'
+                                )}
                             </button>
                         </div>
                     )}
@@ -299,18 +316,18 @@ export default function ScreenshotsView() {
             )}
 
             {/* Lightbox */}
-            {lightboxIdx !== null && paginatedScreenshots[lightboxIdx] && (
+            {lightboxIdx !== null && displayedScreenshots[lightboxIdx] && (
                 <Lightbox
-                    screenshot={paginatedScreenshots[lightboxIdx]}
+                    screenshot={displayedScreenshots[lightboxIdx]}
                     onClose={() => setLightboxIdx(null)}
                     onPrev={() => setLightboxIdx(i => (i !== null && i > 0 ? i - 1 : null))}
-                    onNext={() => setLightboxIdx(i => (i !== null && i < paginatedScreenshots.length - 1 ? i + 1 : null))}
+                    onNext={() => setLightboxIdx(i => (i !== null && i < displayedScreenshots.length - 1 ? i + 1 : null))}
                     onDelete={(id) => {
                         handleDeleteScreenshot({ stopPropagation: () => { } } as any, id);
                         setLightboxIdx(null);
                     }}
                     hasPrev={lightboxIdx > 0}
-                    hasNext={lightboxIdx < paginatedScreenshots.length - 1}
+                    hasNext={lightboxIdx < displayedScreenshots.length - 1}
                 />
             )}
         </div>

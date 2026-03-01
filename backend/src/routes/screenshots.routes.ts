@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { uploadFile, deleteFile } from "../lib/storage";
 import { authenticateToken } from "../middleware/authenticate";
+import sharp from "sharp";
 
 const router = Router();
 
@@ -56,10 +57,23 @@ router.post("/upload", async (req: Request, res: Response) => {
             }
 
             const imageUrl = await uploadFile(imageBuffer, "screen.jpg", "image/jpeg");
+
+            let thumbnailUrl = null;
+            try {
+                const thumbnailBuffer = await sharp(imageBuffer)
+                    .resize({ width: 400 })
+                    .jpeg({ quality: 60 })
+                    .toBuffer();
+                thumbnailUrl = await uploadFile(thumbnailBuffer, "thumb.jpg", "image/jpeg");
+            } catch (thumbErr) {
+                console.error("[SHARP ERROR] Failed to generate thumbnail:", thumbErr);
+            }
+
             const screenshot = await prisma.screenshot.create({
                 data: {
                     userId,
                     imageUrl,
+                    thumbnailUrl,
                     hash: findText("hash"),
                     activityCount: parseInt(findText("activityCount"), 10) || 0,
                     taskAtTheTime: findText("taskAtTheTime"),

@@ -49,10 +49,13 @@ model Screenshot {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   imageUrl      String
+  thumbnailUrl  String?
   hash          String?  @default("")
   activityCount Int?     @default(0)
   taskAtTheTime String   @default("")
   timestamp     DateTime @default(now())
+
+  @@index([userId, timestamp(sort: Desc)])
 }
 
 model Task {

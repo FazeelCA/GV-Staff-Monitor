@@ -35,6 +35,8 @@ export default function UserDetailView() {
 
     // Pagination for Screenshots & Websites
     const [screenshotsPage, setScreenshotsPage] = useState(1);
+    const [screenshotsHasMore, setScreenshotsHasMore] = useState(true);
+    const [loadingMoreScreenshots, setLoadingMoreScreenshots] = useState(false);
     const [websitesPage, setWebsitesPage] = useState(1);
 
     // Pagination and Filtering for timeline
@@ -157,44 +159,71 @@ export default function UserDetailView() {
         }
     };
 
+    const loadScreenshotsPage = async (page: number) => {
+        if (!userId) return;
+        if (page > 1) setLoadingMoreScreenshots(true);
+        try {
+            const shots = await fetchUserScreenshots(userId, { ...dateFilter, page, limit: 20 });
+            if (page === 1) {
+                setScreenshots(shots);
+            } else {
+                setScreenshots(prev => {
+                    const existingIds = new Set(prev.map(s => s.id));
+                    const nextShots = shots.filter(s => !existingIds.has(s.id));
+                    return [...prev, ...nextShots];
+                });
+            }
+            setScreenshotsHasMore(shots.length === 20);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoadingMoreScreenshots(false);
+        }
+    };
+
     const load = useCallback(async () => {
         if (!userId) return;
         try {
-            const [shots, users, userTasks, hist] = await Promise.all([
-                fetchUserScreenshots(userId, dateFilter),
+            loadScreenshotsPage(1);
+            const [users, userTasks, hist] = await Promise.all([
                 fetchDashboardUsers(),
                 fetchUserTasks(userId, dateFilter),
                 fetchUserHistory(userId, dateFilter)
             ]);
-            setScreenshots(shots);
             setUser(users.find((u) => u.id === userId) ?? null);
             setTasks(userTasks);
 
-            // Build Timeline Events
             const events: any[] = [];
             hist.timeLogs.forEach((l: any) => events.push({ time: new Date(l.timestamp).getTime(), type: 'TIME_LOG', data: l }));
             hist.screenshots.forEach((s: any) => events.push({ time: new Date(s.timestamp).getTime(), type: 'SCREENSHOT', data: s }));
             hist.activityLogs.forEach((a: any) => events.push({ time: new Date(a.startTime).getTime(), type: 'ACTIVITY', data: a }));
-            events.sort((a, b) => b.time - a.time); // Newest first
+            events.sort((a, b) => b.time - a.time);
             setTimelineEvents(events);
-
             setActivityLogs(hist.activityLogs || []);
-
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
-            setScreenshotsPage(1);
             setWebsitesPage(1);
         }
     }, [userId, dateFilter]);
 
     // Load data
     useEffect(() => {
+        setScreenshotsPage(1);
+        setScreenshotsHasMore(true);
         load();
         const interval = setInterval(load, 30_000);
         return () => clearInterval(interval);
     }, [load]);
+
+    const handleLoadMoreScreenshots = () => {
+        if (!loadingMoreScreenshots && screenshotsHasMore) {
+            const next = screenshotsPage + 1;
+            setScreenshotsPage(next);
+            loadScreenshotsPage(next);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -438,15 +467,12 @@ export default function UserDetailView() {
             {!loading && screenshots.length > 0 && (
                 <>
                     {(() => {
-                        const totalScreenshotPages = Math.ceil(screenshots.length / 100);
-                        const paginatedScreenshots = screenshots.slice((screenshotsPage - 1) * 100, screenshotsPage * 100);
-
                         return (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {paginatedScreenshots.map((shot, idx) => {
+                                    {screenshots.map((shot, idx) => {
                                         // UserDetail API sorts ASC, so idx - 1 is the older screenshot it should be compared to
-                                        const prevShot = idx > 0 ? paginatedScreenshots[idx - 1] : null;
+                                        const prevShot = idx > 0 ? screenshots[idx - 1] : null;
                                         const isStatic = shot.hash && prevShot?.hash && shot.hash === prevShot.hash;
                                         const isLowActivity = shot.activityCount !== undefined && shot.activityCount < 50;
 
@@ -457,9 +483,10 @@ export default function UserDetailView() {
                                                 onClick={() => setLightboxIdx(idx)}
                                             >
                                                 <img
-                                                    src={shot.imageUrl}
+                                                    src={shot.thumbnailUrl || shot.imageUrl}
                                                     alt={shot.taskAtTheTime || 'Screenshot'}
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 bg-black/20"
+                                                    loading="lazy"
                                                 />
 
                                                 {isStatic ? (
@@ -503,24 +530,21 @@ export default function UserDetailView() {
                                         )
                                     })}
                                 </div>
-                                {totalScreenshotPages > 1 && (
-                                    <div className="flex justify-center items-center gap-4 py-4 mt-8">
+                                {screenshotsHasMore && (
+                                    <div className="flex justify-center mt-8">
                                         <button
-                                            disabled={screenshotsPage === 1}
-                                            onClick={() => setScreenshotsPage(prev => Math.max(1, prev - 1))}
-                                            className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                                            onClick={handleLoadMoreScreenshots}
+                                            disabled={loadingMoreScreenshots}
+                                            className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-2 text-sm text-foreground disabled:opacity-50"
                                         >
-                                            <ChevronLeft size={16} /> Previous
-                                        </button>
-                                        <span className="text-sm font-medium text-foreground bg-white/5 px-4 py-2 rounded-xl border border-white/10">
-                                            Page {screenshotsPage} of {totalScreenshotPages}
-                                        </span>
-                                        <button
-                                            disabled={screenshotsPage === totalScreenshotPages}
-                                            onClick={() => setScreenshotsPage(prev => Math.min(totalScreenshotPages, prev + 1))}
-                                            className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
-                                        >
-                                            Next <ChevronRight size={16} />
+                                            {loadingMoreScreenshots ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                                    Loading...
+                                                </>
+                                            ) : (
+                                                'Load More'
+                                            )}
                                         </button>
                                     </div>
                                 )}
