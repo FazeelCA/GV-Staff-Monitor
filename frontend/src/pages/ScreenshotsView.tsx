@@ -4,7 +4,7 @@ import { fetchAllScreenshots, fetchDashboardUsers, deleteScreenshot, type Screen
 import { GlassCard, SkeletonGlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
-import { Monitor, Clock, Filter, AlertTriangle, Trash2, Activity, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Monitor, Clock, Filter, AlertTriangle, Trash2, Activity, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 type ScreenshotWithUser = Screenshot & { user: { name: string; email: string }; hash?: string };
