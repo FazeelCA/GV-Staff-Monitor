@@ -61,15 +61,7 @@ export default function ScreenshotsView() {
         setPage(1);
         setHasMore(true);
         loadData(1);
-    }, [selectedUser, dateFilter]);
-
-    useEffect(() => {
-        // Just keeping activityFilter local for now, but resetting page might be weird if we don't refetch
-        // Let's refetch on activity filter change too for consistency, or just let local filter work.
-        // Let's just reset page and refetch.
-        setPage(1);
-        setHasMore(true);
-    }, [activityFilter]);
+    }, [selectedUser, dateFilter, activityFilter]);
 
     const loadData = async (pageNum = page) => {
         if (pageNum === 1) setLoading(true);
