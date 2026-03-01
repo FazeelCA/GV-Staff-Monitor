@@ -4,7 +4,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { fetchDashboardUsers, type DashboardUser } from '../services/api';
-import { Globe, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { DateFilterSelect } from '../components/ui/DateFilterSelect';
@@ -42,7 +42,7 @@ export default function WebsitesView() {
     const [selectedUser, setSelectedUser] = useState<string>('ALL');
     const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
     const [filterUnproductive, setFilterUnproductive] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [visibleCount, setVisibleCount] = useState(20);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -55,11 +55,11 @@ export default function WebsitesView() {
 
     useEffect(() => {
         loadActivities();
-        setCurrentPage(1);
+        setVisibleCount(20);
     }, [selectedUser, dateFilter]);
 
     useEffect(() => {
-        setCurrentPage(1);
+        setVisibleCount(20);
     }, [filterUnproductive]);
 
     const loadActivities = async () => {
@@ -169,8 +169,8 @@ export default function WebsitesView() {
     }, [activities, filterUnproductive]);
 
     const filteredActivities = activities.filter(log => filterUnproductive ? isUnproductive(log) : true);
-    const totalPages = Math.ceil(filteredActivities.length / 100);
-    const paginatedActivities = filteredActivities.slice((currentPage - 1) * 100, currentPage * 100);
+    const hasMore = visibleCount < filteredActivities.length;
+    const paginatedActivities = filteredActivities.slice(0, visibleCount);
 
     return (
         <div className="space-y-8">
@@ -352,24 +352,13 @@ export default function WebsitesView() {
                 </div>
             </GlassCard>
 
-            {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-4 py-4 mt-8">
+            {hasMore && (
+                <div className="flex justify-center mt-6 py-4">
                     <button
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                        onClick={() => setVisibleCount(prev => prev + 20)}
+                        className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-sm text-foreground active:scale-95"
                     >
-                        <ChevronLeft size={16} /> Previous
-                    </button>
-                    <span className="text-sm font-medium text-foreground bg-white/5 px-4 py-2 rounded-xl border border-white/10">
-                        Page {currentPage} of {totalPages}
-                    </span>
-                    <button
-                        disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
-                    >
-                        Next <ChevronRight size={16} />
+                        Load More
                     </button>
                 </div>
             )}

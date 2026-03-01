@@ -41,6 +41,11 @@ export default function WorkHoursView() {
     const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
     const [quickFilter, setQuickFilter] = useState<'ALL' | 'ABSENT' | 'LATE' | 'LOW_TIME' | 'OVER_WORKED' | 'CRITICAL'>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
+    const [visibleCount, setVisibleCount] = useState(20);
+
+    useEffect(() => {
+        setVisibleCount(20);
+    }, [quickFilter, searchQuery, dateFilter]);
 
     useEffect(() => {
         loadData();
@@ -240,7 +245,7 @@ export default function WorkHoursView() {
                 ) : filteredUsers.length === 0 ? (
                     <div className="col-span-full text-center p-12 text-muted-foreground">No records found.</div>
                 ) : (
-                    filteredUsers.map(user => {
+                    filteredUsers.slice(0, visibleCount).map(user => {
                         const h = Math.floor(user.totalTimeMs / 3600000);
                         const m = Math.floor((user.totalTimeMs % 3600000) / 60000);
                         const totalTimeStr = `${h}h ${m}m`;
@@ -294,6 +299,17 @@ export default function WorkHoursView() {
                     })
                 )}
             </div>
+
+            {visibleCount < filteredUsers.length && (
+                <div className="flex justify-center mt-6 py-4">
+                    <button
+                        onClick={() => setVisibleCount(prev => prev + 20)}
+                        className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-sm text-foreground active:scale-95"
+                    >
+                        Load More
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

@@ -12,7 +12,12 @@ export default function UsersView() {
     const [showModal, setShowModal] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [visibleCount, setVisibleCount] = useState(20);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        setVisibleCount(20);
+    }, [searchQuery]);
 
     // Form state
     const [newName, setNewName] = useState('');
@@ -73,6 +78,11 @@ export default function UsersView() {
         }
     };
 
+    const filteredUsers = users.filter(user =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -120,10 +130,7 @@ export default function UsersView() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {users.filter(user =>
-                        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        user.email.toLowerCase().includes(searchQuery.toLowerCase())
-                    ).map(user => (
+                    {filteredUsers.slice(0, visibleCount).map(user => (
                         <GlassCard
                             key={user.id}
                             className="group hover:border-primary/30 transition-all duration-300 cursor-pointer"
@@ -174,6 +181,17 @@ export default function UsersView() {
                             </div>
                         </GlassCard>
                     ))}
+                </div>
+            )}
+
+            {!loading && visibleCount < filteredUsers.length && (
+                <div className="flex justify-center mt-6 py-4">
+                    <button
+                        onClick={() => setVisibleCount(prev => prev + 20)}
+                        className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-sm text-foreground active:scale-95"
+                    >
+                        Load More
+                    </button>
                 </div>
             )}
 

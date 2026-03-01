@@ -11,7 +11,12 @@ export default function TasksView() {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'>('ALL');
     const [search, setSearch] = useState('');
+    const [visibleCount, setVisibleCount] = useState(20);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        setVisibleCount(20);
+    }, [filter, search]);
 
     useEffect(() => {
         loadTasks();
@@ -92,7 +97,7 @@ export default function TasksView() {
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {filteredTasks.map(task => (
+                    {filteredTasks.slice(0, visibleCount).map(task => (
                         <GlassCard
                             key={task.id}
                             className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:border-primary/30 transition-all hover:bg-white/[0.02] cursor-pointer"
@@ -140,6 +145,17 @@ export default function TasksView() {
                             </Badge>
                         </GlassCard>
                     ))}
+
+                    {visibleCount < filteredTasks.length && (
+                        <div className="flex justify-center mt-6 py-4">
+                            <button
+                                onClick={() => setVisibleCount(prev => prev + 20)}
+                                className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-sm text-foreground active:scale-95"
+                            >
+                                Load More
+                            </button>
+                        </div>
+                    )}
 
                     {filteredTasks.length === 0 && (
                         <div className="text-center py-20 text-muted-foreground">
