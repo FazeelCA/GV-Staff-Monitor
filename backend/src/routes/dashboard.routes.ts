@@ -135,7 +135,10 @@ router.get("/all-screenshots", async (req: Request, res: Response) => {
         }
 
         if (activityFilter === 'Low Activity') {
-            where.activityCount = { lt: 50 };
+            where.OR = [
+                { activityCount: { lt: 50 } },
+                { activityCount: null }
+            ];
         }
 
         if (startDate && endDate) {
