@@ -212,7 +212,8 @@ router.get("/:id/history", requireAdmin, async (req: Request, res: Response) => 
             }),
             prisma.screenshot.findMany({
                 where: { userId: id, timestamp: { gte: startOfDay, lt: endOfDay } },
-                orderBy: { timestamp: "asc" }
+                orderBy: { timestamp: "asc" },
+                select: { id: true, userId: true, timestamp: true, thumbnailUrl: true, taskAtTheTime: true }
             }),
             prisma.activityLog.findMany({
                 where: { userId: id, startTime: { gte: startOfDay, lt: endOfDay } },

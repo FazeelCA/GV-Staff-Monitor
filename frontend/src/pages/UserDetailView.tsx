@@ -33,11 +33,12 @@ export default function UserDetailView() {
     };
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
-    // Pagination for Screenshots & Websites
+    // Pagination for Screenshots & Websites & Tasks
     const [screenshotsPage, setScreenshotsPage] = useState(1);
     const [screenshotsHasMore, setScreenshotsHasMore] = useState(true);
     const [loadingMoreScreenshots, setLoadingMoreScreenshots] = useState(false);
     const [websitesPage, setWebsitesPage] = useState(1);
+    const [tasksPage, setTasksPage] = useState(1);
 
     // Pagination and Filtering for timeline
     const [timelinePage, setTimelinePage] = useState(1);
@@ -205,6 +206,7 @@ export default function UserDetailView() {
         } finally {
             setLoading(false);
             setWebsitesPage(1);
+            setTasksPage(1);
         }
     }, [userId, dateFilter]);
 
@@ -623,7 +625,7 @@ export default function UserDetailView() {
 
                                         {ev.type === 'SCREENSHOT' && (
                                             <div className="space-y-2 cursor-zoom-in" onClick={() => setLightboxIdx(screenshots.findIndex(s => s.id === ev.data.id))}>
-                                                <img src={ev.data.imageUrl} className="w-full h-24 object-cover rounded-lg border border-white/10 hover:border-primary/50 transition-colors" />
+                                                <img src={ev.data.thumbnailUrl || ev.data.imageUrl} loading="lazy" className="w-full h-24 object-cover rounded-lg border border-white/10 hover:border-primary/50 transition-colors" />
                                                 <p className="text-xs text-muted-foreground line-clamp-1">{ev.data.taskAtTheTime}</p>
                                             </div>
                                         )}
@@ -669,29 +671,59 @@ export default function UserDetailView() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {tasks?.map(task => (
-                            <GlassCard
-                                key={task.id}
-                                className="flex items-center justify-between p-4"
-                            >
-                                <div>
-                                    <h3 className="font-medium text-foreground">{task.title || 'Untitled Task'}</h3>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {task.createdAt ? new Date(task.createdAt).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'Date unknown'}
-                                    </p>
-                                </div>
-                                {task.status && task.status !== 'UNKNOWN' && (
-                                    <Badge variant={task.status === 'COMPLETED' ? 'success' : task.status === 'IN_PROGRESS' ? 'warning' : 'outline'}>
-                                        {task.status.replace('_', ' ')}
-                                    </Badge>
-                                )}
-                            </GlassCard>
-                        ))}
-                        {(!tasks || tasks.length === 0) && (
-                            <div className="text-center py-8 text-muted-foreground bg-white/5 rounded-xl border border-white/5">
-                                No tasks recorded.
-                            </div>
-                        )}
+                        {(() => {
+                            const totalTasksPages = Math.ceil((tasks?.length || 0) / 20);
+                            const paginatedTasks = tasks?.slice((tasksPage - 1) * 20, tasksPage * 20) || [];
+
+                            return (
+                                <>
+                                    {paginatedTasks.map(task => (
+                                        <GlassCard
+                                            key={task.id}
+                                            className="flex items-center justify-between p-4"
+                                        >
+                                            <div>
+                                                <h3 className="font-medium text-foreground">{task.title || 'Untitled Task'}</h3>
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    {task.createdAt ? new Date(task.createdAt).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'Date unknown'}
+                                                </p>
+                                            </div>
+                                            {task.status && task.status !== 'UNKNOWN' && (
+                                                <Badge variant={task.status === 'COMPLETED' ? 'success' : task.status === 'IN_PROGRESS' ? 'warning' : 'outline'}>
+                                                    {task.status.replace('_', ' ')}
+                                                </Badge>
+                                            )}
+                                        </GlassCard>
+                                    ))}
+                                    {(!tasks || tasks.length === 0) && (
+                                        <div className="text-center py-8 text-muted-foreground bg-white/5 rounded-xl border border-white/5">
+                                            No tasks recorded.
+                                        </div>
+                                    )}
+                                    {totalTasksPages > 1 && (
+                                        <div className="flex justify-center items-center gap-4 py-4 mt-4">
+                                            <button
+                                                disabled={tasksPage === 1}
+                                                onClick={() => setTasksPage(prev => Math.max(1, prev - 1))}
+                                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                                            >
+                                                <ChevronLeft size={16} /> Previous
+                                            </button>
+                                            <span className="text-sm font-medium text-foreground bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+                                                Page {tasksPage} of {totalTasksPages}
+                                            </span>
+                                            <button
+                                                disabled={tasksPage === totalTasksPages}
+                                                onClick={() => setTasksPage(prev => Math.min(totalTasksPages, prev + 1))}
+                                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl disabled:opacity-50 hover:bg-white/10 transition-colors flex items-center gap-2 text-sm"
+                                            >
+                                                Next <ChevronRight size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
+                            )
+                        })()}
                     </div>
                 )}
             </div>
@@ -717,8 +749,8 @@ export default function UserDetailView() {
                     <div className="space-y-3">
                         {(() => {
                             const filteredActivities = activityLogs.filter(log => filterUnproductive ? isUnproductive(log) : true);
-                            const totalWebsitesPages = Math.ceil(filteredActivities.length / 100);
-                            const paginatedWebsites = filteredActivities.slice((websitesPage - 1) * 100, websitesPage * 100);
+                            const totalWebsitesPages = Math.ceil(filteredActivities.length / 20);
+                            const paginatedWebsites = filteredActivities.slice((websitesPage - 1) * 20, websitesPage * 20);
 
                             return (
                                 <>
