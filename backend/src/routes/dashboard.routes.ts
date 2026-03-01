@@ -123,7 +123,7 @@ router.get("/users", async (req: Request, res: Response) => {
 // GET /api/dashboard/all-screenshots
 router.get("/all-screenshots", async (req: Request, res: Response) => {
     try {
-        const { userId, date, startDate, endDate, page, limit } = req.query as any;
+        const { userId, date, startDate, endDate, page, limit, activityFilter } = req.query as any;
         const pageNum = parseInt(page as string) || 1;
         const limitNum = parseInt(limit as string) || 20;
         const skip = (pageNum - 1) * limitNum;
@@ -132,6 +132,10 @@ router.get("/all-screenshots", async (req: Request, res: Response) => {
 
         if (userId && userId !== 'ALL') {
             where.userId = userId;
+        }
+
+        if (activityFilter === 'Low Activity') {
+            where.activityCount = { lt: 50 };
         }
 
         if (startDate && endDate) {

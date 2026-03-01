@@ -303,7 +303,7 @@ export async function fetchAllTasks(): Promise<Task[]> {
     return res.json();
 }
 
-export const fetchAllScreenshots = async (filters?: { userId?: string; date?: string; startDate?: string; endDate?: string; page?: number; limit?: number }): Promise<(Screenshot & { user: { name: string; email: string } })[]> => {
+export const fetchAllScreenshots = async (filters?: { userId?: string; date?: string; startDate?: string; endDate?: string; page?: number; limit?: number; activityFilter?: 'All' | 'Low Activity' }): Promise<(Screenshot & { user: { name: string; email: string } })[]> => {
     const params = new URLSearchParams();
     if (filters?.userId && filters.userId !== 'ALL') params.append('userId', filters.userId);
     if (filters?.startDate && filters?.endDate) {
@@ -314,6 +314,7 @@ export const fetchAllScreenshots = async (filters?: { userId?: string; date?: st
     }
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.activityFilter && filters.activityFilter !== 'All') params.append('activityFilter', filters.activityFilter);
 
     const token = localStorage.getItem('token');
     const res = await fetch(`${BASE}/dashboard/all-screenshots?${params.toString()}`, {

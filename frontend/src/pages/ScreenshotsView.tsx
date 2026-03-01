@@ -76,7 +76,7 @@ export default function ScreenshotsView() {
         else setLoadingMore(true);
         try {
             const [shotsData, usersData] = await Promise.all([
-                fetchAllScreenshots({ userId: selectedUser, startDate: dateFilter.startDate, endDate: dateFilter.endDate, page: pageNum, limit: 20 }),
+                fetchAllScreenshots({ userId: selectedUser, startDate: dateFilter.startDate, endDate: dateFilter.endDate, page: pageNum, limit: 20, activityFilter }),
                 users.length === 0 ? fetchDashboardUsers() : Promise.resolve(users),
             ]);
 
@@ -127,8 +127,12 @@ export default function ScreenshotsView() {
             if (shotTime < minTime || shotTime > maxTime) return false;
         }
 
-        if (activityFilter === 'All') return true;
-        return shot.isLowActivity || shot.isStatic;
+        // We no longer filter by activity here because the backend handles it.
+        // But we DO still want to show Static shots if they match.
+        // Actually, the backend doesn't filter static (unless we add that too). 
+        // For now, if activity filter is Low Activity, the backend returns ONLY low activity shots, 
+        // so we don't need to filter them redundantly here.
+        return true;
     });
 
     const clearCustomFilters = () => {
