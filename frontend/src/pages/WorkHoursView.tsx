@@ -39,7 +39,7 @@ export default function WorkHoursView() {
     const [users, setUsers] = useState<UserWithLogs[]>([]);
     const [loading, setLoading] = useState(true);
     const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
-    const [quickFilter, setQuickFilter] = useState<'ALL' | 'ABSENT' | 'LATE' | 'LOW_TIME' | 'OVER_WORKED' | 'CRITICAL'>('ALL');
+    const [quickFilter, setQuickFilter] = useState<'ALL' | 'ABSENT' | 'LATE' | 'LOW_TIME' | 'OVER_WORKED' | 'CRITICAL' | 'HIGH_TO_LOW'>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
     const [visibleCount, setVisibleCount] = useState(20);
 
@@ -104,7 +104,10 @@ export default function WorkHoursView() {
 
         return {
             ...user,
-            totalTimeMs,
+            totalTimeMs: user.totalCheckedInHoursToday !== undefined ? user.totalCheckedInHoursToday * 3600000 : totalTimeMs,
+            workedMs: user.totalWorkedHoursToday !== undefined ? user.totalWorkedHoursToday * 3600000 : totalTimeMs,
+            checkedInHours: user.totalCheckedInHoursToday !== undefined ? user.totalCheckedInHoursToday : hours,
+            workedHours: user.totalWorkedHoursToday !== undefined ? user.totalWorkedHoursToday : hours,
             hours,
             firstLog: { timestamp: user.firstStartTime },
             isAbsent,
@@ -130,9 +133,14 @@ export default function WorkHoursView() {
         if (quickFilter === 'LOW_TIME') return user.isLowTime;
         if (quickFilter === 'OVER_WORKED') return user.isOverWorked;
         if (quickFilter === 'CRITICAL') return user.isCritical;
+        if (quickFilter === 'HIGH_TO_LOW') return true;
 
         return true;
     });
+
+    if (quickFilter === 'HIGH_TO_LOW') {
+        filteredUsers.sort((a, b) => b.workedHours - a.workedHours);
+    }
 
     return (
         <div className="space-y-8">
@@ -178,6 +186,12 @@ export default function WorkHoursView() {
                             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${quickFilter === 'CRITICAL' ? 'bg-rose-600 text-white shadow flex items-center gap-1' : 'text-muted-foreground hover:text-foreground flex items-center gap-1'}`}
                         >
                             <AlertTriangle size={12} /> Critical
+                        </button>
+                        <button
+                            onClick={() => setQuickFilter('HIGH_TO_LOW')}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${quickFilter === 'HIGH_TO_LOW' ? 'bg-indigo-500 text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            High to Low Hrs
                         </button>
                     </div>
 
@@ -249,6 +263,11 @@ export default function WorkHoursView() {
                         const h = Math.floor(user.totalTimeMs / 3600000);
                         const m = Math.floor((user.totalTimeMs % 3600000) / 60000);
                         const totalTimeStr = `${h}h ${m}m`;
+
+                        const wh = Math.floor(user.workedMs / 3600000);
+                        const wm = Math.floor((user.workedMs % 3600000) / 60000);
+                        const workedTimeStr = `${wh}h ${wm}m`;
+
                         const startTime = user.firstLog ? new Date(user.firstLog.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '-';
 
                         return (
@@ -268,8 +287,11 @@ export default function WorkHoursView() {
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1">
-                                        <Badge variant="glass" className="bg-primary/10 text-primary border-primary/20">
-                                            {totalTimeStr}
+                                        <Badge variant="glass" className="bg-primary/10 text-primary border-primary/20 text-[10px]" title="Worked Hours">
+                                            {workedTimeStr} (Worked)
+                                        </Badge>
+                                        <Badge variant="glass" className="bg-white/5 text-muted-foreground border-white/10 text-[10px]" title="Checked In Hours">
+                                            {totalTimeStr} (Checked In)
                                         </Badge>
                                         {user.isAbsent && <Badge variant="glass" className="bg-red-500/10 text-red-400 border-red-500/20 text-[10px]">Absent</Badge>}
                                         {user.isLate && !user.isAbsent && <Badge variant="glass" className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px]">Late Checkin</Badge>}

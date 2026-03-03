@@ -12,6 +12,8 @@ export interface DashboardUser {
     status: UserStatus;
     currentTask: string;
     totalHoursToday: number;
+    totalCheckedInHoursToday?: number;
+    totalWorkedHoursToday?: number;
     expectedStartTime?: string;
     firstStartTime?: string | null;
 }

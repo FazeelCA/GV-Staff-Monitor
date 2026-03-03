@@ -60,6 +60,11 @@ router.get("/users", async (req: Request, res: Response) => {
                     where: { timestamp: { gte: today, lt: tomorrow } },
                     orderBy: { timestamp: "asc" },
                 },
+                screenshots: {
+                    where: { timestamp: { gte: today, lt: tomorrow } },
+                    orderBy: { timestamp: "asc" },
+                    select: { id: true, hash: true, timestamp: true },
+                },
             },
         });
 
@@ -98,7 +103,25 @@ router.get("/users", async (req: Request, res: Response) => {
 
             const firstStartLog = logs.find(l => l.type === "START");
 
-            const totalHours = Math.round((totalMs / 3_600_000) * 100) / 100;
+            const checkedInHours = Math.round((totalMs / 3_600_000) * 100) / 100;
+
+            // Calculate static time from screenshots
+            let totalStaticMs = 0;
+            const shots = user.screenshots;
+            for (let i = 1; i < shots.length; i++) {
+                const prev = shots[i - 1];
+                const curr = shots[i];
+                if (curr.hash && prev.hash && curr.hash === prev.hash) {
+                    const diff = curr.timestamp.getTime() - prev.timestamp.getTime();
+                    // Cap static deduction to 15 minutes between two screenshots to avoid huge gaps
+                    if (diff > 0 && diff <= 15 * 60 * 1000) {
+                        totalStaticMs += diff;
+                    }
+                }
+            }
+
+            const workedMs = Math.max(0, totalMs - totalStaticMs);
+            const workedHours = Math.round((workedMs / 3_600_000) * 100) / 100;
 
             return {
                 id: user.id,
@@ -107,7 +130,9 @@ router.get("/users", async (req: Request, res: Response) => {
                 role: user.role,
                 status: deriveStatus(latestLog?.type, user.lastActiveAt),
                 currentTask: latestLog?.currentTask || "",
-                totalHoursToday: totalHours,
+                totalHoursToday: checkedInHours, // Keep for backward compatibility or rename? Let's rename in frontend if possible, but keep here as fallback.
+                totalCheckedInHoursToday: checkedInHours,
+                totalWorkedHoursToday: workedHours,
                 expectedStartTime: user.expectedStartTime,
                 firstStartTime: firstStartLog ? firstStartLog.timestamp.toISOString() : null,
             };
@@ -229,7 +254,7 @@ router.get("/screenshots/:userId", async (req: Request, res: Response) => {
 
         const screenshots = await prisma.screenshot.findMany({
             where,
-            orderBy: { timestamp: "asc" },
+            orderBy: { timestamp: "desc" },
             skip,
             take: limitNum,
         });

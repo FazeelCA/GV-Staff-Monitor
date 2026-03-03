@@ -187,7 +187,7 @@ export default function UserDetailView() {
         try {
             loadScreenshotsPage(1);
             const [users, userTasks, hist] = await Promise.all([
-                fetchDashboardUsers(),
+                fetchDashboardUsers(dateFilter),
                 fetchUserTasks(userId, dateFilter),
                 fetchUserHistory(userId, dateFilter)
             ]);
@@ -314,8 +314,17 @@ export default function UserDetailView() {
                             </div>
                             <div className="h-8 w-px bg-white/10" />
                             <div className="text-right">
-                                <p className="text-2xl font-bold text-foreground">{user?.totalHoursToday.toFixed(1) ?? '0.0'}</p>
-                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Hours Today</p>
+                                <p className="text-2xl font-bold text-foreground">{user?.totalWorkedHoursToday !== undefined ? user.totalWorkedHoursToday.toFixed(1) : (user?.totalHoursToday.toFixed(1) ?? '0.0')}</p>
+                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                                    {dateFilter?.option === 'today' ? 'Worked Today' : 'Worked'}
+                                </p>
+                            </div>
+                            <div className="h-8 w-px bg-white/10" />
+                            <div className="text-right">
+                                <p className="text-2xl font-bold text-foreground">{user?.totalCheckedInHoursToday !== undefined ? user.totalCheckedInHoursToday.toFixed(1) : (user?.totalHoursToday.toFixed(1) ?? '0.0')}</p>
+                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                                    {dateFilter?.option === 'today' ? 'Checked In Today' : 'Checked In'}
+                                </p>
                             </div>
                         </GlassCard>
                     )}
@@ -385,11 +394,11 @@ export default function UserDetailView() {
                 <div className="mt-6 mb-2">
                     <h2 className="text-lg font-semibold text-foreground mb-4">Latest Screenshot</h2>
                     {(() => {
-                        const latestShot = screenshots[screenshots.length - 1];
+                        const latestShot = screenshots[0];
                         return (
                             <GlassCard
                                 className="group p-0 overflow-hidden relative aspect-video sm:aspect-[21/9] transition-all hover:shadow-2xl hover:shadow-primary/10 cursor-zoom-in border-primary/20 ring-1 ring-white/10"
-                                onClick={() => setLightboxIdx(screenshots.length - 1)}
+                                onClick={() => setLightboxIdx(0)}
                             >
                                 <img
                                     src={latestShot.imageUrl}
@@ -473,8 +482,8 @@ export default function UserDetailView() {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {screenshots.map((shot, idx) => {
-                                        // UserDetail API sorts ASC, so idx - 1 is the older screenshot it should be compared to
-                                        const prevShot = idx > 0 ? screenshots[idx - 1] : null;
+                                        // UserDetail API sorts DESC, so idx + 1 is the older screenshot it should be compared to
+                                        const prevShot = idx < screenshots.length - 1 ? screenshots[idx + 1] : null;
                                         const isStatic = shot.hash && prevShot?.hash && shot.hash === prevShot.hash;
                                         const isLowActivity = shot.activityCount !== undefined && shot.activityCount < 50;
 

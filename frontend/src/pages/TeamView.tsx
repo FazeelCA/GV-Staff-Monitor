@@ -86,15 +86,30 @@ function UserCard({ user, onClick }: { user: DashboardUser; onClick: () => void 
 
                 {/* Footer */}
                 <div className="flex items-end justify-between border-t border-white/5 pt-3">
-                    <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Today's Activity</p>
-                        <p className="text-xl font-bold text-foreground">
-                            {user.totalHoursToday.toFixed(1)}
-                            <span className="text-sm font-medium text-muted-foreground ml-1">hrs</span>
-                        </p>
-                    </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 text-primary">
-                        →
+                    <div className="w-full">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Today's Activity</p>
+                        <div className="flex items-center justify-between">
+                            <div className="flex gap-4">
+                                <div>
+                                    <p className="text-xl font-bold text-foreground leading-none">
+                                        {user.totalWorkedHoursToday !== undefined ? user.totalWorkedHoursToday.toFixed(1) : user.totalHoursToday.toFixed(1)}
+                                        <span className="text-sm font-medium text-muted-foreground ml-1">h</span>
+                                    </p>
+                                    <p className="text-[9px] text-muted-foreground uppercase mt-1 tracking-wider">Worked</p>
+                                </div>
+                                <div className="w-px bg-white/10 h-8 self-center" />
+                                <div>
+                                    <p className="text-xl font-bold text-foreground leading-none">
+                                        {user.totalCheckedInHoursToday !== undefined ? user.totalCheckedInHoursToday.toFixed(1) : user.totalHoursToday.toFixed(1)}
+                                        <span className="text-sm font-medium text-muted-foreground ml-1">h</span>
+                                    </p>
+                                    <p className="text-[9px] text-muted-foreground uppercase mt-1 tracking-wider">Checked In</p>
+                                </div>
+                            </div>
+                            <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 text-primary">
+                                →
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -209,9 +224,9 @@ export default function TeamView() {
     };
 
     if (sortBy === 'hours-asc') {
-        filteredUsers.sort((a, b) => a.totalHoursToday - b.totalHoursToday);
+        filteredUsers.sort((a, b) => (a.totalWorkedHoursToday ?? a.totalHoursToday) - (b.totalWorkedHoursToday ?? b.totalHoursToday));
     } else if (sortBy === 'hours-desc') {
-        filteredUsers.sort((a, b) => b.totalHoursToday - a.totalHoursToday);
+        filteredUsers.sort((a, b) => (b.totalWorkedHoursToday ?? b.totalHoursToday) - (a.totalWorkedHoursToday ?? a.totalHoursToday));
     } else {
         filteredUsers.sort((a, b) => a.name.localeCompare(b.name));
     }
