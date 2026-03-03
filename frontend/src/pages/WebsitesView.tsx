@@ -42,6 +42,7 @@ export default function WebsitesView() {
     const [selectedUser, setSelectedUser] = useState<string>('ALL');
     const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
     const [filterUnproductive, setFilterUnproductive] = useState(false);
+    const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
     const [visibleCount, setVisibleCount] = useState(20);
     const navigate = useNavigate();
 
@@ -56,7 +57,7 @@ export default function WebsitesView() {
     useEffect(() => {
         loadActivities();
         setVisibleCount(20);
-    }, [selectedUser, dateFilter]);
+    }, [selectedUser, dateFilter, sortOrder]);
 
     useEffect(() => {
         setVisibleCount(20);
@@ -110,10 +111,6 @@ export default function WebsitesView() {
                         if (Array.isArray(logs)) allLogs = [...allLogs, ...logs];
                     });
                 }
-
-                // sort by startTime desc
-                allLogs.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-
             } else {
                 if (users.length === 0) {
                     currentUsers = await fetchDashboardUsers();
@@ -125,6 +122,12 @@ export default function WebsitesView() {
                 if (res.ok) {
                     allLogs = await res.json();
                 }
+            }
+
+            if (sortOrder === 'asc') {
+                allLogs.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+            } else {
+                allLogs.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
             }
 
             // Enrich with user data if missing (backend might not send included user)
@@ -214,6 +217,18 @@ export default function WebsitesView() {
                             value={dateFilter}
                             onChange={(val) => setDateFilter(val)}
                         />
+                    </div>
+
+                    {/* Sort Filter */}
+                    <div className="relative z-10 w-full sm:w-auto">
+                        <select
+                            className="w-full sm:w-36 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
+                        >
+                            <option value="desc" className="bg-[#09090b]">Latest First</option>
+                            <option value="asc" className="bg-[#09090b]">Oldest First</option>
+                        </select>
                     </div>
                 </div>
             </div>

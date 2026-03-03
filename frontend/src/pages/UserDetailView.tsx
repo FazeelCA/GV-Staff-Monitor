@@ -24,6 +24,7 @@ export default function UserDetailView() {
     const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
     const [activityLogs, setActivityLogs] = useState<any[]>([]);
     const [filterUnproductive, setFilterUnproductive] = useState(false);
+    const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
     const [loading, setLoading] = useState(true);
 
     const UNPRODUCTIVE_KEYWORDS = ['youtube', 'facebook', 'instagram', 'twitter', 'tiktok', 'netflix', 'reddit', 'whatsapp', 'telegram', 'discord'];
@@ -164,7 +165,7 @@ export default function UserDetailView() {
         if (!userId) return;
         if (page > 1) setLoadingMoreScreenshots(true);
         try {
-            const shots = await fetchUserScreenshots(userId, { ...dateFilter, page, limit: 20 });
+            const shots = await fetchUserScreenshots(userId, { ...dateFilter, page, limit: 20, sortOrder });
             if (page === 1) {
                 setScreenshots(shots);
             } else {
@@ -192,13 +193,26 @@ export default function UserDetailView() {
                 fetchUserHistory(userId, dateFilter)
             ]);
             setUser(users.find((u) => u.id === userId) ?? null);
+            if (sortOrder === 'asc') {
+                userTasks.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                hist.activityLogs.sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+            } else {
+                userTasks.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                hist.activityLogs.sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+            }
             setTasks(userTasks);
 
             const events: any[] = [];
             hist.timeLogs.forEach((l: any) => events.push({ time: new Date(l.timestamp).getTime(), type: 'TIME_LOG', data: l }));
             hist.screenshots.forEach((s: any) => events.push({ time: new Date(s.timestamp).getTime(), type: 'SCREENSHOT', data: s }));
             hist.activityLogs.forEach((a: any) => events.push({ time: new Date(a.startTime).getTime(), type: 'ACTIVITY', data: a }));
-            events.sort((a, b) => b.time - a.time);
+
+            if (sortOrder === 'asc') {
+                events.sort((a, b) => a.time - b.time);
+            } else {
+                events.sort((a, b) => b.time - a.time);
+            }
+
             setTimelineEvents(events);
             setActivityLogs(hist.activityLogs || []);
         } catch (e) {
@@ -208,7 +222,7 @@ export default function UserDetailView() {
             setWebsitesPage(1);
             setTasksPage(1);
         }
-    }, [userId, dateFilter]);
+    }, [userId, dateFilter, sortOrder]);
 
     // Load data
     useEffect(() => {
@@ -381,7 +395,15 @@ export default function UserDetailView() {
 
             <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">Activity Log</h2>
-                <div className="flex items-center gap-3 relative z-50">
+                <div className="flex flex-col sm:flex-row items-center gap-3 relative z-50">
+                    <select
+                        className="w-full sm:w-36 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
+                        value={sortOrder}
+                        onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
+                    >
+                        <option value="desc" className="bg-[#09090b]">Latest First</option>
+                        <option value="asc" className="bg-[#09090b]">Oldest First</option>
+                    </select>
                     <DateFilterSelect
                         value={dateFilter}
                         onChange={(val) => setDateFilter(val)}

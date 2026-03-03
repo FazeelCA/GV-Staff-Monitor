@@ -39,6 +39,7 @@ export default function ScreenshotsView() {
     const [selectedUser, setSelectedUser] = useState<string>(initialUser);
     const [dateFilter, setDateFilter] = useState<any>({ option: 'today', startDate: initialDate, endDate: initialDate });
     const [activityFilter, setActivityFilter] = useState<'All' | 'Low Activity'>('All');
+    const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -61,14 +62,14 @@ export default function ScreenshotsView() {
         setPage(1);
         setHasMore(true);
         loadData(1);
-    }, [selectedUser, dateFilter, activityFilter]);
+    }, [selectedUser, dateFilter, activityFilter, sortOrder]);
 
     const loadData = async (pageNum = page) => {
         if (pageNum === 1) setLoading(true);
         else setLoadingMore(true);
         try {
             const [shotsData, usersData] = await Promise.all([
-                fetchAllScreenshots({ userId: selectedUser, startDate: dateFilter.startDate, endDate: dateFilter.endDate, page: pageNum, limit: 20, activityFilter }),
+                fetchAllScreenshots({ userId: selectedUser, startDate: dateFilter.startDate, endDate: dateFilter.endDate, page: pageNum, limit: 20, activityFilter, sortOrder }),
                 users.length === 0 ? fetchDashboardUsers() : Promise.resolve(users),
             ]);
 
@@ -136,6 +137,7 @@ export default function ScreenshotsView() {
         setSelectedUser('ALL');
         setDateFilter({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] });
         setActivityFilter('All');
+        setSortOrder('desc');
         setPage(1);
         setHasMore(true);
     };
@@ -197,8 +199,21 @@ export default function ScreenshotsView() {
                         </select>
                     </div>
 
+                    {/* Sort Filter */}
+                    <div className="relative">
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                        <select
+                            className="w-full sm:w-40 pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
+                        >
+                            <option value="desc" className="bg-[#09090b]">Latest First</option>
+                            <option value="asc" className="bg-[#09090b]">Oldest First</option>
+                        </select>
+                    </div>
+
                     <button
-                        onClick={() => { setSelectedUser('ALL'); setDateFilter({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] }); setActivityFilter('All'); }}
+                        onClick={() => { setSelectedUser('ALL'); setDateFilter({ option: 'today', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] }); setActivityFilter('All'); setSortOrder('desc'); }}
                         className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
                         title="Clear Filters"
                     >
