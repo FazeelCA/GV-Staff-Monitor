@@ -133,6 +133,7 @@ router.get("/users", async (req: Request, res: Response) => {
                 totalHoursToday: checkedInHours, // Keep for backward compatibility or rename? Let's rename in frontend if possible, but keep here as fallback.
                 totalCheckedInHoursToday: checkedInHours,
                 totalWorkedHoursToday: workedHours,
+                totalScreenshotsToday: user.screenshots.length,
                 expectedStartTime: user.expectedStartTime,
                 firstStartTime: firstStartLog ? firstStartLog.timestamp.toISOString() : null,
             };

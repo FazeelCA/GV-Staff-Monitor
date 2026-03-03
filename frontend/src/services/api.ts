@@ -14,6 +14,7 @@ export interface DashboardUser {
     totalHoursToday: number;
     totalCheckedInHoursToday?: number;
     totalWorkedHoursToday?: number;
+    totalScreenshotsToday?: number;
     expectedStartTime?: string;
     firstStartTime?: string | null;
 }

@@ -323,7 +323,7 @@ export default function UserDetailView() {
                     {!loading && (
                         <GlassCard className="px-5 py-3 flex items-center gap-4">
                             <div className="text-right">
-                                <p className="text-2xl font-bold text-foreground">{screenshots.length}</p>
+                                <p className="text-2xl font-bold text-foreground">{user?.totalScreenshotsToday !== undefined ? user.totalScreenshotsToday : screenshots.length}</p>
                                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Screenshots</p>
                             </div>
                             <div className="h-8 w-px bg-white/10" />
