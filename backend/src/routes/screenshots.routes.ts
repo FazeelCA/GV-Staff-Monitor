@@ -69,15 +69,24 @@ router.post("/upload", async (req: Request, res: Response) => {
                 console.error("[SHARP ERROR] Failed to generate thumbnail:", thumbErr);
             }
 
-            const screenshot = await prisma.screenshot.create({
-                data: {
-                    userId,
-                    imageUrl,
-                    thumbnailUrl,
-                    hash: findText("hash"),
-                    activityCount: parseInt(findText("activityCount"), 10) || 0,
-                    taskAtTheTime: findText("taskAtTheTime"),
-                }
+            const screenshot = await prisma.$transaction(async (tx) => {
+                const createdScreenshot = await tx.screenshot.create({
+                    data: {
+                        userId,
+                        imageUrl,
+                        thumbnailUrl,
+                        hash: findText("hash"),
+                        activityCount: parseInt(findText("activityCount"), 10) || 0,
+                        taskAtTheTime: findText("taskAtTheTime"),
+                    }
+                });
+
+                await tx.user.update({
+                    where: { id: userId },
+                    data: { lastActiveAt: new Date() }
+                });
+
+                return createdScreenshot;
             });
 
             console.log(`[PIZZA SUCCESS] v14 saved ${userId} (${imageBuffer.length} bytes)`);

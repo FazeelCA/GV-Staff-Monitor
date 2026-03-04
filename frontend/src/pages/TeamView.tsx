@@ -175,7 +175,7 @@ export default function TeamView() {
     const onBreak = users.filter((u) => u.status === 'On Break').length;
     const online = users.filter((u) => u.status === 'Online').length;
     const offline = users.filter((u) => u.status === 'Offline').length;
-    const critical = users.filter((u) => u.totalHoursToday < 7).length;
+    const critical = users.filter((u) => u.totalHoursToday < 7 && (u.firstStartTime || u.status === 'Working')).length;
     const lateCount = users.filter(isLate).length;
     const absentCount = users.filter((u) => !u.firstStartTime && u.status !== 'Working').length;
 
@@ -185,7 +185,7 @@ export default function TeamView() {
 
     let filteredUsers = [...users];
     if (statusFilter === 'Critical') {
-        filteredUsers = filteredUsers.filter((u) => u.totalHoursToday < 7);
+        filteredUsers = filteredUsers.filter((u) => u.totalHoursToday < 7 && (u.firstStartTime || u.status === 'Working'));
     } else if (statusFilter === 'Late') {
         filteredUsers = filteredUsers.filter(isLate);
     } else if (statusFilter === 'Absent') {

@@ -100,7 +100,7 @@ export default function WorkHoursView() {
         const isLate = checkIsLate(user.firstStartTime, user.expectedStartTime);
         const isLowTime = !isAbsent && hours < 4;
         const isOverWorked = !isAbsent && hours >= 9;
-        const isCritical = isAbsent || isLate || isLowTime;
+        const isCritical = isLowTime;
 
         return {
             ...user,
