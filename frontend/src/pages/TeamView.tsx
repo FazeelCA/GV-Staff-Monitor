@@ -165,6 +165,7 @@ export default function TeamView() {
             const actualMins = actual.getHours() * 60 + actual.getMinutes();
             return actualMins > expectedTimeMins + 5; // adding 5 mins grace period
         } else {
+            if (u.status !== 'Working') return false; // Exclude absent users
             const now = new Date();
             const nowMins = now.getHours() * 60 + now.getMinutes();
             return nowMins > expectedTimeMins + 5;
